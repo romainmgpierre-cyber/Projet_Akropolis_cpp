@@ -1,7 +1,7 @@
 #include "Akropolis.h"
 namespace Akropolis{
 
-    std::initializer_list<Couleur> Couleurs = { Couleur::rouge, Couleur::violet, Couleur::vert, Couleur::bleu };
+    std::initializer_list<Couleur> Couleurs = { Couleur::rouge, Couleur::violet, Couleur::vert, Couleur::bleu, Couleur::gris };
 	std::initializer_list<Etoile> Etoiles = { Etoile::un, Etoile::deux, Etoile::trois };
 
 
@@ -11,6 +11,7 @@ namespace Akropolis{
 		case Couleur::bleu: return "BLeu";
 		case Couleur::vert: return "Vert";
         case Couleur::violet: return "Violet";
+        case Couleur::gris: return "Gris"; //couleur par défaut pour les carrières
 		default: throw GameException("Couleur inconnue");
 		}
 	}

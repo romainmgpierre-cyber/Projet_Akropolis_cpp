@@ -1,5 +1,0 @@
-Ici la liste des remarques entre ce qu'on a prévu et ce qui se passe réellement :
-1. Le temps de création des classes prévu est disproportionné par rapport au temps que cela prend réellement
-2. La classe Type à le mérite de devenir un classe d'énumération -> tout ce qui nous intéresse pour définir les quartiers et les places sont uniquement leur couleur et le nombre d'étoiles (pour les places)
-3. Correction à faire dans le MCD, comme Carrière, Quartier et Place hérite de HexagoneConstruction alors on ne doit pas retrouver les attributs id dans les classes Filles
-4. On a complètement oublié de rajouter une classe Plateau qui serait plutôt pratique pour placer les tuiles sur un plateau

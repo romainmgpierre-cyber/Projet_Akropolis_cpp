@@ -16,7 +16,7 @@ namespace Akropolis{
 		string info;
 	};
 
-    enum class Couleur { rouge, violet, vert, bleu };
+    enum class Couleur { rouge, violet, vert, bleu, gris };
     enum class Etoile { un=1, deux=2, trois=3 };
     
     string toString(Couleur c);
@@ -41,21 +41,31 @@ namespace Akropolis{
 
     class TableauScore{
 
+
     };
 
     class Pioche{
         size_t id;
-        TuileCité ** tuiles;
+        TuileCite ** tuiles;
+        size_t nb; //nombre de tuiles dans la pioche
         public:
-        Pioche(size_t id, size_t taillepioche) : id(id) {tuiles = new TuileCité*[taillepioche];}
+        Pioche(size_t id, size_t taillepioche) : id(id) {tuiles = new TuileCite*[taillepioche];}
+        size_t getNbtuilesPioche() const {return nb;}
+        bool estVide(){return nb==0;}
         ~Pioche(){ delete[] tuiles;}
     };
 
+    
+
+
     class Cite{
+        // S'inspirer de la classe Plateau qu'on avait pour le jeu SET mais il faut aller voir sur un site internet spécial pour voir comment gérer le placement de pièce hexagonal
+        // Lien du site : 
 
     };
 
-    class TuileCité{
+    class TuileCite{
+        unsigned int hauteur = 1;
 
     };
 
@@ -81,6 +91,13 @@ namespace Akropolis{
             Etoile nbetoile;
         public:
             Place(size_t id, const Couleur& coul, const Etoile& nbetoile) : HexagoneConstruction(id), coul(coul), nbetoile(nbetoile) {}
+    };
+
+    class Carriere : public HexagoneConstruction{
+        private :
+            Couleur coul = Couleur::gris;
+        public:
+            Carriere(size_t id) : HexagoneConstruction(id){}
     };
 
 }

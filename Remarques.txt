@@ -1,0 +1,9 @@
+Ici la liste des remarques entre ce qu'on a prévu et ce qui se passe réellement :
+1. Le temps de création des classes prévu est disproportionné par rapport au temps que cela prend réellement
+2. La classe Type à le mérite de devenir un classe d'énumération -> tout ce qui nous intéresse pour définir les quartiers et les places sont uniquement leur couleur et le nombre d'étoiles (pour les places)
+3. Correction à faire dans le MCD, comme Carrière, Quartier et Place hérite de HexagoneConstruction alors on ne doit pas retrouver les attributs id dans les classes Filles
+4. Pourquoi pas rajouter une classe Choix qui prend en attribut un Tableau alloué dynamiquement de 3 ou 4 tuiles. Cela permet de mieux assurer la transition entre la pioche et la tuile choisi pour aller sur le plateau
+5. Suggestion : Séparer la classe Tableau des scores en plusieurs sous classes : une qui permet de calculer les points dans le cas ou des tuiles sont recouvertes, une qui gère de checker l'attribution des points des places en fonction des règles, une qui checke le nombre de multiplicateur...(héritage multiple)
+6. Il faut rajouter un attibut hauteur à TuileCite comme ça on pourra gérer le recouvrement si il y a un empilement de TuileCite (rapportant plus de points)
+7. Erreur : dans le MCD on a dit que une Pioche était composé de 11 tuilesCite masi c'est faux, c'est beaucoup plus
+8. Puisque on utilise des objets "pierres" dans plusieurs classes, pourquoi pas créer une classe "Pierre" (pas obligé mais plus cohérent)
