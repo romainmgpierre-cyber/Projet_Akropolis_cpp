@@ -88,18 +88,31 @@ pour rapporter des points. Il est possible de jouer avec plusieurs variantes dan
         ~Pioche(){ delete[] tuiles;}
     };
 
-    
-
-
-    class Cite{
-        // S'inspirer de la classe Plateau qu'on avait pour le jeu SET mais il faut aller voir sur un site internet spécial pour voir comment gérer le placement de pièce hexagonal
-        // Lien du site : 
-
-    };
-
     class TuileCite{
         unsigned int hauteur = 1;
 
+    };
+
+    class Cite{
+    private:
+        const TuileCite** tuile_cites = nullptr; //on stocke le pointeur de chaque tuile
+        size_t nb = 0; //nombre de tuile stockées
+        size_t nb_max = 0; //taille du tableau
+
+    public:
+        Cite(size_t capacite_initiale = 4): nb(0), nb_max(capacite_initiale),
+          tuile_cites(new const TuileCite*[capacite_initiale]) {}
+
+        ~Cite(){delete [] tuile_cites;}
+
+        void ajouter(const TuileCite& t);
+        void afficher(ostream& f) const; //afficher l'ensemble des carte contenu dans Cite
+
+        //accesseurs :
+        size_t getnb() const {return nb;}
+        size_t getnb_max() const {return nb_max;}
+
+        //je pense qu'il faudrais stocker les coordonée des différente tuiles dans tuileCite
     };
 
     class HexagoneConstruction{
