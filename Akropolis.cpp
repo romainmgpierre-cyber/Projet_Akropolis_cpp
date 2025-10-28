@@ -35,5 +35,27 @@ namespace Akropolis{
         for (auto e : Etoiles) f << e << " ";
         f << "\n";
     }
+
+    void Cite::ajouter(const TuileCite &t) {
+        if (nb == nb_max) {
+            size_t new_max = (nb_max + 1) * 2; // appels logarithmique
+
+            // création d'un tableau plus grand si le tabelau est déjà remplis
+            auto newtab = new const TuileCite * [new_max];
+
+            // recopie des adresses des Tuiles citées dans le nouveau tableau
+            for (size_t i = 0; i < nb; i++)
+                newtab[i] = tuile_cites[i];
+
+            // on met a jour la taille max
+            nb_max = new_max;
+            
+            // desalocation de l'ancien tableau
+            auto old = tuile_cites;
+            tuile_cites = newtab;
+            delete[] old;
+        }
+        tuile_cites[nb++] = &t;
+    }
 	
 }
