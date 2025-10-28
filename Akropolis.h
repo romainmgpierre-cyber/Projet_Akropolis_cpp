@@ -31,6 +31,27 @@ namespace Akropolis{
     void printCouleurs(std::ostream& f = cout);
 	void printNbEtoiles(std::ostream& f = cout);
 
+    enum class ModeJeu {SOLO, MULTIJOUEUR};
+    enum class NiveauDifficulte {FACILE, MOYEN, DIFFICILE};
+    enum class EtatPartie {NON_DEMARREE, EN_COURS, TERMINEE, SUSPENDUE};
+
+    class Variante {
+    private:
+        string nom;
+        string description;
+        bool active;
+    
+    public:
+        Variante(const string& n, const string& desc) 
+            : nom(n), description(desc), active(false) {}
+    
+        void activer() { active = true; }
+        void desactiver() { active = false; }
+        bool estActive() const { return active; }
+        string getNom() const { return nom; }
+        string getDescription() const { return description; }
+    };
+
     class Partie{
 
     };

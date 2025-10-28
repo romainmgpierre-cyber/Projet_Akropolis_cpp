@@ -1,5 +1,5 @@
 #include "Akropolis.h"
-namespace Akropolis{
+namespace Akropolis{ 
 
     std::initializer_list<Couleur> Couleurs = { Couleur::rouge, Couleur::violet, Couleur::vert, Couleur::bleu, Couleur::gris };
 	std::initializer_list<Etoile> Etoiles = { Etoile::un, Etoile::deux, Etoile::trois };
