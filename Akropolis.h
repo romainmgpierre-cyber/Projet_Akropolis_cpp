@@ -31,10 +31,16 @@ namespace Akropolis{
     void printCouleurs(std::ostream& f = cout);
 	void printNbEtoiles(std::ostream& f = cout);
 
+//pour la classe partie : 
     enum class ModeJeu {SOLO, MULTIJOUEUR};
     enum class NiveauDifficulte {FACILE, MOYEN, DIFFICILE};
     enum class EtatPartie {NON_DEMARREE, EN_COURS, TERMINEE, SUSPENDUE};
 
+/* "Le jeu propose quelques variantes qui permettent de corser le jeu.
+Dans ce cas, la mise en place et le déroulé de la partie ne changent pas. 
+Chaque variante propose une condition de placement supplémentaire
+pour rapporter des points. Il est possible de jouer avec plusieurs variantes dans la même partie."
+*/
     class Variante {
     private:
         string nom;
@@ -53,6 +59,12 @@ namespace Akropolis{
     };
 
     class Partie{
+        size_t id;
+        ModeJeu mode;
+        EtatPartie etat;
+    public:
+        Partie(size_t id, ModeJeu mode);
+        ~Partie();
 
     };
 
