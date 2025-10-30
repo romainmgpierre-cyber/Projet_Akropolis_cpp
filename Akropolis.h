@@ -178,6 +178,48 @@ pour rapporter des points. Il est possible de jouer avec plusieurs variantes dan
             Carriere(size_t id) : HexagoneConstruction(id){}
     };
 
+        // --- Tableau des scores ---
+    class CalculScoreBase {
+    public:
+        virtual ~CalculScoreBase() = default;
+        virtual int calculerScore(const Joueur& joueur) const = 0;
+    };
+
+    class CalculScoreRecouvrement : public virtual CalculScoreBase {
+    public:
+        int calculerScore(const Joueur& joueur) const ;
+    };
+
+    class CalculScorePlaces : public virtual CalculScoreBase {
+    public:
+        int calculerScore(const Joueur& joueur) const ;
+    };
+
+    class CalculScoreMultiplicateurs : public virtual CalculScoreBase {
+    public:
+        int calculerScore(const Joueur& joueur) const;
+    };
+
+    class TableauScore :
+        public CalculScoreRecouvrement,
+        public CalculScorePlaces,
+        public CalculScoreMultiplicateurs
+    {
+    private:
+        vector<pair<Joueur*, int>> scores;
+
+    public:
+        void ajouterJoueur(Joueur* j);
+        void calculerScores();
+        void afficherScores(ostream& f = cout) const;
+        int calculerScore(const Joueur& joueur) const{
+        return CalculScoreRecouvrement::calculerScore(joueur)
+             + CalculScorePlaces::calculerScore(joueur)
+             + CalculScoreMultiplicateurs::calculerScore(joueur);
+    }
+    };
+
+
 }
 
 #endif
