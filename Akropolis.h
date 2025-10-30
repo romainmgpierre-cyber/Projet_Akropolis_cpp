@@ -62,9 +62,41 @@ pour rapporter des points. Il est possible de jouer avec plusieurs variantes dan
         size_t id;
         ModeJeu mode;
         EtatPartie etat;
+        NiveauDifficulte difficulte;
+        vector<Variante> variantes;
+
+        //joueurs
+        vector<Joueur*> joueurs;
+        size_t joueurActuelIndex;
+
+        //pioche
+        Pioche* pioche;
+        vector<TuileCite*> tuilesDisponibles; 
+        size_t nbTuilesParTour;
+
     public:
         Partie(size_t id, ModeJeu mode);
         ~Partie();
+        Partie(const Partie&) = delete;
+        Partie& operator=(const Partie&) = delete;
+
+        ModeJeu getMode() const { return mode; }
+        EtatPartie getEtat() const { return etat; }
+        size_t getNombreJoueurs() const { return joueurs.size(); }
+        Joueur* getJoueurActuel() const { return joueurs[joueurActuelIndex]; }
+        const vector<Joueur*>& getJoueurs() const { return joueurs; }
+        Pioche* getPioche() const { return pioche; }
+        vector<Variante> getVariantesDisponibles() const{ return variantes; }
+        vector<Variante> getVariantesActives() const;
+
+        void ajouterJoueur(const string& nom);
+        void retirerJoueur(const string& nom);
+        void setModeEtendu(bool etendu) { modeEtendu = etendu; }
+        void setDifficulte(NiveauDifficulte diff) { difficulte = diff; }
+        void ajouterVariante(const Variante& v) { variantes.push_back(v); }
+        void activerVariante(const string& nom);
+        void desactiverVariante(const std::string& nom);
+
 
     };
 
