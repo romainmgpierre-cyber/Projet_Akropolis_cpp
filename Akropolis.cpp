@@ -37,6 +37,32 @@ namespace Akropolis{
         f << "\n";
     }
 
+    const TuileCite& Pioche::piocher(){
+        if (estVide()) throw GameException("Pioche Vide");
+        int i = rand() % nb; //tire un numéro de carte au hasard
+        const TuileCite* tmp = tuiles[i];
+        tuiles[i]=tuiles[--nb];
+        return *tmp;
+    }
+
+    bool ChoixTuile::ajouterTuile(TuileCite* tuile) {
+            if (tuilesDisponibles.size() < MAX_TUILES) {
+                tuilesDisponibles.push_back(tuile);
+                return true;
+            }
+            return false; // Déjà plein
+        }
+    
+    bool ChoixTuile::retirerTuile(size_t tuileId) {
+            auto it = std::find_if(tuilesDisponibles.begin(), tuilesDisponibles.end(),
+                [tuileId](TuileCite* t) { return t->getId() == tuileId; });
+            if (it != tuilesDisponibles.end()) {
+                tuilesDisponibles.erase(it);
+                return true;
+            }
+            return false; // Tuile non trouvée
+        }
+
     void Cite::ajouter(const TuileCite &t) {
         if (nb == nb_max) {
             size_t new_max = (nb_max + 1) * 2; // appels logarithmique

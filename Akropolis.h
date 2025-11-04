@@ -4,6 +4,8 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <algorithm>
+#include <array>
 
 using namespace std;
 namespace Akropolis{
@@ -112,8 +114,36 @@ pour rapporter des points. Il est possible de jouer avec plusieurs variantes dan
         Pioche(size_t id, size_t taillepioche) : id(id) {tuiles = new TuileCite*[taillepioche];}
         size_t getNbtuilesPioche() const {return nb;}
         bool estVide(){return nb==0;}
+        const TuileCite& piocher();
         ~Pioche(){ delete[] tuiles;}
+        Pioche& operator=(const Pioche&) = delete;
+		Pioche(const Pioche&) = delete;
     };
+
+    class ChoixTuile {
+    private:
+        static const size_t MAX_TUILES = 4;
+        size_t id;
+        vector<TuileCite*> tuilesDisponibles;
+    
+    public:
+        ChoixTuile(size_t id) : id(id) {
+            tuilesDisponibles.reserve(MAX_TUILES);
+        }
+        
+        bool ajouterTuile(TuileCite* tuile);
+        bool retirerTuile(size_t tuileId);
+        const vector<TuileCite*>& getTuilesDisponibles() const {
+            return tuilesDisponibles;
+        }
+        
+        size_t getNombreTuiles() const { return tuilesDisponibles.size(); }
+};
+
+
+
+
+
     enum class Orientation {
         NORD = 0,      // 0°
         NORD_EST = 1,  // 60°
