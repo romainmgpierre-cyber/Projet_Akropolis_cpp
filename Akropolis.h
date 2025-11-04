@@ -25,11 +25,11 @@ namespace Akropolis{
     ostream& operator<<(ostream& f, Couleur c);
 	ostream& operator<<(ostream& f, Etoile e);
 
-    extern std::initializer_list<Couleur> Couleurs;
-	extern std::initializer_list<Etoile> Etoiles;
+    extern initializer_list<Couleur> Couleurs;
+	extern initializer_list<Etoile> Etoiles;
 
-    void printCouleurs(std::ostream& f = cout);
-	void printNbEtoiles(std::ostream& f = cout);
+    void printCouleurs(ostream& f = cout);
+	void printNbEtoiles(ostream& f = cout);
 
 //pour la classe partie : 
     enum class ModeJeu {SOLO, MULTIJOUEUR};
@@ -95,7 +95,7 @@ pour rapporter des points. Il est possible de jouer avec plusieurs variantes dan
         void setDifficulte(NiveauDifficulte diff) { difficulte = diff; }
         void ajouterVariante(const Variante& v) { variantes.push_back(v); }
         void activerVariante(const string& nom);
-        void desactiverVariante(const std::string& nom);
+        void desactiverVariante(const string& nom);
 
 
     };
@@ -104,10 +104,6 @@ pour rapporter des points. Il est possible de jouer avec plusieurs variantes dan
 
     };
 
-    class TableauScore{
-
-
-    };
 
     class Pioche{
         size_t id;

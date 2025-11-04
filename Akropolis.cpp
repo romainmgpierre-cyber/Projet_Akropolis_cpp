@@ -1,8 +1,9 @@
 #include "Akropolis.h"
+using namespace std;
 namespace Akropolis{ 
 
-    std::initializer_list<Couleur> Couleurs = { Couleur::rouge, Couleur::violet, Couleur::vert, Couleur::bleu, Couleur::gris };
-	std::initializer_list<Etoile> Etoiles = { Etoile::un, Etoile::deux, Etoile::trois };
+    initializer_list<Couleur> Couleurs = { Couleur::rouge, Couleur::violet, Couleur::vert, Couleur::bleu, Couleur::gris };
+	initializer_list<Etoile> Etoiles = { Etoile::un, Etoile::deux, Etoile::trois };
 
 
     string toString(Couleur c) {
@@ -24,14 +25,14 @@ namespace Akropolis{
         }
     }
 
-    std::ostream& operator<<(std::ostream& f, Couleur c) { f << toString(c); return f; }
-	std::ostream& operator<<(std::ostream& f, Etoile e) {	f << toString(e); return f; }
+    ostream& operator<<(ostream& f, Couleur c) { f << toString(c); return f; }
+	ostream& operator<<(ostream& f, Etoile e) {	f << toString(e); return f; }
     
-    void printCouleurs(std::ostream& f) {
+    void printCouleurs(ostream& f) {
         for (auto c : Couleurs) f << c << " ";
         f << "\n";
     }
-    void printNbEtoiles(std::ostream& f) {
+    void printNbEtoiles(ostream& f) {
         for (auto e : Etoiles) f << e << " ";
         f << "\n";
     }
