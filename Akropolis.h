@@ -240,14 +240,7 @@ pour rapporter des points. Il est possible de jouer avec plusieurs variantes dan
         string getNom() const { return nom; }
         Couleur getCouleur() const { return couleur; }
         string getDescription() const { return description; }
-    
-        // Factory method pour créer les types standards
-        static Type creerHabitation();
-        static Type creerMarche();
-        static Type creerCaserne();
-        static Type creerTemple();
-        static Type creerJardin();
-};
+    };
 
 }
 
