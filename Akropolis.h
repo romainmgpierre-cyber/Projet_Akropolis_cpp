@@ -157,18 +157,25 @@ pour rapporter des points. Il est possible de jouer avec plusieurs variantes dan
 
     class Quartier : public HexagoneConstruction{
         private:
-            Couleur coul;
+            const Type* type; // association vers Type
         public:
-            Quartier(size_t id, const Couleur& coul ) : HexagoneConstruction(id), coul(coul){ }
+            Quartier(size_t id, const Type& type)
+                : HexagoneConstruction(id), type(&type) {}
+
+            const Type& getType() const { return *type; }
     };
 
 
     class Place : public HexagoneConstruction{
         private:
-            Couleur coul;
+            const Type* type; // association vers Type
             Etoile nbetoile;
         public:
-            Place(size_t id, const Couleur& coul, const Etoile& nbetoile) : HexagoneConstruction(id), coul(coul), nbetoile(nbetoile) {}
+            Place(size_t id, const Type& type, Etoile nbetoile)
+                : HexagoneConstruction(id), type(&type), nbetoile(nbetoile) {}
+
+            const Type& getType() const { return *type; }
+            Etoile getNbEtoile() const { return nbetoile; }
     };
 
     class Carriere : public HexagoneConstruction{
@@ -218,8 +225,32 @@ pour rapporter des points. Il est possible de jouer avec plusieurs variantes dan
              + CalculScoreMultiplicateurs::calculerScore(joueur);
     }
     };
-
+    //les types de quartier
+    class Type {
+        string nom;
+        Couleur couleur;
+        string description;
+    public:
+        Type(const string& nom, Couleur couleur, 
+            const string& description);
+    
+        Type(const Type& other);
+        Type& operator=(const Type& other);
+    
+        string getNom() const { return nom; }
+        Couleur getCouleur() const { return couleur; }
+        string getDescription() const { return description; }
+    
+        // Factory method pour créer les types standards
+        static Type creerHabitation();
+        static Type creerMarche();
+        static Type creerCaserne();
+        static Type creerTemple();
+        static Type creerJardin();
+};
 
 }
+
+
 
 #endif

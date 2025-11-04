@@ -60,7 +60,7 @@ namespace Akropolis{
 	
     Partie::Partie(size_t id, ModeJeu mode)
         : id(id), mode(mode), etat(EtatPartie::NON_DEMARREE),
-        joueurActuelIndex(0),pioche(nullptr), nbTuilesParTour(3), {
+        joueurActuelIndex(0),pioche(nullptr), nbTuilesParTour(3) {
     
     }
 
