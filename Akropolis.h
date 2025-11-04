@@ -91,7 +91,6 @@ pour rapporter des points. Il est possible de jouer avec plusieurs variantes dan
 
         void ajouterJoueur(const string& nom);
         void retirerJoueur(const string& nom);
-        void setModeEtendu(bool etendu) { modeEtendu = etendu; }
         void setDifficulte(NiveauDifficulte diff) { difficulte = diff; }
         void ajouterVariante(const Variante& v) { variantes.push_back(v); }
         void activerVariante(const string& nom);
@@ -104,10 +103,6 @@ pour rapporter des points. Il est possible de jouer avec plusieurs variantes dan
 
     };
 
-    class TableauScore{
-
-
-    };
 
     class Pioche{
         size_t id;
@@ -119,10 +114,62 @@ pour rapporter des points. Il est possible de jouer avec plusieurs variantes dan
         bool estVide(){return nb==0;}
         ~Pioche(){ delete[] tuiles;}
     };
-
+    enum class Orientation {
+        NORD = 0,      // 0°
+        NORD_EST = 1,  // 60°
+        SUD_EST = 2,   // 120°
+        SUD = 3,       // 180°
+        SUD_OUEST = 4, // 240°
+        NORD_OUEST = 5 // 300°
+    };
     class TuileCite{
-        unsigned int hauteur = 1;
+        private : 
+            size_t id;
+            array<HexagoneConstruction*, 3> hexagones;
+            Orientation orientation;
+            unsigned int hauteur=1;
+            bool proprietaire; //true si possède des haxagones (pour la gestion de la mémoire)
+        public : 
+            TuileCite(size_t id, HexagoneConstruction* h1, 
+              HexagoneConstruction* h2, HexagoneConstruction* h3,
+              bool possede = true);
+            ~TuileCite();
+            TuileCite(const TuileCite&)=delete;
+            TuileCite& operator=(const TuileCite& )=delete;
 
+            size_t getId() const { return id; }
+            unsigned int getHauteur() const { return hauteur; }
+            Orientation getOrientation() const { return orientation; }
+            const array<HexagoneConstruction*, 3>& getHexagones() const { 
+                return hexagones; 
+            }
+            HexagoneConstruction* getHexagone(size_t index) const {
+                if (index >= 3) throw GameException("Index hexagone invalide");
+                return hexagones[index];
+            }
+
+            void setHauteur(unsigned int h) { hauteur = h; }
+            void setOrientation(Orientation o) { orientation = o; }
+         
+            void rotationHoraire();
+            void rotationAntihoraire();
+            void setRotation(Orientation nouvelleOrientation);
+    
+            // Vérification du contenu
+            bool contientCarriere() const;
+            bool contientPlace() const;
+            int getNombreQuartiers() const;
+            int getNombreCarrieres() const;
+            
+            // Obtenir les types de quartiers présents
+            vector<Couleur> getCouleursQuartiers() const;
+    
+            // Affichage
+            void afficher(ostream& os = std::cout) const;
+            friend ostream& operator<<(std::ostream& os, const TuileCite& tuile);
+    
+            // Méthode pour cloner une tuile
+            TuileCite* clone() const;
     };
 
     class Cite{
@@ -229,17 +276,22 @@ pour rapporter des points. Il est possible de jouer avec plusieurs variantes dan
     class Type {
         string nom;
         Couleur couleur;
-        string description;
+        string conditions;        
+        Type(const string& nom, Couleur couleur, const string& cond)
+            : nom(nom), couleur(couleur), conditions(cond) {}
     public:
-        Type(const string& nom, Couleur couleur, 
-            const string& description);
+        static const Type HABITATION;
+        static const Type MARCHE;
+        static const Type CASERNE;
+        static const Type TEMPLE;
+        static const Type JARDIN;
     
-        Type(const Type& other);
-        Type& operator=(const Type& other);
+        Type(const Type&)=delete;
+        Type& operator=(const Type&)=delete;
     
-        string getNom() const { return nom; }
+        const string& getNom() const { return nom; }
         Couleur getCouleur() const { return couleur; }
-        string getDescription() const { return description; }
+        const string& getConditions() const { return conditions; }
     };
 
 }

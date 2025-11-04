@@ -173,11 +173,116 @@ void TableauScore::afficherScores(ostream& f) const {
         f << "Joueur " /* << pair.first->getNom() */ << ": " << pair.second << " pts\n";
     }
 }
-    const Type HABITATION("Habitation", Couleur::bleu, "Seules celles du plus grand groupe rapportent des points.");
-    const Type MARCHE("Marché", Couleur::jaune, "Rapporte des points s'il n'est pas adjacent à un autre marché.");
-    const Type CASERNE("Caserne", Couleur::rouge, "Rapporte des points si elle est placée en périphérie de la cité.");
-    const Type TEMPLE("Temple", Couleur::violet, "Rapporte des points si il est entièrement entouré.");
-    const Type JARDIN("Jardin", Couleur::vert, "Rapporte toujours des points, sans contrainte.");
+
+
+    const Type Type::HABITATION("Habitation", Couleur::bleu, "Seules celles du plus grand groupe rapportent des points.");
+    const Type Type::MARCHE("Marché", Couleur::jaune, "Rapporte des points s'il n'est pas adjacent à un autre marché.");
+    const Type Type::CASERNE("Caserne", Couleur::rouge, "Rapporte des points si elle est placée en périphérie de la cité.");
+    const Type Type::TEMPLE("Temple", Couleur::violet, "Rapporte des points si il est entièrement entouré.");
+    const Type Type::JARDIN("Jardin", Couleur::vert, "Rapporte toujours des points, sans contrainte.");
+
+    TuileCite::TuileCite(size_t id, HexagoneConstruction* h1,
+            HexagoneConstruction* h2, HexagoneConstruction* h3,
+            bool possede)
+        : id(id), hexagones{h1, h2, h3}, orientation(Orientation::NORD),
+            hauteur(1), proprietaire(possede) {
+                if (!h1 || !h2 || !h3)
+                    throw GameException("HexagoneConstruction manquant dans TuileCite.");
+            }
+
+    TuileCite::~TuileCite() {
+        if (proprietaire) {
+            for (auto* hex : hexagones) {
+                delete hex;
+            }
+        }
+    }
+    void TuileCite::rotationHoraire() {
+        int orientActuelle = static_cast<int>(orientation);
+        orientation = static_cast<Orientation>((orientActuelle + 1) % 6);
+    }
+
+    void TuileCite::rotationAntihoraire() {
+        int orientActuelle = static_cast<int>(orientation);
+        orientation = static_cast<Orientation>((orientActuelle + 5) % 6);
+    }
+
+    void TuileCite::setRotation(Orientation nouvelleOrientation) {
+        orientation = nouvelleOrientation;
+    }
+
+    bool TuileCite::contientCarriere() const {
+        for (const auto* hex : hexagones) {
+            if (dynamic_cast<const Carriere*>(hex) != nullptr) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    bool TuileCite::contientPlace() const {
+        for (const auto* hex : hexagones) {
+            if (dynamic_cast<const Place*>(hex) != nullptr)
+                return true;
+        }
+        return false;
+    }
+
+    int TuileCite::getNombreQuartiers() const {
+        int count = 0;
+        for (const auto* hex : hexagones) {
+            if (dynamic_cast<const Quartier*>(hex) != nullptr)
+                count++;
+        }
+        return count;
+    }
+
+    int TuileCite::getNombreCarrieres() const {
+        int count = 0;
+        for (const auto* hex : hexagones) {
+            if (dynamic_cast<const Carriere*>(hex) != nullptr)
+                count++;
+        }
+        return count;
+    }
+
+    vector<Couleur> TuileCite::getCouleursQuartiers() const {
+        vector<Couleur> couleurs;
+        for (auto* hex : hexagones) {
+            if (auto* q = dynamic_cast<Quartier*>(hex)) {
+                couleurs.push_back(q->getType().getCouleur());
+            }
+        }
+        return couleurs;
+    }
+    
+    void TuileCite::afficher(ostream& f) const {
+        f << "Tuile #" << id << " (hauteur: " << hauteur 
+        << ", orientation: " << static_cast<int>(orientation) << ")\n";
+        for (size_t i = 0; i < 3; ++i) {
+            f << "  Hexagone " << i << ": ";
+            // Affichage selon le type
+            if (auto* q = dynamic_cast<Quartier*>(hexagones[i])) {
+                f << "Quartier " << q->getCouleur();
+            } else if (auto* p = dynamic_cast<Place*>(hexagones[i])) {
+                f << "Place " << p->getCouleur() << " (" << p->getNbEtoiles() << "★)";
+            } else if (dynamic_cast<Carriere*>(hexagones[i])) {
+                f << "Carrière";
+            }
+            f << "\n";
+        }
+    }
+    ostream& operator<<(ostream& f, const TuileCite& tuile) {
+        tuile.afficher(f);
+        return f;
+    }
+    TuileCite* TuileCite::clone() const {
+        return new TuileCite(id,
+                         hexagones[0], 
+                         hexagones[1], 
+                         hexagones[2],
+                         true); // la tuile clonée possède ses hexagones
+    }
 
 
 
