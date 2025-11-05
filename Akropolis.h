@@ -74,6 +74,7 @@ pour rapporter des points. Il est possible de jouer avec plusieurs variantes dan
         //pioche
         Pioche* pioche;
         vector<TuileCite*> tuilesDisponibles; 
+        vector<TuileDepart*> tuilesDepart; // 4 tuiles de départ 
         size_t nbTuilesParTour;
 
     public:
@@ -81,6 +82,7 @@ pour rapporter des points. Il est possible de jouer avec plusieurs variantes dan
         ~Partie();
         Partie(const Partie&) = delete;
         Partie& operator=(const Partie&) = delete;
+        
 
         ModeJeu getMode() const { return mode; }
         EtatPartie getEtat() const { return etat; }
@@ -90,7 +92,7 @@ pour rapporter des points. Il est possible de jouer avec plusieurs variantes dan
         Pioche* getPioche() const { return pioche; }
         vector<Variante> getVariantesDisponibles() const{ return variantes; }
         vector<Variante> getVariantesActives() const;
-
+        void initialiserTuiles();
         void ajouterJoueur(const string& nom);
         void retirerJoueur(const string& nom);
         void setDifficulte(NiveauDifficulte diff) { difficulte = diff; }
@@ -152,6 +154,11 @@ pour rapporter des points. Il est possible de jouer avec plusieurs variantes dan
         SUD_OUEST = 4, // 240°
         NORD_OUEST = 5 // 300°
     };
+    
+    
+    
+    
+    
     class TuileCite{
         private : 
             size_t id;
@@ -201,6 +208,34 @@ pour rapporter des points. Il est possible de jouer avec plusieurs variantes dan
             // Méthode pour cloner une tuile
             TuileCite* clone() const;
     };
+
+   class TuileDepart {
+    private:
+        size_t id;
+        std::array<HexagoneConstruction*, 4> hexagones; // 0 = centre (Place), 1-3 = Carrières
+    public:
+        // Constructeur : le centre est toujours une Place, les autres sont des Carrières
+        TuileDepart(size_t id, Place* centre, Carriere* c1, Carriere* c2, Carriere* c3)
+            : id(id) 
+        {
+            hexagones[0] = centre; // centre = Place
+            hexagones[1] = c1;
+            hexagones[2] = c2;
+            hexagones[3] = c3;
+        }
+
+        ~TuileDepart() {
+            // On détruit les hexagones
+            for (auto h : hexagones) delete h;
+        }
+
+        size_t getId() const { return id; }
+        const std::array<HexagoneConstruction*,4>& getHexagones() const { return hexagones; }
+        HexagoneConstruction* getHexagone(size_t index) const { 
+            if (index >= 4) throw GameException("Index hexagone invalide");
+            return hexagones[index];
+        }
+   };
 
     class Cite{
     private:
