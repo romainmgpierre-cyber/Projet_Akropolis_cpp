@@ -7,3 +7,4 @@ Ici la liste des remarques entre ce qu'on a prévu et ce qui se passe réellemen
 6. Il faut rajouter un attibut hauteur à TuileCite comme ça on pourra gérer le recouvrement si il y a un empilement de TuileCite (rapportant plus de points)
 7. Erreur : dans le MCD on a dit que une Pioche était composé de 11 tuilesCite masi c'est faux, c'est beaucoup plus
 8. Puisque on utilise des objets "pierres" dans plusieurs classes, pourquoi pas créer une classe "Pierre" (pas obligé mais plus cohérent)
+9.Ajout d'une classe tuiles de départ ressemblante à la classe tuile cité mais avec 4 hexagones. Pas trop de méthodes car leur orientation ainsi que la hauteur ne change pas. 
