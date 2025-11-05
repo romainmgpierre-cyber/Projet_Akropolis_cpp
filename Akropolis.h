@@ -168,8 +168,10 @@ pour rapporter des points. Il est possible de jouer avec plusieurs variantes dan
         NORD_OUEST = 5 // 300°
     };
     
-    
-    
+    class CoordHex{
+        //coordonées axiales q, r,s avec s = -q -r
+        int q, r; 
+    }
     
     
     class TuileCite{
@@ -179,6 +181,7 @@ pour rapporter des points. Il est possible de jouer avec plusieurs variantes dan
             Orientation orientation;
             unsigned int hauteur=1;
             bool proprietaire; //true si possède des haxagones (pour la gestion de la mémoire)
+            CoordHex position; //stocke les coordonées de la tuile
         public : 
             TuileCite(size_t id, HexagoneConstruction* h1, 
               HexagoneConstruction* h2, HexagoneConstruction* h3,
