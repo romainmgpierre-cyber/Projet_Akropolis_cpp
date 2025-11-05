@@ -103,9 +103,22 @@ pour rapporter des points. Il est possible de jouer avec plusieurs variantes dan
 
     };
 
-    class Joueur{
-
-    };
+    class Joueur { 
+    private : 
+        string nom; 
+        int nbPierres 
+        Cite* cite;
+        TableauScore* tableauScore; 
+    public : 
+        Joueur(const string& nom, size_t capaciteCite = 25)
+        ~Joueur();
+        Joueur(const Joueur&) = delete;
+        Joueur& operator=(const Joueur&) = delete;
+        const string& getNom() const { return nom; }
+        int getNbPierres() const { return nbPierres; }
+        Cite* getCite() const { return cite; }
+        TableauScore* getTableauScore() const { return tableauScore; }
+    }
 
 
     class Pioche{
@@ -358,6 +371,8 @@ pour rapporter des points. Il est possible de jouer avec plusieurs variantes dan
         Couleur getCouleur() const { return couleur; }
         const string& getConditions() const { return conditions; }
     };
+
+
 
 }
 
