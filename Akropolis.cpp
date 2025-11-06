@@ -178,6 +178,51 @@ void Joueur::setNom(const string& nouveauNom) {
     nom = nouveauNom;
 }
 
+void Joueur::retirerPierre() {
+    if (nbPierres <= 0) {
+        throw GameException("Le joueur " + nom + " n'a pas de pierres à retirer");
+    }
+    nbPierres--;
+}
+
+void Joueur::retirerPierres(int n) {
+    if (n < 0) {
+        throw GameException("Impossible de retirer un nombre négatif de pierres");
+    }
+    if (n == 0) {
+        return; 
+    }
+    
+    if (nbPierres < n) {
+        throw GameException("Le joueur n'as pas assez de pierre");
+    }
+    nbPierres -= n;
+}
+
+void Joueur::afficher(ostream& f) const {
+    f << "=== Joueur: " << nom << " ===\n";
+    f << "Pierres: " << nbPierres << "\n";
+    f << "Nombre de tuiles dans la cité: " << cite->getnb() << "\n";
+    
+    if (tableauScore != nullptr) {
+        f << "Score actuel: " << calculerScore() << "\n";
+    }
+    
+    f << "Cité:\n";
+    cite->afficher(f);
+}
+
+ostream& operator<<(ostream& f, const Joueur& joueur) {
+    joueur.afficher(f);
+    return f;
+}
+
+int Joueur::calculerScore() const {
+    if (tableauScore != nullptr) {
+        return tableauScore->calculerScore(*this);
+    }
+    return 0;
+}
 
 
 //FIN DE LA CLASSE JOUEUR  
