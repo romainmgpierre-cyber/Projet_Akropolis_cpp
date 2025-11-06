@@ -114,10 +114,23 @@ pour rapporter des points. Il est possible de jouer avec plusieurs variantes dan
         ~Joueur();
         Joueur(const Joueur&) = delete;
         Joueur& operator=(const Joueur&) = delete;
+
         const string& getNom() const { return nom; }
         int getNbPierres() const { return nbPierres; }
         Cite* getCite() const { return cite; }
         TableauScore* getTableauScore() const { return tableauScore; }
+        void setNom(const string& nouveauNom) { nom = nouveauNom; }
+        void setTableauScore(TableauScore* ts) { tableauScore = ts; }
+
+        void ajouterPierre() { nbPierres++; }
+        void ajouterPierres(int n);
+        void retirerPierre();
+        void retirerPierres(int n);
+        bool peutPayerPierres(int n) const { return nbPierres >= n;}
+        void ajouterTuile(const TuileCite& tuile) { cite->ajouter(tuile);}
+        void afficher(ostream& f = cout) const;
+        friend ostream& operator<<(ostream& f, const Joueur& joueur);
+        int calculerScore() const;
     }
 
 

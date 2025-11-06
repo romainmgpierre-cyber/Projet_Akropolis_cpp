@@ -157,6 +157,21 @@ namespace Akropolis{
         }
         return actives;
     }
+
+// DÉBUT CLASSE JOUEUR 
+Joueur::Joueur(const string& nom, size_t capaciteCite)
+    : nom(nom), nbPierres(0), cite(new Cite(capaciteCite)), tableauScore(nullptr) {
+    
+    if (nom.empty()) {
+        throw GameException("Le nom du joueur ne peut pas être vide");
+    }
+}
+
+Joueur::~Joueur() {
+    delete cite;
+}
+
+
     // --- CalculScoreRecouvrement ---
 int CalculScoreRecouvrement::calculerScore(const Joueur& joueur) const {
     // TODO : Calculer les points liés aux tuiles recouvertes pour ce joueur
