@@ -170,7 +170,15 @@ Joueur::Joueur(const string& nom, size_t capaciteCite)
 Joueur::~Joueur() {
     delete cite;
 }
-w
+
+void Joueur::setNom(const string& nouveauNom) {
+    if (nouveauNom.empty()) {
+        throw GameException("Le nom du joueur ne peut pas être vide");
+    }
+    nom = nouveauNom;
+}
+
+
 
 //FIN DE LA CLASSE JOUEUR  
 

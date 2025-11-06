@@ -119,7 +119,7 @@ pour rapporter des points. Il est possible de jouer avec plusieurs variantes dan
         int getNbPierres() const { return nbPierres; }
         Cite* getCite() const { return cite; }
         TableauScore* getTableauScore() const { return tableauScore; }
-        void setNom(const string& nouveauNom) { nom = nouveauNom; }
+        void setNom(const string& nouveauNom);
         void setTableauScore(TableauScore* ts) { tableauScore = ts; }
 
         void ajouterPierre() { nbPierres++; }
