@@ -158,15 +158,6 @@ pour rapporter des points. Il est possible de jouer avec plusieurs variantes dan
 
 
 
-
-    enum class Orientation {
-        NORD = 0,      // 0°
-        NORD_EST = 1,  // 60°
-        SUD_EST = 2,   // 120°
-        SUD = 3,       // 180°
-        SUD_OUEST = 4, // 240°
-        NORD_OUEST = 5 // 300°
-    };
     
     class CoordHex{
         //coordonées axiales q, r,s avec s = -q -r
@@ -179,7 +170,6 @@ pour rapporter des points. Il est possible de jouer avec plusieurs variantes dan
             size_t id;
             array<HexagoneConstruction*, 3> hexagones;
             array<CoordHex, 3> positions; //on stocke les coordonées des 3 tuiles; 
-            Orientation orientation;
             unsigned int hauteur=1;
             bool proprietaire; //true si possède des haxagones (pour la gestion de la mémoire)
             
@@ -192,8 +182,6 @@ pour rapporter des points. Il est possible de jouer avec plusieurs variantes dan
             TuileCite& operator=(const TuileCite& )=delete;
 
             size_t getId() const { return id; }
-            unsigned int getHauteur() const { return hauteur; }
-            Orientation getOrientation() const { return orientation; }
             const array<HexagoneConstruction*, 3>& getHexagones() const { 
                 return hexagones; 
             }
@@ -203,26 +191,19 @@ pour rapporter des points. Il est possible de jouer avec plusieurs variantes dan
             }
 
             void setHauteur(unsigned int h) { hauteur = h; }
-            void setOrientation(Orientation o) { orientation = o; }
          
             void rotationHoraire();
             void rotationAntihoraire();
-            void setRotation(Orientation nouvelleOrientation);
-    
-            // Vérification du contenu
+
             bool contientCarriere() const;
             bool contientPlace() const;
             int getNombreQuartiers() const;
             int getNombreCarrieres() const;
-            
-            // Obtenir les types de quartiers présents
             vector<Couleur> getCouleursQuartiers() const;
     
-            // Affichage
             void afficher(ostream& os = std::cout) const;
             friend ostream& operator<<(std::ostream& os, const TuileCite& tuile);
     
-            // Méthode pour cloner une tuile
             TuileCite* clone() const;
     };
 

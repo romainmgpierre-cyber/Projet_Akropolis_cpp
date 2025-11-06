@@ -211,8 +211,7 @@ void TableauScore::afficherScores(ostream& f) const {
     TuileCite::TuileCite(size_t id, HexagoneConstruction* h1,
             HexagoneConstruction* h2, HexagoneConstruction* h3,
             bool possede)
-        : id(id), hexagones{h1, h2, h3}, orientation(Orientation::NORD),
-            hauteur(1), proprietaire(possede) {
+        : id(id), hexagones{h1, h2, h3}, hauteur(1), proprietaire(possede) {
                 if (!h1 || !h2 || !h3)
                     throw GameException("HexagoneConstruction manquant dans TuileCite.");
             }
@@ -223,19 +222,6 @@ void TableauScore::afficherScores(ostream& f) const {
                 delete hex;
             }
         }
-    }
-    void TuileCite::rotationHoraire() {
-        int orientActuelle = static_cast<int>(orientation);
-        orientation = static_cast<Orientation>((orientActuelle + 1) % 6);
-    }
-
-    void TuileCite::rotationAntihoraire() {
-        int orientActuelle = static_cast<int>(orientation);
-        orientation = static_cast<Orientation>((orientActuelle + 5) % 6);
-    }
-
-    void TuileCite::setRotation(Orientation nouvelleOrientation) {
-        orientation = nouvelleOrientation;
     }
 
     bool TuileCite::contientCarriere() const {
@@ -284,8 +270,7 @@ void TableauScore::afficherScores(ostream& f) const {
     }
     
     void TuileCite::afficher(ostream& f) const {
-        f << "Tuile #" << id << " (hauteur: " << hauteur 
-        << ", orientation: " << static_cast<int>(orientation) << ")\n";
+        f << "Tuile #" << id << " (hauteur: " << hauteur << ")\n";
         for (size_t i = 0; i < 3; ++i) {
             f << "  Hexagone " << i << ": ";
             // Affichage selon le type
