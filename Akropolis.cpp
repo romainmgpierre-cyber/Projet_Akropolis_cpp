@@ -170,6 +170,9 @@ Joueur::Joueur(const string& nom, size_t capaciteCite)
 Joueur::~Joueur() {
     delete cite;
 }
+w
+
+//FIN DE LA CLASSE JOUEUR  
 
 
     // --- CalculScoreRecouvrement ---
