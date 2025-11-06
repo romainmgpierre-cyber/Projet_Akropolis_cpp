@@ -106,7 +106,7 @@ pour rapporter des points. Il est possible de jouer avec plusieurs variantes dan
     class Joueur { 
     private : 
         string nom; 
-        int nbPierres 
+        int nbPierres; 
         Cite* cite;
         TableauScore* tableauScore; 
     public : 
@@ -131,7 +131,7 @@ pour rapporter des points. Il est possible de jouer avec plusieurs variantes dan
         void afficher(ostream& f = cout) const;
         friend ostream& operator<<(ostream& f, const Joueur& joueur);
         int calculerScore() const;
-    }
+    };
 
 
     class Pioche{
