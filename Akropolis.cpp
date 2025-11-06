@@ -178,6 +178,15 @@ void Joueur::setNom(const string& nouveauNom) {
     nom = nouveauNom;
 }
 
+void Joueur::ajouterPierres(int n) {
+    if (n < 0) {
+        throw GameException("Impossible d'ajouter un nombre négatif de pierres");
+    }
+    if (n > 0) {
+        nbPierres += n;
+    }
+}
+
 void Joueur::retirerPierre() {
     if (nbPierres <= 0) {
         throw GameException("Le joueur " + nom + " n'a pas de pierres à retirer");
