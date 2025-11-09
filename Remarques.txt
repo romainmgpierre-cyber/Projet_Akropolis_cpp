@@ -8,3 +8,7 @@ Ici la liste des remarques entre ce qu'on a prévu et ce qui se passe réellemen
 7. Erreur : dans le MCD on a dit que une Pioche était composé de 11 tuilesCite masi c'est faux, c'est beaucoup plus
 8. Puisque on utilise des objets "pierres" dans plusieurs classes, pourquoi pas créer une classe "Pierre" (pas obligé mais plus cohérent)
 9.Ajout d'une classe tuiles de départ ressemblante à la classe tuile cité mais avec 4 hexagones. Pas trop de méthodes car leur orientation ainsi que la hauteur ne change pas. 
+
+10. Il faut redéfinir les tâches et les prioriser (attendu dans le rapport) : d'abord développer le jeu en mode console (jeu simple pouvant se jouer de 1 à 4 joueurs) -- prioritée indispensable.
+Quand le jeu est jouable --> répartir les tâches dans le groupe : qqln commence le développement de l'interface Qt (prioritée indispensable), qqln d'autres s'occupent de développer les variantes (prioritée importante), qqln d'autres de pouvoir gérer les paramètres du jeu (abandon, reprise,...)(prioritée importante) et qqln d'autres se charge de développer le mode illustre constructeur (prioritée importante)
+11 Reste à définir et rerépartir les tâches pour développer le mode simple --> déterminer une échéance max pour ce mode
