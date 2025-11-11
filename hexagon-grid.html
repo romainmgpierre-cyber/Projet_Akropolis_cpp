@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grille Hexagonale Interactive</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    
+    <script type="text/babel">
+        const { useState, useRef, useEffect } = React;
+        
+        const HexGrid = ({ title }) => {
+          const canvasRef = useRef(null);
+          const [radius, setRadius] = useState(8);
+          const [selectedColor, setSelectedColor] = useState('#ffeb3b');
+          const [hexColors, setHexColors] = useState({});
+          const [hexStars, setHexStars] = useState({});
+          const [selectedStars, setSelectedStars] = useState(0);
+          const [offsetX, setOffsetX] = useState(0);
+          const [offsetY, setOffsetY] = useState(0);
+          const [isDragging, setIsDragging] = useState(false);
+          const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+          
+          const colors = [
+            { name: 'Jaune', value: '#ffeb3b' },
+            { name: 'Vert', value: '#4caf50' },
+            { name: 'Bleu', value: '#2196f3' },
+            { name: 'Violet', value: '#9c27b0' },
+            { name: 'Gris', value: '#9e9e9e' },
+            { name: 'Rouge', value: '#f44336' }
+          ];
+          
+          const cubeToPixel = (q, r, hexSize, centerX, centerY) => {
+            const x = hexSize * Math.sqrt(3) * (q + r/2);
+            const y = hexSize * (3/2) * r;
+            return [centerX + x + offsetX, centerY + y + offsetY];
+          };
+          
+          const pointInHexagon = (px, py, hx, hy, size) => {
+            const dx = Math.abs(px - hx);
+            const dy = Math.abs(py - hy);
+            if (dx > size * Math.sqrt(3) / 2 || dy > size) return false;
+            return size * 1.5 - Math.sqrt(3) / 2 * dx - dy / 2 >= 0;
+          };
+          
+          const getHexAtPoint = (px, py, hexSize, centerX, centerY) => {
+            for (let q = -radius; q <= radius; q++) {
+              for (let r = -radius; r <= radius; r++) {
+                const s = -q - r;
+                if (Math.abs(s) <= radius) {
+                  const [x, y] = cubeToPixel(q, r, hexSize, centerX, centerY);
+                  if (pointInHexagon(px, py, x, y, hexSize)) {
+                    return { q, r, s };
+                  }
+                }
+              }
+            }
+            return null;
+          };
+          
+          const drawGrid = () => {
+            const canvas = canvasRef.current;
+            if (!canvas) return;
+            
+            const ctx = canvas.getContext('2d');
+            const hexSize = 35;
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            
+            const drawHexagon = (x, y, size, fill = 'white', stroke = '#333') => {
+              ctx.beginPath();
+              for (let i = 0; i < 6; i++) {
+                const angle = (Math.PI / 3) * i - Math.PI / 6;
+                const hx = x + size * Math.cos(angle);
+                const hy = y + size * Math.sin(angle);
+                if (i === 0) ctx.moveTo(hx, hy);
+                else ctx.lineTo(hx, hy);
+              }
+              ctx.closePath();
+              ctx.fillStyle = fill;
+              ctx.fill();
+              ctx.strokeStyle = stroke;
+              ctx.lineWidth = 1.5;
+              ctx.stroke();
+            };
+            
+            const drawStars = (x, y, count) => {
+              const starSize = 10;
+              const spacing = 14;
+              const startX = x - ((count - 1) * spacing) / 2;
+              
+              for (let i = 0; i < count; i++) {
+                const sx = startX + i * spacing;
+                const sy = y;
+                
+                const drawStar = (cx, cy, size) => {
+                  ctx.beginPath();
+                  for (let j = 0; j < 10; j++) {
+                    const radius = j % 2 === 0 ? size : size * 0.4;
+                    const angle = (Math.PI * 2 * j) / 10 - Math.PI / 2;
+                    const px = cx + Math.cos(angle) * radius;
+                    const py = cy + Math.sin(angle) * radius;
+                    if (j === 0) ctx.moveTo(px, py);
+                    else ctx.lineTo(px, py);
+                  }
+                  ctx.closePath();
+                };
+                
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+                ctx.shadowBlur = 3;
+                ctx.shadowOffsetX = 1;
+                ctx.shadowOffsetY = 1;
+                
+                drawStar(sx, sy, starSize);
+                ctx.fillStyle = '#FFD700';
+                ctx.fill();
+                
+                ctx.shadowColor = 'transparent';
+                ctx.strokeStyle = '#FFA500';
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+              }
+            };
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            for (let q = -radius; q <= radius; q++) {
+              for (let r = -radius; r <= radius; r++) {
+                const s = -q - r;
+                if (Math.abs(s) <= radius) {
+                  const [x, y] = cubeToPixel(q, r, hexSize, centerX, centerY);
+                  const key = `${q},${r}`;
+                  const color = hexColors[key] || 'white';
+                  drawHexagon(x, y, hexSize, color);
+                  
+                  const stars = hexStars[key];
+                  if (stars && stars > 0) {
+                    drawStars(x, y, stars);
+                  }
+                  
+                  ctx.fillStyle = '#333';
+                  ctx.font = '10px Arial';
+                  ctx.textAlign = 'center';
+                  ctx.textBaseline = 'middle';
+                  
+                  ctx.fillText(`${q > 0 ? '+' : ''}${q}`, x, y - 8);
+                  ctx.fillText(`${r > 0 ? '+' : ''}${r}`, x + 12, y + 8);
+                  ctx.fillText(`${s > 0 ? '+' : ''}${s}`, x - 12, y + 8);
+                }
+              }
+            }
+            
+            ctx.fillStyle = '#4caf50';
+            ctx.font = 'bold 14px Arial';
+            ctx.fillText('+q', centerX + offsetX + hexSize * Math.sqrt(3) * (radius + 1), centerY + offsetY);
+            
+            ctx.fillStyle = '#2196f3';
+            ctx.fillText('+r', centerX + offsetX, centerY + offsetY + hexSize * 1.5 * (radius + 0.7));
+            
+            ctx.fillStyle = '#ff9800';
+            ctx.fillText('+s', centerX + offsetX - hexSize * Math.sqrt(3) * (radius + 1), centerY + offsetY);
+          };
+          
+          useEffect(() => {
+            drawGrid();
+          }, [radius, hexColors, hexStars, offsetX, offsetY]);
+          
+          const handleCanvasClick = (e) => {
+            if (isDragging) return;
+            const canvas = canvasRef.current;
+            const rect = canvas.getBoundingClientRect();
+            const px = e.clientX - rect.left;
+            const py = e.clientY - rect.top;
+            
+            const hexSize = 35;
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            
+            const hex = getHexAtPoint(px, py, hexSize, centerX, centerY);
+            if (hex) {
+              const key = `${hex.q},${hex.r}`;
+              
+              if (selectedStars > 0) {
+                setHexStars(prev => {
+                  if (prev[key] === selectedStars) {
+                    const newStars = { ...prev };
+                    delete newStars[key];
+                    return newStars;
+                  }
+                  return { ...prev, [key]: selectedStars };
+                });
+              } else {
+                setHexColors(prev => {
+                  if (prev[key] === selectedColor) {
+                    const newColors = { ...prev };
+                    delete newColors[key];
+                    return newColors;
+                  }
+                  return { ...prev, [key]: selectedColor };
+                });
+              }
+            }
+          };
+          
+          const handleMouseDown = (e) => {
+            setIsDragging(true);
+            setDragStart({ x: e.clientX - offsetX, y: e.clientY - offsetY });
+          };
+          
+          const handleMouseMove = (e) => {
+            if (isDragging) {
+              setOffsetX(e.clientX - dragStart.x);
+              setOffsetY(e.clientY - dragStart.y);
+            }
+          };
+          
+          const handleMouseUp = () => {
+            setIsDragging(false);
+          };
+          
+          return (
+            <div className="bg-white p-6 rounded-lg shadow-lg">
+              <h3 className="text-xl font-bold mb-4 text-center text-gray-800">
+                {title}
+              </h3>
+              
+              <div className="mb-4 flex flex-wrap gap-2 justify-center">
+                {colors.map(color => (
+                  <button
+                    key={color.value}
+                    onClick={() => {
+                      setSelectedColor(color.value);
+                      setSelectedStars(0);
+                    }}
+                    className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                      selectedColor === color.value && selectedStars === 0
+                        ? 'ring-4 ring-offset-2 ring-blue-500 scale-105' 
+                        : 'hover:scale-105'
+                    }`}
+                    style={{ 
+                      backgroundColor: color.value,
+                      color: color.value === '#ffeb3b' ? '#333' : 'white'
+                    }}
+                  >
+                    {color.name}
+                  </button>
+                ))}
+              </div>
+              
+              <div className="mb-4 flex flex-wrap gap-2 justify-center items-center">
+                <span className="text-gray-700 font-medium">Étoiles:</span>
+                {[1, 2, 3].map(num => (
+                  <button
+                    key={num}
+                    onClick={() => setSelectedStars(num)}
+                    className={`px-4 py-2 rounded-lg font-medium transition-all bg-yellow-400 hover:bg-yellow-500 ${
+                      selectedStars === num
+                        ? 'ring-4 ring-offset-2 ring-blue-500 scale-105' 
+                        : 'hover:scale-105'
+                    }`}
+                  >
+                    {'⭐'.repeat(num)}
+                  </button>
+                ))}
+              </div>
+              
+              <canvas 
+                ref={canvasRef} 
+                width={800} 
+                height={800}
+                className="border-2 border-gray-300 rounded"
+                style={{ cursor: isDragging ? 'grabbing' : 'move' }}
+                onClick={handleCanvasClick}
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+              />
+              
+              <div className="mt-4 flex items-center gap-4 justify-center">
+                <label className="text-gray-700 font-medium">Rayon:</label>
+                <input 
+                  type="range" 
+                  min="3" 
+                  max="12" 
+                  value={radius}
+                  onChange={(e) => setRadius(Number(e.target.value))}
+                  className="w-64"
+                />
+                <span className="text-xl font-bold text-gray-800">{radius}</span>
+              </div>
+              
+              <div className="mt-4 flex gap-2 justify-center">
+                <button
+                  onClick={() => {
+                    setHexColors({});
+                    setHexStars({});
+                    setOffsetX(0);
+                    setOffsetY(0);
+                  }}
+                  className="px-6 py-2 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-colors"
+                >
+                  Effacer tout
+                </button>
+                <button
+                  onClick={() => {
+                    setOffsetX(0);
+                    setOffsetY(0);
+                  }}
+                  className="px-6 py-2 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors"
+                >
+                  Recentrer
+                </button>
+              </div>
+              
+              <div className="mt-4 text-sm text-gray-600 text-center">
+                <p>🎨 Sélectionnez une couleur ou des étoiles puis cliquez sur un hexagone</p>
+                <p className="mt-1">🖱️ Cliquez et glissez pour vous déplacer</p>
+              </div>
+            </div>
+          );
+        };
+        
+        const App = () => {
+          const [showTwoPlayers, setShowTwoPlayers] = useState(false);
+          
+          return (
+            <div className="flex flex-col items-center gap-8 p-6 bg-gray-50 min-h-screen">
+              <h1 className="text-3xl font-bold text-gray-800">Grille Hexagonale - Deux Joueurs</h1>
+              
+              <div className="flex items-center gap-3">
+                <input 
+                  type="checkbox" 
+                  id="twoPlayersCheckbox"
+                  checked={showTwoPlayers}
+                  onChange={(e) => setShowTwoPlayers(e.target.checked)}
+                  className="w-5 h-5 cursor-pointer"
+                />
+                <label htmlFor="twoPlayersCheckbox" className="text-lg font-medium text-gray-700 cursor-pointer">
+                  Mode deux joueurs
+                </label>
+              </div>
+              
+              <div className="flex flex-col gap-8 max-w-7xl">
+                <HexGrid title="Joueur 1" />
+                {showTwoPlayers && <HexGrid title="Joueur 2" />}
+              </div>
+            </div>
+          );
+        };
+        
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
