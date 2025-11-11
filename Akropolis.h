@@ -18,7 +18,7 @@ namespace Akropolis{
 		string info;
 	};
 
-    enum class Couleur { rouge, violet, vert, bleu, gris };
+    enum class Couleur { rouge, violet, vert, bleu, jaune, gris };
     enum class Etoile { un=1, deux=2, trois=3 };
     
     string toString(Couleur c);
@@ -110,7 +110,7 @@ pour rapporter des points. Il est possible de jouer avec plusieurs variantes dan
         Cite* cite;
         TableauScore* tableauScore; 
     public : 
-        Joueur(const string& nom, size_t capaciteCite = 25)
+        Joueur(const string& nom, size_t capaciteCite = 25);
         ~Joueur();
         Joueur(const Joueur&) = delete;
         Joueur& operator=(const Joueur&) = delete;
@@ -175,7 +175,7 @@ pour rapporter des points. Il est possible de jouer avec plusieurs variantes dan
     class CoordHex{
         //coordonées axiales q, r,s avec s = -q -r
         int q, r; 
-    }
+    };
     
     
     class TuileCite{
@@ -275,6 +275,8 @@ pour rapporter des points. Il est possible de jouer avec plusieurs variantes dan
             size_t id;
         public:
             HexagoneConstruction(size_t id) : id(id) {}
+            virtual ~HexagoneConstruction() = default;
+            size_t getId() const { return id; } 
 
     };
 
@@ -292,13 +294,13 @@ pour rapporter des points. Il est possible de jouer avec plusieurs variantes dan
     class Place : public HexagoneConstruction{
         private:
             const Type* type; // association vers Type
-            Etoile nbetoile;
+            size_t nbetoile=0;
         public:
-            Place(size_t id, const Type& type, Etoile nbetoile)
+            Place(size_t id, const Type& type, size_t nbetoile=0)
                 : HexagoneConstruction(id), type(&type), nbetoile(nbetoile) {}
 
             const Type& getType() const { return *type; }
-            Etoile getNbEtoile() const { return nbetoile; }
+            size_t getNbEtoile() const { return nbetoile; }
     };
 
     class Carriere : public HexagoneConstruction{

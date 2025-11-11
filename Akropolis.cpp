@@ -2,17 +2,18 @@
 using namespace std;
 namespace Akropolis{ 
 
-    initializer_list<Couleur> Couleurs = { Couleur::rouge, Couleur::violet, Couleur::vert, Couleur::bleu, Couleur::gris };
+    initializer_list<Couleur> Couleurs = { Couleur::rouge, Couleur::violet, Couleur::vert, Couleur::bleu, Couleur::jaune, Couleur::gris };
 	initializer_list<Etoile> Etoiles = { Etoile::un, Etoile::deux, Etoile::trois };
 
 
     string toString(Couleur c) {
 		switch (c) { 
 		case Couleur::rouge: return "Rouge";
-		case Couleur::bleu: return "BLeu";
+		case Couleur::bleu: return "Bleu";
 		case Couleur::vert: return "Vert";
         case Couleur::violet: return "Violet";
-        case Couleur::gris: return "Gris"; //couleur par défaut pour les carrières
+        case Couleur::jaune: return "Jaune";
+        case Couleur::gris: return "Gris";
 		default: throw GameException("Couleur inconnue");
 		}
 	}
@@ -22,6 +23,7 @@ namespace Akropolis{
             case Etoile::un: return "*";
             case Etoile::deux: return "2*";
             case Etoile::trois: return "3*";
+            default: throw GameException("Etoile inconnue");
         }
     }
 
@@ -353,11 +355,10 @@ void TableauScore::afficherScores(ostream& f) const {
         f << "Tuile #" << id << " (hauteur: " << hauteur << ")\n";
         for (size_t i = 0; i < 3; ++i) {
             f << "  Hexagone " << i << ": ";
-            // Affichage selon le type
             if (auto* q = dynamic_cast<Quartier*>(hexagones[i])) {
-                f << "Quartier " << q->getCouleur();
+                f << "Quartier " << q->getType().getCouleur();
             } else if (auto* p = dynamic_cast<Place*>(hexagones[i])) {
-                f << "Place " << p->getCouleur() << " (" << p->getNbEtoiles() << "★)";
+                f << "Place " << p->getType().getCouleur() << " (" << p->getNbEtoile() << "★)";
             } else if (dynamic_cast<Carriere*>(hexagones[i])) {
                 f << "Carrière";
             }

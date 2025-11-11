@@ -1,4 +1,6 @@
 Ici la liste des remarques entre ce qu'on a prévu et ce qui se passe réellement :
+
+Remarques entre le premier et le deuxième rapport
 1. Le temps de création des classes prévu est disproportionné par rapport au temps que cela prend réellement
 2. La classe Type à le mérite de devenir un classe d'énumération -> tout ce qui nous intéresse pour définir les quartiers et les places sont uniquement leur couleur et le nombre d'étoiles (pour les places)
 3. Correction à faire dans le MCD, comme Carrière, Quartier et Place hérite de HexagoneConstruction alors on ne doit pas retrouver les attributs id dans les classes Filles
@@ -12,3 +14,6 @@ Ici la liste des remarques entre ce qu'on a prévu et ce qui se passe réellemen
 10. Il faut redéfinir les tâches et les prioriser (attendu dans le rapport) : d'abord développer le jeu en mode console (jeu simple pouvant se jouer de 1 à 4 joueurs) -- prioritée indispensable.
 Quand le jeu est jouable --> répartir les tâches dans le groupe : qqln commence le développement de l'interface Qt (prioritée indispensable), qqln d'autres s'occupent de développer les variantes (prioritée importante), qqln d'autres de pouvoir gérer les paramètres du jeu (abandon, reprise,...)(prioritée importante) et qqln d'autres se charge de développer le mode illustre constructeur (prioritée importante)
 11 Reste à définir et rerépartir les tâches pour développer le mode simple --> déterminer une échéance max pour ce mode
+
+Remarques entre le deuxième et le troisième rapport 
+1. Au final la classe pierre est inutile et plus compliquée à gérer que si on créer des attributs nbpierre dans les autres classes --> on l'a donc supprimé
