@@ -38,257 +38,13 @@ namespace Akropolis{
         for (auto e : Etoiles) f << e << " ";
         f << "\n";
     }
-
-    const TuileCite& Pioche::piocher(){
-        if (estVide()) throw GameException("Pioche Vide");
-        int i = rand() % nb; //tire un numéro de carte au hasard
-        const TuileCite* tmp = tuiles[i];
-        tuiles[i]=tuiles[--nb];
-        return *tmp;
-    }
-
-    bool ChoixTuile::ajouterTuile(TuileCite* tuile) {
-            if (tuilesDisponibles.size() < MAX_TUILES) {
-                tuilesDisponibles.push_back(tuile);
-                return true;
-            }
-            return false; // Déjà plein
-        }
-    
-    bool ChoixTuile::retirerTuile(size_t tuileId) {
-            auto it = std::find_if(tuilesDisponibles.begin(), tuilesDisponibles.end(),
-                [tuileId](TuileCite* t) { return t->getId() == tuileId; });
-            if (it != tuilesDisponibles.end()) {
-                tuilesDisponibles.erase(it);
-                return true;
-            }
-            return false; // Tuile non trouvée
-        }
-
-    void Cite::ajouter(const TuileCite &t) {
-        if (nb == nb_max) {
-            size_t new_max = (nb_max + 1) * 2; // appels logarithmique
-
-            // création d'un tableau plus grand si le tabelau est déjà remplis
-            auto newtab = new const TuileCite * [new_max];
-
-            // recopie des adresses des Tuiles citées dans le nouveau tableau
-            for (size_t i = 0; i < nb; i++)
-                newtab[i] = tuile_cites[i];
-
-            // on met a jour la taille max
-            nb_max = new_max;
-            
-            // desalocation de l'ancien tableau
-            auto old = tuile_cites;
-            tuile_cites = newtab;
-            delete[] old;
-        }
-        tuile_cites[nb++] = &t;
-    }
-	
-    Partie::Partie(size_t id, ModeJeu mode)
-        : id(id), mode(mode), etat(EtatPartie::NON_DEMARREE),
-        joueurActuelIndex(0),pioche(nullptr), nbTuilesParTour(3) {
-    
-    }
-
-    Partie::~Partie() {
-        for (auto* joueur : joueurs) {
-            delete joueur;
-        }
-        delete pioche;
-        for (auto* tuile : tuilesDisponibles) {
-            delete tuile;
-        }
-    }
-
-    void Partie::ajouterJoueur(const string& nom) {
-        if (etat != EtatPartie::NON_DEMARREE) {
-            throw GameException("Impossible d'ajouter un joueur en cours de partie");
-        }
-        if (joueurs.size() >= 4) {
-            throw GameException("Maximum 4 joueurs");
-        }
-        joueurs.push_back(new Joueur(nom));
-    }
-
-    void Partie::retirerJoueur(const string& nom) {
-        if (etat != EtatPartie::NON_DEMARREE) {
-            throw GameException("Impossible de retirer un joueur en cours de partie");
-        }
-        auto it = find_if(joueurs.begin(), joueurs.end(),
-            [&nom](const Joueur* j) { return j->getNom() == nom; });
-        if (it == joueurs.end()) {
-            throw GameException("Joueur '" + nom + "' introuvable");
-        }
-        delete *it;  // Libérer la mémoire
-        joueurs.erase(it);
-
-    }
-
-    void Partie::activerVariante(const string& nom) {
-        if (etat != EtatPartie::NON_DEMARREE) {
-            throw GameException("Impossible de modifier les variantes en cours de partie");
-        }
-        auto it = find_if(variantes.begin(), variantes.end(),
-            [&nom](const Variante& v) { return v.getNom() == nom; });
-    
-        if (it == variantes.end()) {
-            throw GameException("Variante '" + nom + "' introuvable");
-        }
-        it->activer();
-    }
-
-
-    void Partie::desactiverVariante(const string& nom) {
-        auto it = find_if(variantes.begin(), variantes.end(),
-            [&nom](const Variante& v) { return v.getNom() == nom; });
-        if (it == variantes.end()) {
-            throw GameException("Variante '" + nom + "' introuvable");
-        }
-        it->desactiver();
-    }
-
-    vector<Variante> Partie::getVariantesActives() const {
-        vector<Variante> actives;
-        for (const auto& v : variantes) {
-            if (v.estActive()) {
-                actives.push_back(v);
-            }
-        }
-        return actives;
-    }
-
-// DÉBUT CLASSE JOUEUR 
-Joueur::Joueur(const string& nom, size_t capaciteCite)
-    : nom(nom), nbPierres(0), cite(new Cite(capaciteCite)), tableauScore(nullptr) {
-    
-    if (nom.empty()) {
-        throw GameException("Le nom du joueur ne peut pas être vide");
-    }
-}
-
-Joueur::~Joueur() {
-    delete cite;
-}
-
-void Joueur::setNom(const string& nouveauNom) {
-    if (nouveauNom.empty()) {
-        throw GameException("Le nom du joueur ne peut pas être vide");
-    }
-    nom = nouveauNom;
-}
-
-void Joueur::ajouterPierres(int n) {
-    if (n < 0) {
-        throw GameException("Impossible d'ajouter un nombre négatif de pierres");
-    }
-    if (n > 0) {
-        nbPierres += n;
-    }
-}
-
-void Joueur::retirerPierre() {
-    if (nbPierres <= 0) {
-        throw GameException("Le joueur " + nom + " n'a pas de pierres à retirer");
-    }
-    nbPierres--;
-}
-
-void Joueur::retirerPierres(int n) {
-    if (n < 0) {
-        throw GameException("Impossible de retirer un nombre négatif de pierres");
-    }
-    if (n == 0) {
-        return; 
-    }
-    
-    if (nbPierres < n) {
-        throw GameException("Le joueur n'as pas assez de pierre");
-    }
-    nbPierres -= n;
-}
-
-void Joueur::afficher(ostream& f) const {
-    f << "=== Joueur: " << nom << " ===\n";
-    f << "Pierres: " << nbPierres << "\n";
-    f << "Nombre de tuiles dans la cité: " << cite->getnb() << "\n";
-    
-    if (tableauScore != nullptr) {
-        f << "Score actuel: " << calculerScore() << "\n";
-    }
-    
-    f << "Cité:\n";
-    cite->afficher(f);
-}
-
-ostream& operator<<(ostream& f, const Joueur& joueur) {
-    joueur.afficher(f);
-    return f;
-}
-
-int Joueur::calculerScore() const {
-    if (tableauScore != nullptr) {
-        return tableauScore->calculerScore(*this);
-    }
-    return 0;
-}
-
-
-//FIN DE LA CLASSE JOUEUR  
-
-
-    // --- CalculScoreRecouvrement ---
-int CalculScoreRecouvrement::calculerScore(const Joueur& joueur) const {
-    // TODO : Calculer les points liés aux tuiles recouvertes pour ce joueur
-    return 0;
-}
-
-// --- CalculScorePlaces ---
-int CalculScorePlaces::calculerScore(const Joueur& joueur) const {
-    // TODO : Calculer les points des places selon les règles du jeu
-    return 0;
-}
-
-// --- CalculScoreMultiplicateurs ---
-int CalculScoreMultiplicateurs::calculerScore(const Joueur& joueur) const {
-    // TODO : Calculer les multiplicateurs selon les quartiers ou autres critères
-    return 0;
-}
-
-// --- TableauScore ---
-void TableauScore::ajouterJoueur(Joueur* j) {
-    scores.push_back({j, 0});
-}
-
-void TableauScore::calculerScores() {
-    // On parcourt tous les joueurs et on calcule le score total
-    for(auto& pair : scores) {
-        Joueur* j = pair.first;
-
-        int scoreRecouvrement    = CalculScoreRecouvrement::calculerScore(*j);
-        int scorePlaces          = CalculScorePlaces::calculerScore(*j);
-        int scoreMultiplicateur  = CalculScoreMultiplicateurs::calculerScore(*j);
-
-        pair.second = scoreRecouvrement + scorePlaces + scoreMultiplicateur;
-    }
-}
-
-void TableauScore::afficherScores(ostream& f) const {
-    f << "=== Scores ===\n";
-    for(const auto& pair : scores) {
-        // TODO : remplacer getNom() par la méthode réelle pour récupérer le nom du joueur
-        f << "Joueur " /* << pair.first->getNom() */ << ": " << pair.second << " pts\n";
-    }
-}
-
-
     const Type Type::HABITATION("Habitation", Couleur::bleu, "Seules celles du plus grand groupe rapportent des points.");
     const Type Type::MARCHE("Marché", Couleur::jaune, "Rapporte des points s'il n'est pas adjacent à un autre marché.");
     const Type Type::CASERNE("Caserne", Couleur::rouge, "Rapporte des points si elle est placée en périphérie de la cité.");
     const Type Type::TEMPLE("Temple", Couleur::violet, "Rapporte des points si il est entièrement entouré.");
     const Type Type::JARDIN("Jardin", Couleur::vert, "Rapporte toujours des points, sans contrainte.");
+
+    
 
     TuileCite::TuileCite(size_t id, HexagoneConstruction* h1,
             HexagoneConstruction* h2, HexagoneConstruction* h3,
@@ -376,6 +132,269 @@ void TableauScore::afficherScores(ostream& f) const {
                          hexagones[2],
                          true); // la tuile clonée possède ses hexagones
     }
+
+    void Cite::ajouter(const TuileCite &t) {
+        if (nb == nb_max) {
+            size_t new_max = (nb_max + 1) * 2; // appels logarithmique
+
+            // création d'un tableau plus grand si le tabelau est déjà remplis
+            auto newtab = new const TuileCite * [new_max];
+
+            // recopie des adresses des Tuiles citées dans le nouveau tableau
+            for (size_t i = 0; i < nb; i++)
+                newtab[i] = tuile_cites[i];
+
+            // on met a jour la taille max
+            nb_max = new_max;
+            
+            // desalocation de l'ancien tableau
+            auto old = tuile_cites;
+            tuile_cites = newtab;
+            delete[] old;
+        }
+        tuile_cites[nb++] = &t;
+    }
+
+    // Implémentation manquante: affiche le contenu de la cité (évite l'erreur de linkage)
+    void Cite::afficher(ostream& f) const {
+        f << "Cité (" << nb << " tuiles):\n";
+        for (size_t i = 0; i < nb; ++i) {
+            const TuileCite* t = tuile_cites[i];
+            if (t) {
+                f << *t;
+            } else {
+                f << "  (tuile nulle)\n";
+            }
+        }
+    }
+
+// DÉBUT CLASSE JOUEUR 
+Joueur::Joueur(const string& nom, size_t capaciteCite)
+    : nom(nom), nbPierres(0), cite(new Cite(capaciteCite)){
+    
+    if (nom.empty()) {
+        throw GameException("Le nom du joueur ne peut pas être vide");
+    }
+}
+
+Joueur::~Joueur() {
+    delete cite;
+}
+
+void Joueur::setNom(const string& nouveauNom) {
+    if (nouveauNom.empty()) {
+        throw GameException("Le nom du joueur ne peut pas être vide");
+    }
+    nom = nouveauNom;
+}
+
+void Joueur::ajouterPierres(int n) {
+    if (n < 0) {
+        throw GameException("Impossible d'ajouter un nombre négatif de pierres");
+    }
+    if (n > 0) {
+        nbPierres += n;
+    }
+}
+
+void Joueur::retirerPierre() {
+    if (nbPierres <= 0) {
+        throw GameException("Le joueur " + nom + " n'a pas de pierres à retirer");
+    }
+    nbPierres--;
+}
+
+void Joueur::retirerPierres(int n) {
+    if (n < 0) {
+        throw GameException("Impossible de retirer un nombre négatif de pierres");
+    }
+    if (n == 0) {
+        return; 
+    }
+    
+    if (nbPierres < n) {
+        throw GameException("Le joueur n'as pas assez de pierre");
+    }
+    nbPierres -= n;
+}
+
+void Joueur::afficher(ostream& f) const {
+    f << "=== Joueur: " << nom << " ===\n";
+    f << "Pierres: " << nbPierres << "\n";
+    f << "Nombre de tuiles dans la cité: " << cite->getnb() << "\n";
+    
+    //On peut prévoir d'afficher le score si le tableau de score est défini
+    
+    f << "Cité:\n";
+    cite->afficher(f);
+}
+
+ostream& operator<<(ostream& f, const Joueur& joueur) {
+    joueur.afficher(f);
+    return f;
+}
+
+// A redefinir
+// int Joueur::calculerScore() const {
+//     if (tableauScore != nullptr) {
+//         return tableauScore->calculerScore(*this);
+//     }
+//     return 0;
+// }
+
+
+//FIN DE LA CLASSE JOUEUR  
+
+
+    // --- CalculScoreRecouvrement ---
+int CalculScoreRecouvrement::calculerScore(const Joueur& joueur) const {
+    // TODO : Calculer les points liés aux tuiles recouvertes pour ce joueur
+    return 0;
+}
+
+// --- CalculScorePlaces ---
+int CalculScorePlaces::calculerScore(const Joueur& joueur) const {
+    // TODO : Calculer les points des places selon les règles du jeu
+    return 0;
+}
+
+// --- CalculScoreMultiplicateurs ---
+int CalculScoreMultiplicateurs::calculerScore(const Joueur& joueur) const {
+    // TODO : Calculer les multiplicateurs selon les quartiers ou autres critères
+    return 0;
+}
+
+// --- TableauScore ---
+void TableauScore::ajouterJoueur(Joueur* j) {
+    scores.push_back({j, 0});
+}
+
+void TableauScore::calculerScores() {
+    // On parcourt tous les joueurs et on calcule le score total
+    for(auto& pair : scores) {
+        Joueur* j = pair.first;
+
+        int scoreRecouvrement    = CalculScoreRecouvrement::calculerScore(*j);
+        int scorePlaces          = CalculScorePlaces::calculerScore(*j);
+        int scoreMultiplicateur  = CalculScoreMultiplicateurs::calculerScore(*j);
+
+        pair.second = scoreRecouvrement + scorePlaces + scoreMultiplicateur;
+    }
+}
+
+void TableauScore::afficherScores(ostream& f) const {
+    f << "=== Scores ===\n";
+    for(const auto& pair : scores) {
+        // TODO : remplacer getNom() par la méthode réelle pour récupérer le nom du joueur
+        f << "Joueur " /* << pair.first->getNom() */ << ": " << pair.second << " pts\n";
+    }
+}
+
+    const TuileCite& Pioche::piocher(){
+        if (estVide()) throw GameException("Pioche Vide");
+        int i = rand() % nb; //tire un numéro de carte au hasard
+        const TuileCite* tmp = tuiles[i];
+        tuiles[i]=tuiles[--nb];
+        return *tmp;
+    }
+
+    bool ChoixTuile::ajouterTuile(TuileCite* tuile) {
+            if (tuilesDisponibles.size() < MAX_TUILES) {
+                tuilesDisponibles.push_back(tuile);
+                return true;
+            }
+            return false; // Déjà plein
+        }
+    
+    bool ChoixTuile::retirerTuile(size_t tuileId) {
+            auto it = std::find_if(tuilesDisponibles.begin(), tuilesDisponibles.end(),
+                [tuileId](TuileCite* t) { return t->getId() == tuileId; });
+            if (it != tuilesDisponibles.end()) {
+                tuilesDisponibles.erase(it);
+                return true;
+            }
+            return false; // Tuile non trouvée
+        }
+
+
+	
+    Partie::Partie(size_t id, ModeJeu mode)
+        : id(id), mode(mode), etat(EtatPartie::NON_DEMARREE),
+        joueurActuelIndex(0),pioche(nullptr), nbTuilesParTour(3) {
+    
+    }
+
+    Partie::~Partie() {
+        for (auto* joueur : joueurs) {
+            delete joueur;
+        }
+        delete pioche;
+        for (auto* tuile : tuilesDisponibles) {
+            delete tuile;
+        }
+    }
+
+    void Partie::ajouterJoueur(const string& nom) {
+        if (etat != EtatPartie::NON_DEMARREE) {
+            throw GameException("Impossible d'ajouter un joueur en cours de partie");
+        }
+        if (joueurs.size() >= 4) {
+            throw GameException("Maximum 4 joueurs");
+        }
+        joueurs.push_back(new Joueur(nom));
+    }
+
+    void Partie::retirerJoueur(const string& nom) {
+        if (etat != EtatPartie::NON_DEMARREE) {
+            throw GameException("Impossible de retirer un joueur en cours de partie");
+        }
+        auto it = find_if(joueurs.begin(), joueurs.end(),
+            [&nom](const Joueur* j) { return j->getNom() == nom; });
+        if (it == joueurs.end()) {
+            throw GameException("Joueur '" + nom + "' introuvable");
+        }
+        delete *it;  // Libérer la mémoire
+        joueurs.erase(it);
+
+    }
+
+    void Partie::activerVariante(const string& nom) {
+        if (etat != EtatPartie::NON_DEMARREE) {
+            throw GameException("Impossible de modifier les variantes en cours de partie");
+        }
+        auto it = find_if(variantes.begin(), variantes.end(),
+            [&nom](const Variante& v) { return v.getNom() == nom; });
+    
+        if (it == variantes.end()) {
+            throw GameException("Variante '" + nom + "' introuvable");
+        }
+        it->activer();
+    }
+
+
+    void Partie::desactiverVariante(const string& nom) {
+        auto it = find_if(variantes.begin(), variantes.end(),
+            [&nom](const Variante& v) { return v.getNom() == nom; });
+        if (it == variantes.end()) {
+            throw GameException("Variante '" + nom + "' introuvable");
+        }
+        it->desactiver();
+    }
+
+    vector<Variante> Partie::getVariantesActives() const {
+        vector<Variante> actives;
+        for (const auto& v : variantes) {
+            if (v.estActive()) {
+                actives.push_back(v);
+            }
+        }
+        return actives;
+    }
+
+
+
+
+
 
 
 

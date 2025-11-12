@@ -43,136 +43,29 @@ Dans ce cas, la mise en place et le déroulé de la partie ne changent pas.
 Chaque variante propose une condition de placement supplémentaire
 pour rapporter des points. Il est possible de jouer avec plusieurs variantes dans la même partie."
 */
-    class Variante {
-    private:
+    //les types de quartier
+    class Type {
         string nom;
-        string description;
-        bool active;
-    
+        Couleur couleur;
+        string conditions;        
+        Type(const string& nom, Couleur couleur, const string& cond)
+            : nom(nom), couleur(couleur), conditions(cond) {}
     public:
-        Variante(const string& n, const string& desc) 
-            : nom(n), description(desc), active(false) {}
+        static const Type HABITATION;
+        static const Type MARCHE;
+        static const Type CASERNE;
+        static const Type TEMPLE;
+        static const Type JARDIN;
     
-        void activer() { active = true; }
-        void desactiver() { active = false; }
-        bool estActive() const { return active; }
-        string getNom() const { return nom; }
-        string getDescription() const { return description; }
-    };
-
-    class Partie{
-        size_t id;
-        ModeJeu mode;
-        EtatPartie etat;
-        NiveauDifficulte difficulte;
-        vector<Variante> variantes;
-
-        //joueurs
-        vector<Joueur*> joueurs;
-        size_t joueurActuelIndex;
-
-        //pioche
-        Pioche* pioche;
-        vector<TuileCite*> tuilesDisponibles; 
-        vector<TuileDepart*> tuilesDepart; // 4 tuiles de départ 
-        size_t nbTuilesParTour;
-
-    public:
-        Partie(size_t id, ModeJeu mode);
-        ~Partie();
-        Partie(const Partie&) = delete;
-        Partie& operator=(const Partie&) = delete;
-        
-
-        ModeJeu getMode() const { return mode; }
-        EtatPartie getEtat() const { return etat; }
-        size_t getNombreJoueurs() const { return joueurs.size(); }
-        Joueur* getJoueurActuel() const { return joueurs[joueurActuelIndex]; }
-        const vector<Joueur*>& getJoueurs() const { return joueurs; }
-        Pioche* getPioche() const { return pioche; }
-        vector<Variante> getVariantesDisponibles() const{ return variantes; }
-        vector<Variante> getVariantesActives() const;
-        void initialiserTuiles();
-        void ajouterJoueur(const string& nom);
-        void retirerJoueur(const string& nom);
-        void setDifficulte(NiveauDifficulte diff) { difficulte = diff; }
-        void ajouterVariante(const Variante& v) { variantes.push_back(v); }
-        void activerVariante(const string& nom);
-        void desactiverVariante(const string& nom);
-
-
-    };
-
-    class Joueur { 
-    private : 
-        string nom; 
-        int nbPierres; 
-        Cite* cite;
-        TableauScore* tableauScore; 
-    public : 
-        Joueur(const string& nom, size_t capaciteCite = 25);
-        ~Joueur();
-        Joueur(const Joueur&) = delete;
-        Joueur& operator=(const Joueur&) = delete;
-
+        Type(const Type&)=delete;
+        Type& operator=(const Type&)=delete;
+    
         const string& getNom() const { return nom; }
-        int getNbPierres() const { return nbPierres; }
-        Cite* getCite() const { return cite; }
-        TableauScore* getTableauScore() const { return tableauScore; }
-        void setNom(const string& nouveauNom);
-        void setTableauScore(TableauScore* ts) { tableauScore = ts; }
-
-        void ajouterPierre() { nbPierres++; }
-        void ajouterPierres(int n);
-        void retirerPierre();
-        void retirerPierres(int n);
-        bool peutPayerPierres(int n) const { return nbPierres >= n;}
-        void ajouterTuile(const TuileCite& tuile) { cite->ajouter(tuile);}
-        void afficher(ostream& f = cout) const;
-        friend ostream& operator<<(ostream& f, const Joueur& joueur);
-        int calculerScore() const;
+        Couleur getCouleur() const { return couleur; }
+        const string& getConditions() const { return conditions; }
     };
 
-
-    class Pioche{
-        size_t id;
-        TuileCite ** tuiles;
-        size_t nb; //nombre de tuiles dans la pioche
-        public:
-        Pioche(size_t id, size_t taillepioche) : id(id) {tuiles = new TuileCite*[taillepioche];}
-        size_t getNbtuilesPioche() const {return nb;}
-        bool estVide(){return nb==0;}
-        const TuileCite& piocher();
-        ~Pioche(){ delete[] tuiles;}
-        Pioche& operator=(const Pioche&) = delete;
-		Pioche(const Pioche&) = delete;
-    };
-
-    class ChoixTuile {
-    private:
-        static const size_t MAX_TUILES = 4;
-        size_t id;
-        vector<TuileCite*> tuilesDisponibles;
-    
-    public:
-        ChoixTuile(size_t id) : id(id) {
-            tuilesDisponibles.reserve(MAX_TUILES);
-        }
-        
-        bool ajouterTuile(TuileCite* tuile);
-        bool retirerTuile(size_t tuileId);
-        const vector<TuileCite*>& getTuilesDisponibles() const {
-            return tuilesDisponibles;
-        }
-        
-        size_t getNombreTuiles() const { return tuilesDisponibles.size(); }
-};
-
-
-
-
-    
-   class CoordHex {
+    class CoordHex {
     private:
         int q = 0;
         int r = 0;
@@ -180,7 +73,7 @@ pour rapporter des points. Il est possible de jouer avec plusieurs variantes dan
         //constructeur
         CoordHex() : q(0), r(0) {}
         CoordHex(int q_, int r_) : q(q_), r(r_) {}
-        ~CoordHex();
+        ~CoordHex()=default;
 
         // Coordonées axiales donc <s, q, r>
         // s est implicite : s = -q - r
@@ -224,8 +117,47 @@ pour rapporter des points. Il est possible de jouer avec plusieurs variantes dan
             return (std::abs(diff.q) + std::abs(diff.r) + std::abs(diff.s())) / 2;
         }
     };
-    
-    
+
+    class HexagoneConstruction{
+        protected:
+            size_t id;
+        public:
+            HexagoneConstruction(size_t id) : id(id) {}
+            virtual ~HexagoneConstruction() = default;
+            size_t getId() const { return id; } 
+
+    };
+
+    class Quartier : public HexagoneConstruction{
+        private:
+            const Type* type; // association vers Type
+        public:
+            Quartier(size_t id, const Type& type)
+                : HexagoneConstruction(id), type(&type) {}
+
+            const Type& getType() const { return *type; }
+    };
+
+
+    class Place : public HexagoneConstruction{
+        private:
+            const Type* type; // association vers Type
+            size_t nbetoile=0;
+        public:
+            Place(size_t id, const Type& type, size_t nbetoile=0)
+                : HexagoneConstruction(id), type(&type), nbetoile(nbetoile) {}
+
+            const Type& getType() const { return *type; }
+            size_t getNbEtoile() const { return nbetoile; }
+    };
+
+    class Carriere : public HexagoneConstruction{
+        private :
+            Couleur coul = Couleur::gris;
+        public:
+            Carriere(size_t id) : HexagoneConstruction(id){}
+    };
+
     class TuileCite{
         private : 
             size_t id;
@@ -296,7 +228,7 @@ pour rapporter des points. Il est possible de jouer avec plusieurs variantes dan
         }
    };
 
-    class Cite{
+   class Cite{
     private:
         const TuileCite** tuile_cites = nullptr; //on stocke le pointeur de chaque tuile
         size_t nb = 0; //nombre de tuile stockées
@@ -318,45 +250,36 @@ pour rapporter des points. Il est possible de jouer avec plusieurs variantes dan
         //je pense qu'il faudrais stocker les coordonée des différente tuiles dans tuileCite
     };
 
-    class HexagoneConstruction{
-        protected:
-            size_t id;
-        public:
-            HexagoneConstruction(size_t id) : id(id) {}
-            virtual ~HexagoneConstruction() = default;
-            size_t getId() const { return id; } 
+    class Joueur { 
+    private : 
+        string nom; 
+        int nbPierres; 
+        Cite* cite;
+        
+    public : 
+        Joueur(const string& nom, size_t capaciteCite = 25);
+        ~Joueur();
+        Joueur(const Joueur&) = delete;
+        Joueur& operator=(const Joueur&) = delete;
 
+        const string& getNom() const { return nom; }
+        int getNbPierres() const { return nbPierres; }
+        Cite* getCite() const { return cite; }
+        // TableauScore* getTableauScore() const { return tableauScore; } a modifié dans tableau score
+        void setNom(const string& nouveauNom);
+        // void setTableauScore(TableauScore* ts) { tableauScore = ts; } a modifié dans tableau score
+
+        void ajouterPierre() { nbPierres++; }
+        void ajouterPierres(int n);
+        void retirerPierre();
+        void retirerPierres(int n);
+        bool peutPayerPierres(int n) const { return nbPierres >= n;}
+        void ajouterTuile(const TuileCite& tuile) { cite->ajouter(tuile);}
+        void afficher(ostream& f = cout) const;
+        friend ostream& operator<<(ostream& f, const Joueur& joueur);
+        int calculerScore() const;
     };
 
-    class Quartier : public HexagoneConstruction{
-        private:
-            const Type* type; // association vers Type
-        public:
-            Quartier(size_t id, const Type& type)
-                : HexagoneConstruction(id), type(&type) {}
-
-            const Type& getType() const { return *type; }
-    };
-
-
-    class Place : public HexagoneConstruction{
-        private:
-            const Type* type; // association vers Type
-            size_t nbetoile=0;
-        public:
-            Place(size_t id, const Type& type, size_t nbetoile=0)
-                : HexagoneConstruction(id), type(&type), nbetoile(nbetoile) {}
-
-            const Type& getType() const { return *type; }
-            size_t getNbEtoile() const { return nbetoile; }
-    };
-
-    class Carriere : public HexagoneConstruction{
-        private :
-            Couleur coul = Couleur::gris;
-        public:
-            Carriere(size_t id) : HexagoneConstruction(id){}
-    };
 
         // --- Tableau des scores ---
     class CalculScoreBase {
@@ -386,6 +309,7 @@ pour rapporter des points. Il est possible de jouer avec plusieurs variantes dan
         public CalculScoreMultiplicateurs
     {
     private:
+        Joueur* joueur;
         vector<pair<Joueur*, int>> scores;
 
     public:
@@ -398,31 +322,127 @@ pour rapporter des points. Il est possible de jouer avec plusieurs variantes dan
              + CalculScoreMultiplicateurs::calculerScore(joueur);
     }
     };
-    //les types de quartier
-    class Type {
-        string nom;
-        Couleur couleur;
-        string conditions;        
-        Type(const string& nom, Couleur couleur, const string& cond)
-            : nom(nom), couleur(couleur), conditions(cond) {}
+
+    class Pioche{
+        size_t id;
+        TuileCite ** tuiles;
+        size_t nb; //nombre de tuiles dans la pioche
+        public:
+        Pioche(size_t id, size_t taillepioche) : id(id) {tuiles = new TuileCite*[taillepioche];}
+        size_t getNbtuilesPioche() const {return nb;}
+        bool estVide(){return nb==0;}
+        const TuileCite& piocher();
+        ~Pioche(){ delete[] tuiles;}
+        Pioche& operator=(const Pioche&) = delete;
+		Pioche(const Pioche&) = delete;
+    };
+
+    class ChoixTuile {
+    private:
+        static const size_t MAX_TUILES = 4;
+        size_t id;
+        vector<TuileCite*> tuilesDisponibles;
+    
     public:
-        static const Type HABITATION;
-        static const Type MARCHE;
-        static const Type CASERNE;
-        static const Type TEMPLE;
-        static const Type JARDIN;
+        ChoixTuile(size_t id) : id(id) {
+            tuilesDisponibles.reserve(MAX_TUILES);
+        }
+        
+        bool ajouterTuile(TuileCite* tuile);
+        bool retirerTuile(size_t tuileId);
+        const vector<TuileCite*>& getTuilesDisponibles() const {
+            return tuilesDisponibles;
+        }
+        
+        size_t getNombreTuiles() const { return tuilesDisponibles.size(); }
+};
+
+
+
+class Variante {
+    private:
+        string nom;
+        string description;
+        bool active;
     
-        Type(const Type&)=delete;
-        Type& operator=(const Type&)=delete;
+    public:
+        Variante(const string& n, const string& desc) 
+            : nom(n), description(desc), active(false) {}
     
-        const string& getNom() const { return nom; }
-        Couleur getCouleur() const { return couleur; }
-        const string& getConditions() const { return conditions; }
+        void activer() { active = true; }
+        void desactiver() { active = false; }
+        bool estActive() const { return active; }
+        string getNom() const { return nom; }
+        string getDescription() const { return description; }
+    };
+
+    class Partie{
+        size_t id;
+        ModeJeu mode;
+        EtatPartie etat;
+        NiveauDifficulte difficulte;
+        vector<Variante> variantes;
+
+        //joueurs
+        vector<Joueur*> joueurs;
+        size_t joueurActuelIndex;
+
+        //pioche
+        Pioche* pioche;
+        vector<TuileCite*> tuilesDisponibles; 
+        vector<TuileDepart*> tuilesDepart; // 4 tuiles de départ 
+        size_t nbTuilesParTour;
+
+    public:
+        Partie(size_t id, ModeJeu mode);
+        ~Partie();
+        Partie(const Partie&) = delete;
+        Partie& operator=(const Partie&) = delete;
+        
+
+        ModeJeu getMode() const { return mode; }
+        EtatPartie getEtat() const { return etat; }
+        size_t getNombreJoueurs() const { return joueurs.size(); }
+        Joueur* getJoueurActuel() const { return joueurs[joueurActuelIndex]; }
+        const vector<Joueur*>& getJoueurs() const { return joueurs; }
+        Pioche* getPioche() const { return pioche; }
+        vector<Variante> getVariantesDisponibles() const{ return variantes; }
+        vector<Variante> getVariantesActives() const;
+        void initialiserTuiles();
+        void ajouterJoueur(const string& nom);
+        void retirerJoueur(const string& nom);
+        void setDifficulte(NiveauDifficulte diff) { difficulte = diff; }
+        void ajouterVariante(const Variante& v) { variantes.push_back(v); }
+        void activerVariante(const string& nom);
+        void desactiverVariante(const string& nom);
+
+
     };
 
 
 
-}
+
+
+
+
+
+
+
+
+    
+//    
+    
+    
+
+
+//     
+
+
+
+
+
+
+};
 
 
 
