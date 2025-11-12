@@ -169,7 +169,6 @@ pour rapporter des points. Il est possible de jouer avec plusieurs variantes dan
             unsigned int hauteur=1;
             bool proprietaire; //true si possède des haxagones (pour la gestion de la mémoire)
             
-            
         public : 
             TuileCite(size_t id, HexagoneConstruction* h1, 
               HexagoneConstruction* h2, HexagoneConstruction* h3,
@@ -178,7 +177,6 @@ pour rapporter des points. Il est possible de jouer avec plusieurs variantes dan
             TuileCite(const TuileCite&)=delete;
             TuileCite& operator=(const TuileCite& )=delete;
 
-            
             size_t getId() const { return id; }
             const array<HexagoneConstruction*, 3>& getHexagones() const { 
                 return hexagones; 
@@ -347,6 +345,14 @@ pour rapporter des points. Il est possible de jouer avec plusieurs variantes dan
         ChoixTuile(size_t id) : id(id) {
             tuilesDisponibles.reserve(MAX_TUILES);
         }
+        
+        // --- AJOUTS ICI ---
+        size_t calculerCout(size_t index) const {
+            return index;
+        }
+
+        TuileCite* choisirTuile(Joueur* joueur, size_t index);
+        // ------------------
         
         bool ajouterTuile(TuileCite* tuile);
         bool retirerTuile(size_t tuileId);

@@ -1,4 +1,5 @@
 #include "Akropolis.h"
+#include <string> // Nécessaire pour std::to_string
 using namespace std;
 namespace Akropolis{ 
 
@@ -313,6 +314,31 @@ void TableauScore::afficherScores(ostream& f) const {
             return false; // Tuile non trouvée
         }
 
+// IMPLÉMENTATION DE LA LOGIQUE DE PAIEMENT DES PIERRES
+TuileCite* ChoixTuile::choisirTuile(Joueur* joueur, size_t index) {
+    if (index >= tuilesDisponibles.size()) {
+        throw GameException("Index de tuile invalide pour le choix.");
+    }
+    
+    size_t coutPierres = calculerCout(index);
+    TuileCite* tuileChoisie = tuilesDisponibles[index];
+
+    if (!joueur->peutPayerPierres(coutPierres)) {
+        // Utilisation de l'opérateur + et de std::to_string
+        throw GameException("Le joueur " + joueur->getNom() + " n'a pas assez de pierres pour cette tuile (cout: " + std::to_string(coutPierres) + ").");
+    }
+
+    // 1. Paiement des pierres
+    joueur->retirerPierres(coutPierres);
+
+    // 2. Retrait de la tuile de la liste
+    auto it = tuilesDisponibles.begin() + index;
+    tuilesDisponibles.erase(it);
+
+    // 3. Retourner la tuile choisie
+    return tuileChoisie;
+}
+
 
 	
     Partie::Partie(size_t id, ModeJeu mode)
@@ -387,12 +413,4 @@ void TableauScore::afficherScores(ostream& f) const {
         }
         return actives;
     }
-
-
-
-
-
-
-
-
-}
+} // Fermeture du namespace Akropolis
