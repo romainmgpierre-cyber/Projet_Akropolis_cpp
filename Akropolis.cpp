@@ -134,31 +134,13 @@ namespace Akropolis{
     }
 
     void Cite::ajouter(const TuileCite &t) {
-        if (nb == nb_max) {
-            size_t new_max = (nb_max + 1) * 2; // appels logarithmique
-
-            // création d'un tableau plus grand si le tabelau est déjà remplis
-            auto newtab = new const TuileCite * [new_max];
-
-            // recopie des adresses des Tuiles citées dans le nouveau tableau
-            for (size_t i = 0; i < nb; i++)
-                newtab[i] = tuile_cites[i];
-
-            // on met a jour la taille max
-            nb_max = new_max;
-            
-            // desalocation de l'ancien tableau
-            auto old = tuile_cites;
-            tuile_cites = newtab;
-            delete[] old;
-        }
-        tuile_cites[nb++] = &t;
+        tuile_cites.push_back(&t);
     }
 
-    // Implémentation manquante: affiche le contenu de la cité (évite l'erreur de linkage)
+
     void Cite::afficher(ostream& f) const {
-        f << "Cité (" << nb << " tuiles):\n";
-        for (size_t i = 0; i < nb; ++i) {
+        f << "Cité (" << tuile_cites.size() << " tuiles):\n";
+        for (size_t i = 0; i < tuile_cites.size(); ++i) {
             const TuileCite* t = tuile_cites[i];
             if (t) {
                 f << *t;
@@ -292,9 +274,10 @@ void TableauScore::afficherScores(ostream& f) const {
 
     const TuileCite& Pioche::piocher(){
         if (estVide()) throw GameException("Pioche Vide");
-        int i = rand() % nb; //tire un numéro de carte au hasard
+        int i = rand() % tuiles.size(); // tire un numéro de carte au hasard
         const TuileCite* tmp = tuiles[i];
-        tuiles[i]=tuiles[--nb];
+        tuiles[i] = tuiles.back();
+        tuiles.pop_back();
         return *tmp;
     }
 

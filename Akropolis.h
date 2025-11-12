@@ -114,13 +114,13 @@ pour rapporter des points. Il est possible de jouer avec plusieurs variantes dan
         int distance(const CoordHex& autre) const {
             CoordHex diff = *this - autre;
             // Formule de RedBlobGames (convertie de cubique)
-            return (std::abs(diff.q) + std::abs(diff.r) + std::abs(diff.s())) / 2;
+            return (abs(diff.q) + abs(diff.r) + abs(diff.s())) / 2;
         }
     };
 
     class HexagoneConstruction{
         protected:
-            size_t id;
+            size_t id; //compris entre 1 et 61
         public:
             HexagoneConstruction(size_t id) : id(id) {}
             virtual ~HexagoneConstruction() = default;
@@ -230,24 +230,22 @@ pour rapporter des points. Il est possible de jouer avec plusieurs variantes dan
 
    class Cite{
     private:
-        const TuileCite** tuile_cites = nullptr; //on stocke le pointeur de chaque tuile
-        size_t nb = 0; //nombre de tuile stockées
-        size_t nb_max = 0; //taille du tableau
+        vector<const TuileCite*> tuile_cites;
+        size_t nb_max;
 
     public:
-        Cite(size_t capacite_initiale = 4): nb(0), nb_max(capacite_initiale),
-          tuile_cites(new const TuileCite*[capacite_initiale]) {}
+        Cite(size_t capacite_initiale = 4): nb_max(capacite_initiale) {
+            tuile_cites.reserve(capacite_initiale);
+        }
 
-        ~Cite(){delete [] tuile_cites;}
+        ~Cite() = default;
 
         void ajouter(const TuileCite& t);
-        void afficher(ostream& f) const; //afficher l'ensemble des carte contenu dans Cite
+        void afficher(ostream& f) const;
 
         //accesseurs :
-        size_t getnb() const {return nb;}
-        size_t getnb_max() const {return nb_max;}
-
-        //je pense qu'il faudrais stocker les coordonée des différente tuiles dans tuileCite
+        size_t getnb() const { return tuile_cites.size(); }
+        size_t getnb_max() const { return nb_max; }
     };
 
     class Joueur { 
@@ -325,16 +323,20 @@ pour rapporter des points. Il est possible de jouer avec plusieurs variantes dan
 
     class Pioche{
         size_t id;
-        TuileCite ** tuiles;
-        size_t nb; //nombre de tuiles dans la pioche
-        public:
-        Pioche(size_t id, size_t taillepioche) : id(id) {tuiles = new TuileCite*[taillepioche];}
-        size_t getNbtuilesPioche() const {return nb;}
-        bool estVide(){return nb==0;}
+        vector<TuileCite*> tuiles;
+        
+    public:
+        Pioche(size_t id, size_t taillepioche) : id(id) {
+            tuiles.reserve(taillepioche);
+        }
+        
+        size_t getNbtuilesPioche() const { return tuiles.size(); }
+        bool estVide() const { return tuiles.empty(); }
         const TuileCite& piocher();
-        ~Pioche(){ delete[] tuiles;}
+        
+        ~Pioche() = default;
         Pioche& operator=(const Pioche&) = delete;
-		Pioche(const Pioche&) = delete;
+        Pioche(const Pioche&) = delete;
     };
 
     class ChoixTuile {
@@ -418,32 +420,6 @@ class Variante {
 
 
     };
-
-
-
-
-
-
-
-
-
-
-
-    
-//    
-    
-    
-
-
-//     
-
-
-
-
-
-
 };
-
-
 
 #endif
