@@ -133,6 +133,20 @@ namespace Akropolis{
                          true); // la tuile clonée possède ses hexagones
     }
 
+    TuileDepart::TuileDepart(size_t id, Place* centre, Carriere* c1, Carriere* c2, Carriere* c3)
+            : id(id) 
+        {
+            centre->SetPosition(CoordHex(0,0)); // position centrale
+            c1->SetPosition(CoordHex(1,0)); // positions autour
+            c2->SetPosition(CoordHex(0,-1));
+            c3->SetPosition(CoordHex(-1,1));
+            hexagones[0] = centre; // centre = Place
+            hexagones[1] = c1;
+            hexagones[2] = c2;
+            hexagones[3] = c3;
+
+        }
+
     void Cite::ajouter(const TuileCite &t) {
         tuile_cites.push_back(&t);
     }

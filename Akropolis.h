@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <array>
 
+
 using namespace std;
 namespace Akropolis{
 
@@ -121,9 +122,11 @@ pour rapporter des points. Il est possible de jouer avec plusieurs variantes dan
     class HexagoneConstruction{
         protected:
             size_t id; //compris entre 1 et 61
+            CoordHex* position = nullptr; //pointeur  de coordonées qui sera intialisé lors du placement dans la cité
         public:
             HexagoneConstruction(size_t id) : id(id) {}
             virtual ~HexagoneConstruction() = default;
+            void SetPosition(const CoordHex& pos) { *position = pos; }
             size_t getId() const { return id; } 
 
     };
@@ -162,7 +165,7 @@ pour rapporter des points. Il est possible de jouer avec plusieurs variantes dan
         private : 
             size_t id;
             array<HexagoneConstruction*, 3> hexagones;
-            array<CoordHex, 3> positions; //on stocke les coordonées des 3 tuiles; 
+             
             unsigned int hauteur=1;
             bool proprietaire; //true si possède des haxagones (pour la gestion de la mémoire)
             
@@ -208,14 +211,7 @@ pour rapporter des points. Il est possible de jouer avec plusieurs variantes dan
         std::array<HexagoneConstruction*, 4> hexagones; // 0 = centre (Place), 1-3 = Carrières
     public:
         // Constructeur : le centre est toujours une Place, les autres sont des Carrières
-        TuileDepart(size_t id, Place* centre, Carriere* c1, Carriere* c2, Carriere* c3)
-            : id(id) 
-        {
-            hexagones[0] = centre; // centre = Place
-            hexagones[1] = c1;
-            hexagones[2] = c2;
-            hexagones[3] = c3;
-        }
+        TuileDepart(size_t id, Place* centre, Carriere* c1, Carriere* c2, Carriere* c3);
 
         ~TuileDepart() {
             // On détruit les hexagones
