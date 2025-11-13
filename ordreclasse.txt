@@ -1,0 +1,12 @@
+1. GameException + enums
+2. Type
+3. CoordHex
+4. HexagoneConstruction, Carriere, Quartier, Place
+5. TuileCite, TuileDepart
+6. Cite
+7. TableauScore + CalculScore...
+8. Joueur
+9. Pioche
+10. ChoixTuile
+11. Variante
+12. Partie 
