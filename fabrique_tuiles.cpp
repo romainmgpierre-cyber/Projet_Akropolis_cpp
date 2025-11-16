@@ -1,5 +1,5 @@
 #include "Pioche_ChoixTuile.h"
-
+#include "GameExcep_Enums.h"
 namespace Akropolis {
     
     // pour créer toutes les tuiles d'un coup
