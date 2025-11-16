@@ -8,7 +8,7 @@ namespace Akropolis {
         size_t idTuile = 1;
         size_t idHexagone = 1;
         
-        };
+        
         
         //1
         tuiles.push_back(new TuileCite(
@@ -75,8 +75,7 @@ namespace Akropolis {
     
     // Fonction pour créer la tuile de départ
     TuileDepart* creerTuileDepart() {
-        size_t idHexDepart = 1000; // IDs différents pour la tuile de départ
-        Place* centre = new Place(idHexDepart++, TypeQuartier::getPlace(), 0);
+        Place* centre = new Carriere(idHexDepart++);
         Carriere* c1 = new Carriere(idHexDepart++);
         Carriere* c2 = new Carriere(idHexDepart++);
         Carriere* c3 = new Carriere(idHexDepart++);
