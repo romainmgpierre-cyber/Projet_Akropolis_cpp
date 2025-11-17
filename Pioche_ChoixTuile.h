@@ -3,8 +3,11 @@
 #include <vector>
 #include "TuileCite_TuileDep.h"
 #include "Joueur.h"
+#include "GameExcep_Enums.h" 
+
 using namespace std;
 namespace Akropolis{
+    
     class Pioche{
         size_t id;
         vector<TuileCite*> tuiles;
@@ -13,19 +16,24 @@ namespace Akropolis{
         Pioche(size_t id, size_t taillepioche) : id(id) {
             tuiles.reserve(taillepioche);
         }
-        
+
+        ~Pioche();
+
         size_t getNbtuilesPioche() const { return tuiles.size(); }
         bool estVide() const { return tuiles.empty(); }
-        const TuileCite& piocher();
         
-        ~Pioche() = default;
+        // --- CORRECTION : Ajout de cette méthode pour l'initialisation ---
+        void ajouterTuile(TuileCite* t) { tuiles.push_back(t); }
+
+        TuileCite* piocher();
+        
         Pioche& operator=(const Pioche&) = delete;
         Pioche(const Pioche&) = delete;
     };
 
     class ChoixTuile {
     private:
-        static const size_t MAX_TUILES = 4;
+        static const size_t MAX_TUILES = 6; // Ou autre valeur selon règles
         size_t id;
         vector<TuileCite*> tuilesDisponibles;
     
@@ -34,22 +42,23 @@ namespace Akropolis{
             tuilesDisponibles.reserve(MAX_TUILES);
         }
         
-        // --- AJOUTS ICI ---
+        ~ChoixTuile();
+
+        
         size_t calculerCout(size_t index) const {
-            return index;
+            // Exemple : coût = index (0 pour la 1ère, 1 pour la 2ème...)
+            return index; 
         }
 
-        TuileCite* choisirTuile(Joueur* joueur, size_t index);
-        // ------------------
-        
-        bool ajouterTuile(TuileCite* tuile);
-        bool retirerTuile(size_t tuileId);
+        TuileCite* choisirTuile(size_t index);
+        bool ajouterTuile(TuileCite* tuile);  
+
         const vector<TuileCite*>& getTuilesDisponibles() const {
             return tuilesDisponibles;
         }
         
         size_t getNombreTuiles() const { return tuilesDisponibles.size(); }
-};
+    };
 }
 
 #endif

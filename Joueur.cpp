@@ -1,81 +1,60 @@
 #include "Joueur.h"
+#include "Score.h"      
+#include "GameExcep_Enums.h"
 
-namespace Akropolis{
-    // DÉBUT CLASSE JOUEUR 
-Joueur::Joueur(const string& nom, size_t capaciteCite)
-    : nom(nom), nbPierres(0), cite(new Cite(capaciteCite)){
-    
-    if (nom.empty()) {
-        throw GameException("Le nom du joueur ne peut pas être vide");
+namespace Akropolis {
+
+    Joueur::Joueur(const string& nom) 
+        : nom(nom), nbPierres(1) // Règle officielle : on commence souvent avec 1 pierre (ou ajuster selon règle)
+    {
+        cite = new Cite();
     }
-}
 
-Joueur::~Joueur() {
-    delete cite;
-}
-
-void Joueur::setNom(const string& nouveauNom) {
-    if (nouveauNom.empty()) {
-        throw GameException("Le nom du joueur ne peut pas être vide");
+    Joueur::~Joueur() {
+        delete cite;
     }
-    nom = nouveauNom;
-}
 
-void Joueur::ajouterPierres(int n) {
-    if (n < 0) {
-        throw GameException("Impossible d'ajouter un nombre négatif de pierres");
+    void Joueur::setNom(const string& nouveauNom) {
+        nom = nouveauNom;
     }
-    if (n > 0) {
+
+    void Joueur::ajouterPierres(int n) {
         nbPierres += n;
     }
-}
 
-void Joueur::retirerPierre() {
-    if (nbPierres <= 0) {
-        throw GameException("Le joueur " + nom + " n'a pas de pierres à retirer");
+    void Joueur::retirerPierre() {
+        if (nbPierres > 0) nbPierres--;
+        else throw GameException("Pas assez de pierres !");
     }
-    nbPierres--;
-}
 
-void Joueur::retirerPierres(int n) {
-    if (n < 0) {
-        throw GameException("Impossible de retirer un nombre négatif de pierres");
+    void Joueur::retirerPierres(int n) {
+        if (nbPierres >= n) nbPierres -= n;
+        else throw GameException("Pas assez de pierres !");
     }
-    if (n == 0) {
-        return; 
+
+    void Joueur::placerTuile(TuileCite* tuile, const Cite::CoupPossible& coup) {
+        // Délègue simplement à la méthode de la Cité
+        // C'est ici qu'on fait le lien entre l'ancienne méthode "ajouterTuile"
+        // et la nouvelle logique "placerTuile" avec coordonnées.
+        cite->placerTuile(tuile, coup);
     }
-    
-    if (nbPierres < n) {
-        throw GameException("Le joueur n'as pas assez de pierre");
+
+    void Joueur::afficher(ostream& f) const {
+        f << "Joueur : " << nom << " (" << nbPierres << " pierres)" << endl;
+        f << "Cité :" << endl;
+        cite->afficher(f);
     }
-    nbPierres -= n;
-}
 
-void Joueur::afficher(ostream& f) const {
-    f << "=== Joueur: " << nom << " ===\n";
-    f << "Pierres: " << nbPierres << "\n";
-    f << "Nombre de tuiles dans la cité: " << cite->getnb() << "\n";
-    
-    //On peut prévoir d'afficher le score si le tableau de score est défini
-    
-    f << "Cité:\n";
-    cite->afficher(f);
-}
+    ostream& operator<<(ostream& f, const Joueur& joueur) {
+        joueur.afficher(f);
+        return f;
+    }
 
-ostream& operator<<(ostream& f, const Joueur& joueur) {
-    joueur.afficher(f);
-    return f;
-}
-
-// A redefinir
-// int Joueur::calculerScore() const {
-//     if (tableauScore != nullptr) {
-//         return tableauScore->calculerScore(*this);
-//     }
-//     return 0;
-// }
-
-
-//FIN DE LA CLASSE JOUEUR  
+    int Joueur::calculerScore() const {
+        
+        TableauScore calculateur;
+        // On délègue le calcul
+        return calculateur.calculerScore(*this);
+    }
 
 }

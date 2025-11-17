@@ -8,11 +8,11 @@ namespace Akropolis{
         int q = 0;
         int r = 0;
     public:
-        //constructeur
         CoordHex() : q(0), r(0) {}
         CoordHex(int q_, int r_) : q(q_), r(r_) {}
         ~CoordHex()=default;
-
+        int getQ() const { return q; }
+        int getR() const { return r; }
         // Coordonées axiales donc <s, q, r>
         // s est implicite : s = -q - r
         int s() const { return -q - r; }
@@ -45,7 +45,7 @@ namespace Akropolis{
                 CoordHex(1, 0), CoordHex(0, 1), CoordHex(-1, 1),
                 CoordHex(-1, 0), CoordHex(0, -1), CoordHex(1, -1)
             }};
-            return *this + directions[direction % 6]; //utilisation de la surcharge +
+            return *this + directions[direction % 6];
         }
 
         // Distance entre deux hexagones
@@ -56,4 +56,5 @@ namespace Akropolis{
         }
     };
 }
+
 #endif

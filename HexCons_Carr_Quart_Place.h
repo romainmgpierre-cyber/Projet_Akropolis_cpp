@@ -6,24 +6,26 @@ using namespace std;
 namespace Akropolis{
      class HexagoneConstruction{
         protected:
-            size_t id; //compris entre 1 et 61
-            CoordHex* position = nullptr; //pointeur  de coordonées qui sera intialisé lors du placement dans la cité
+            size_t id; 
         public:
             HexagoneConstruction(size_t id) : id(id) {}
             virtual ~HexagoneConstruction() = default;
-            void SetPosition(const CoordHex& pos) { *position = pos; }
             size_t getId() const { return id; } 
-
+            virtual HexagoneConstruction* clone() const = 0; 
     };
 
     class Quartier : public HexagoneConstruction{
         private:
-            const Type* type; // association vers Type
+            const Type* type;
         public:
             Quartier(size_t id, const Type& type)
                 : HexagoneConstruction(id), type(&type) {}
 
             const Type& getType() const { return *type; }
+
+            HexagoneConstruction* clone() const override {
+                return new Quartier(id, *type);
+            }
     };
 
 
@@ -37,13 +39,22 @@ namespace Akropolis{
 
             const Type& getType() const { return *type; }
             size_t getNbEtoile() const { return nbetoile; }
+
+            HexagoneConstruction* clone() const override {
+                return new Place(id, *type, nbetoile);
+            }
     };
 
     class Carriere : public HexagoneConstruction{
         private :
             Couleur coul = Couleur::gris;
         public:
+            public:
             Carriere(size_t id) : HexagoneConstruction(id){}
+
+            HexagoneConstruction* clone() const override {
+                return new Carriere(id);
+            }
     };
 
 

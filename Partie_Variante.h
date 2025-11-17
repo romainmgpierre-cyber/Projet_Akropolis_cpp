@@ -37,8 +37,9 @@ namespace Akropolis{
 
         //pioche
         Pioche* pioche;
+        ChoixTuile* choixTuile; 
         vector<TuileCite*> tuilesDisponibles; 
-        vector<TuileDepart*> tuilesDepart; // 4 tuiles de départ 
+        vector<TuileDepart*> tuilesDepart; 
         size_t nbTuilesParTour;
 
     public:
@@ -47,6 +48,9 @@ namespace Akropolis{
         Partie(const Partie&) = delete;
         Partie& operator=(const Partie&) = delete;
         
+        void lancerPartie(); // Initialise tout
+        void boucleDeJeu();  // Fait tourner les tours
+        void gererTourJoueur(Joueur* joueur); // Logique d'un tour
 
         ModeJeu getMode() const { return mode; }
         EtatPartie getEtat() const { return etat; }
@@ -63,6 +67,16 @@ namespace Akropolis{
         void ajouterVariante(const Variante& v) { variantes.push_back(v); }
         void activerVariante(const string& nom);
         void desactiverVariante(const string& nom);
+    
+    private :
+    //Helpers Privés
+    private:
+        
+        void remplirChoixTuile();
+        void afficherEtatJeu(Joueur* joueur) const;
+        void payerPierres(Joueur* joueur, size_t cout);
+
+        
 
 
     };

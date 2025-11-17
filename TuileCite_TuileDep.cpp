@@ -2,20 +2,43 @@
 
 namespace Akropolis{
 
-    TuileCite::TuileCite(size_t id, HexagoneConstruction* h1,
-            HexagoneConstruction* h2, HexagoneConstruction* h3,
-            bool possede)
-        : id(id), hexagones{h1, h2, h3}, hauteur(1), proprietaire(possede) {
-                if (!h1 || !h2 || !h3)
-                    throw GameException("HexagoneConstruction manquant dans TuileCite.");
-            }
+    TuileCite::TuileCite(size_t id, HexagoneConstruction* h1, 
+                         HexagoneConstruction* h2, HexagoneConstruction* h3,
+                         bool possede) 
+        : id(id), hexagones({{h1, h2, h3}}), hauteur(1), proprietaire(possede) {}
 
     TuileCite::~TuileCite() {
         if (proprietaire) {
-            for (auto* hex : hexagones) {
-                delete hex;
-            }
+            for (auto h : hexagones) delete h;
         }
+    }
+
+    void TuileCite::rotationHoraire() {
+        // Permutation cyclique simple : [0, 1, 2] -> [2, 0, 1]
+        HexagoneConstruction* temp = hexagones[2];
+        hexagones[2] = hexagones[1];
+        hexagones[1] = hexagones[0];
+        hexagones[0] = temp;
+    }
+
+    void TuileCite::rotationAntihoraire() {
+        // Permutation cyclique inverse : [0, 1, 2] -> [1, 2, 0]
+        HexagoneConstruction* temp = hexagones[0];
+        hexagones[0] = hexagones[1];
+        hexagones[1] = hexagones[2];
+        hexagones[2] = temp;
+    }
+    
+    TuileCite* TuileCite::clone() const {
+
+        HexagoneConstruction* h1_clone = hexagones[0]->clone();
+        HexagoneConstruction* h2_clone = hexagones[1]->clone();
+        HexagoneConstruction* h3_clone = hexagones[2]->clone();
+        
+        // Crée une nouvelle tuile (qui possède ses hexagones)
+        TuileCite* newTuile = new TuileCite(id, h1_clone, h2_clone, h3_clone, true);
+        newTuile->setHauteur(this->hauteur);
+        return newTuile;
     }
 
     bool TuileCite::contientCarriere() const {
@@ -81,22 +104,12 @@ namespace Akropolis{
         tuile.afficher(f);
         return f;
     }
-    TuileCite* TuileCite::clone() const {
-        return new TuileCite(id,
-                         hexagones[0], 
-                         hexagones[1], 
-                         hexagones[2],
-                         true); // la tuile clonée possède ses hexagones
-    }
+
 
     TuileDepart::TuileDepart(size_t id, Place* centre, Carriere* c1, Carriere* c2, Carriere* c3)
             : id(id) 
         {
-            centre->SetPosition(CoordHex(0,0)); // position centrale
-            c1->SetPosition(CoordHex(1,0)); // positions autour
-            c2->SetPosition(CoordHex(0,-1));
-            c3->SetPosition(CoordHex(-1,1));
-            hexagones[0] = centre; // centre = Place
+            hexagones[0] = centre; 
             hexagones[1] = c1;
             hexagones[2] = c2;
             hexagones[3] = c3;

@@ -1,35 +1,78 @@
-
 #ifndef CITE_H
 #define CITE_H
 
 
 #include <iostream>
 #include <vector>
+#include <map>   
+#include <set>    
 #include "TuileCite_TuileDep.h"
+#include "CoordHex.h" 
 
 
 using namespace std;
 namespace Akropolis{
     
     class Cite{
+    public:
+
+        class CoupPossible {
+        public:
+            CoordHex ancre;         // Coordonnée de l'hexagone "ancre"
+            int rotation;           // L'index de rotation (0-5)
+            bool recouvrement;      // Est-ce un coup en hauteur ?
+            unsigned int hauteur;   // Hauteur finale de la tuile
+
+            CoupPossible() = default;
+            CoupPossible(const CoordHex& a, int r, bool rec, unsigned int h)
+                : ancre(a), rotation(r), recouvrement(rec), hauteur(h) {}
+        };
+
     private:
-        vector<const TuileCite*> tuile_cites;
-        size_t nb_max;
+        // "Inventaire" pour le score et la gestion mémoire
+        vector<TuileCite*> tuiles_posees; 
+        
+        // "Plateau" pour la logique de placement et l'affichage
+        map<CoordHex, pair<HexagoneConstruction*, unsigned int>> plateau;
+        
+        // Cases vides adjacentes à nos tuiles (pour coups au sol)
+        set<CoordHex> frontiere; 
 
     public:
-        Cite(size_t capacite_initiale = 4): nb_max(capacite_initiale) {
-            tuile_cites.reserve(capacite_initiale);
+        
+        Cite() = default; 
+        ~Cite(); 
+
+        
+        
+        // Place la tuile de départ au centre
+        void initialiserCite(TuileDepart* tuileDepart);
+
+        // trouver tous les coups légaux
+        vector<CoupPossible> genererCoupsValides(const TuileCite& tuile) const;
+
+        // Appliquer le coup choisi
+        void placerTuile(TuileCite* tuile, const CoupPossible& coup);
+
+
+        void afficher(ostream& f) const; // Modifié
+
+        size_t getNbTuilesPosees() const { return tuiles_posees.size(); }
+        const map<CoordHex, pair<HexagoneConstruction*, unsigned int>>& getPlateau() const {
+            return plateau;
         }
 
-        ~Cite() = default;
+    private:
 
-        void ajouter(const TuileCite& t);
-        void afficher(ostream& f) const;
+        
+        // Met à jour la frontière après un placement
+        void mettreAJourFrontiere(const CoordHex& pos);
 
-        //accesseurs :
-        size_t getnb() const { return tuile_cites.size(); }
-        size_t getnb_max() const { return nb_max; }
+        // Teste si les 3 hexagones d'un coup sont valides
+        bool estUnCoupValide(const CoordHex& h0, const CoordHex& h1, const CoordHex& h2, 
+                             bool& recouvrement, unsigned int& hauteur) const;
     };
+
 }
 
 
