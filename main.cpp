@@ -50,6 +50,78 @@ cout << "========================================\n\n" << endl;
     } while (modeChoisi == 0);
     clearInputBuffer();
     
+    ModeJeu mode;
+    if (modeChoisi == 1) {
+        mode = ModeJeu::SOLO;
+    } else {
+        mode = ModeJeu::MULTIJOUEUR;
+    }
+    Partie partie(1, mode);
+
+    int nbJoueursHumains;
+    if (mode == ModeJeu::SOLO) {
+        nbJoueursHumains = 1;
+    } else {
+        nbJoueursHumains = 0;
+        do {
+            cout << "Nombre de joueurs humains (2 à 4): ";
+            if (!(cin >> nbJoueursHumains) || (nbJoueursHumains < 2 || nbJoueursHumains > 4)) {
+                cout << " Entrée invalide. Veuillez entrer un nombre entre 2 et 4." << endl;
+                clearInputBuffer();
+                nbJoueursHumains = 0;
+            }
+        } while (nbJoueursHumains == 0);
+        clearInputBuffer(); 
+    }
+
+    for (int i = 0; i < nbJoueursHumains; ++i) {
+        string nom;
+        cout << "Nom du Joueur " << i + 1 << " : ";
+        getline(cin, nom); 
+        if (nom.empty()) {
+            nom = "Joueur" + to_string(i + 1);
+        }
+        
+        try {
+            partie.ajouterJoueur(nom);
+        } catch (const GameException& e) {
+            cerr << "Erreur lors de l'ajout des joueurs : " << e.getInfo() << endl;
+            return 1;
+        }
+    }
+
+    if (mode == ModeJeu::SOLO) {
+        partie.ajouterJoueur("Illustre Constructeur");  
+        int difficulteChoisie = 0;
+        do {
+            cout << "Niveau de difficulté de l'Illustre Constructeur (1: Facile / 2: Moyen / 3: Difficile): ";
+            if (!(cin >> difficulteChoisie) || (difficulteChoisie < 1 || difficulteChoisie > 3)) {
+                cout << "❌ Entrée invalide. Veuillez entrer un nombre entre 1 et 3." << endl;
+                clearInputBuffer();
+                difficulteChoisie = 0;
+            }
+        } while (difficulteChoisie == 0)
+        clearInputBuffer();
+
+        NiveauDifficulte diff;
+        if (difficulteChoisie == 1) {
+            diff = NiveauDifficulte::FACILE;
+        } else if (difficulteChoisie == 2) {
+            diff = NiveauDifficulte::MOYEN;
+        } else {
+            diff = NiveauDifficulte::DIFFICILE;
+        }
+        partie.setDifficulte(diff);
+    }
+
+    cout << "\n\n Paramétrage terminé. Lancement de la partie..." << endl;
+    
+    try {
+        partie.lancerPartie(); 
+    } catch (const GameException& e) {
+        cerr << "\n💥 Erreur fatale pendant le jeu : " << e.getInfo() << endl;
+        return 1;
+    }
 
     ;
     return 0;
