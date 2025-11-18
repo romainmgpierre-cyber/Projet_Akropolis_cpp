@@ -119,7 +119,7 @@ cout << "========================================\n\n" << endl;
     try {
         partie.lancerPartie(); 
     } catch (const GameException& e) {
-        cerr << "\n💥 Erreur fatale pendant le jeu : " << e.getInfo() << endl;
+        cerr << "\n Erreur: " << e.getInfo() << endl;
         return 1;
     }
 
