@@ -276,7 +276,7 @@ pour une à quatre on prend toutes les cartes*/
             new Quartier(idHexagone++, Type::CASERNE)
         ));
         //37
-        tuiles2j.push_back(new(TuileCite
+        tuiles2j.push_back(new TuileCite(
             idTuile++,
             new Carriere(idHexagone++),
             new Carriere(idHexagone++),
@@ -297,84 +297,84 @@ pour une à quatre on prend toutes les cartes*/
         size_t idHexagone = 112; // de même avec 3x37=111 donc on commence à 112
 
         //38
-       tuiles2j.push_back(new TuileCite(
+       tuiles3j.push_back(new TuileCite(
             idTuile++,
             new Carriere(idHexagone++),
             new Quartier(idHexagone++, Type::MARCHE),
             new Quartier(idHexagone++, Type::HABITATION)
         ));
         //39
-        tuiles2j.push_back(new TuileCite(
+        tuiles3j.push_back(new TuileCite(
             idTuile++,
             new Quartier(idHexagone++, Type::CASERNE),
             new Quartier(idHexagone++, Type::MARCHE),
             new Quartier(idHexagone++, Type::HABITATION)
         ));
         //40
-        tuiles2j.push_back(new TuileCite(
+        tuiles3j.push_back(new TuileCite(
             idTuile++,
             new Place(idHexagone++, Type::MARCHE, 2),
             new Carriere(idHexagone++),
             new Carriere(idHexagone++)
         ));
         //41
-       tuiles2j.push_back(new TuileCite(
+       tuiles3j.push_back(new TuileCite(
             idTuile++,
             new Carriere(idHexagone++),
             new Quartier(idHexagone++, Type::JARDIN),
             new Quartier(idHexagone++, Type::CASERNE)
         ));
         //42
-        tuiles2j.push_back(new TuileCite(
+        tuiles3j.push_back(new TuileCite(
             idTuile++,
             new Quartier(idHexagone++, Type::MARCHE),
             new Quartier(idHexagone++, Type::TEMPLE),
             new Place(idHexagone++, Type::HABITATION, 1)
         ));
         //43
-       tuiles2j.push_back(new TuileCite(
+       tuiles3j.push_back(new TuileCite(
             idTuile++,
             new Carriere(idHexagone++),
             new Quartier(idHexagone++, Type::HABITATION),
             new Quartier(idHexagone++, Type::MARCHE)
         ));
         //44
-        tuiles2j.push_back(new TuileCite(
+        tuiles3j.push_back(new TuileCite(
             idTuile++,
             new Carriere(idHexagone++),
             new Quartier(idHexagone++, Type::HABITATION),
             new Quartier(idHexagone++, Type::HABITATION)
         ));
         //45
-        tuiles2j.push_back(new TuileCite(
+        tuiles3j.push_back(new TuileCite(
             idTuile++,
             new Quartier(idHexagone++, Type::CASERNE),
             new Quartier(idHexagone++, Type::HABITATION),
             new Place(idHexagone++, Type::JARDIN, 3)
         ));
         //46
-        tuiles2j.push_back(new TuileCite(
+        tuiles3j.push_back(new TuileCite(
             idTuile++,
             new Quartier(idHexagone++, Type::HABITATION),
             new Carriere(idHexagone++),
             new Carriere(idHexagone++)
         ));
         //47
-        tuiles2j.push_back(new TuileCite(
+        tuiles3j.push_back(new TuileCite(
             idTuile++,
             new Carriere(idHexagone++),
             new Place(idHexagone++, Type::CASERNE, 2),
             new Quartier(idHexagone++, Type::HABITATION)
         ));
         //48
-        tuiles2j.push_back(new TuileCite(
+        tuiles3j.push_back(new TuileCite(
             idTuile++,
             new Place(idHexagone++, Type::TEMPLE, 2),
             new Carriere(idHexagone++),
             new Carriere(idHexagone++)
         ));
         //49
-        tuiles2j.push_back(new TuileCite(
+        tuiles3j.push_back(new TuileCite(
             idTuile++,
             new Carriere(idHexagone++),
             new Quartier(idHexagone++, Type::HABITATION),
@@ -397,84 +397,84 @@ pour une à quatre on prend toutes les cartes*/
         size_t idHexagone = 148;
 
         //50
-        tuiles2j.push_back(new TuileCite(
+        tuiles4j.push_back(new TuileCite(
             idTuile++,
             new Carriere(idHexagone++),
             new Place(idHexagone++, Type::MARCHE, 2),
             new Quartier(idHexagone++, Type::TEMPLE)
         ));
         //51
-        tuiles2j.push_back(new TuileCite(
+        tuiles4j.push_back(new TuileCite(
             idTuile++,
             new Carriere(idHexagone++),
             new Place(idHexagone++, Type::HABITATION, 1),
             new Quartier(idHexagone++, Type::MARCHE)
         ));
         //52
-        tuiles2j.push_back(new TuileCite(
+        tuiles4j.push_back(new TuileCite(
             idTuile++,
             new Carriere(idHexagone++),
             new Quartier(idHexagone++, Type::MARCHE),
             new Quartier(idHexagone++, Type::HABITATION)
         ));
         //53
-        tuiles2j.push_back(new TuileCite(
+        tuiles4j.push_back(new TuileCite(
             idTuile++,
             new Carriere(idHexagone++),
             new Quartier(idHexagone++, Type::HABITATION),
             new Quartier(idHexagone++, Type::JARDIN)
         ));
         //54
-        tuiles2j.push_back(new TuileCite(
+        tuiles4j.push_back(new TuileCite(
             idTuile++,
             new Quartier(idHexagone++, Type::MARCHE),
             new Quartier(idHexagone++, Type::HABITATION),
             new Place(idHexagone++, Type::TEMPLE, 2)
         ));
         //55
-        tuiles2j.push_back(new TuileCite(
+        tuiles4j.push_back(new TuileCite(
             idTuile++,
             new Place(idHexagone++, Type::CASERNE, 2),
             new Carriere(idHexagone++),
             new Carriere(idHexagone++)
         ));
         //56
-        tuiles2j.push_back(new TuileCite(
+        tuiles4j.push_back(new TuileCite(
             idTuile++,
             new Quartier(idHexagone++, Type::CASERNE),
             new Carriere(idHexagone++),
             new Carriere(idHexagone++)
         ));
         //57
-        tuiles2j.push_back(new TuileCite(
+        tuiles4j.push_back(new TuileCite(
             idTuile++,
             new Carriere(idHexagone++),
             new Quartier(idHexagone++, Type::TEMPLE),
             new Quartier(idHexagone++, Type::HABITATION)
         ));
         //58
-        tuiles2j.push_back(new TuileCite(
+        tuiles4j.push_back(new TuileCite(
             idTuile++,
             new Carriere(idHexagone++),
             new Quartier(idHexagone++, Type::HABITATION),
             new Quartier(idHexagone++, Type::CASERNE)
         ));
         //59
-        tuiles2j.push_back(new TuileCite(
+        tuiles4j.push_back(new TuileCite(
             idTuile++,
             new Carriere(idHexagone++),
             new Quartier(idHexagone++, Type::CASERNE),
             new Quartier(idHexagone++, Type::HABITATION)
         ));
         //60
-        tuiles2j.push_back(new TuileCite(
+        tuiles4j.push_back(new TuileCite(
             idTuile++,
             new Carriere(idHexagone++),
             new Quartier(idHexagone++, Type::HABITATION),
             new Quartier(idHexagone++, Type::HABITATION)
         ));
         //61
-        tuiles2j.push_back(new TuileCite(
+        tuiles4j.push_back(new TuileCite(
             idTuile++,
             new Quartier(idHexagone++, Type::HABITATION),
             new Quartier(idHexagone++, Type::MARCHE),
@@ -497,28 +497,28 @@ pour une à quatre on prend toutes les cartes*/
         size_t idTuile = 62;
         size_t idHexagone = 184;
 
-        tuiles.push_back(new TuileCite(
+        tuiles.push_back(new TuileDepart(
             idTuile++,
             new Place(idHexagone++, Type::HABITATION, 1);
             new Carriere(idHexDepart++),
             new Carriere(idHexDepart++),
             new Carriere(idHexDepart++)));
 
-        tuiles.push_back(new TuileCite(
+        tuiles.push_back(new TuileDepart(
             idTuile++,
             new Place(idHexagone++, Type::HABITATION, 1);
             new Carriere(idHexDepart++),
             new Carriere(idHexDepart++),
             new Carriere(idHexDepart++))):
 
-        tuiles.push_back(new TuileCite(
+        tuiles.push_back(new TuileDepart(
             idTuile++,
             new Place(idHexagone++, Type::HABITATION, 1);
             new Carriere(idHexDepart++),
             new Carriere(idHexDepart++),
             new Carriere(idHexDepart++)));
 
-        tuiles.push_back(new TuileCite(
+        tuiles.push_back(new TuileDepart(
             idTuile++,
             new Place(idHexagone++, Type::HABITATION, 1);
             new Carriere(idHexDepart++),
@@ -526,5 +526,24 @@ pour une à quatre on prend toutes les cartes*/
             new Carriere(idHexDepart++)));
         
         return TuilesDepart;
+    }
+
+    std::vector<TuileCite*> creerToutesTuiles(int nbJoueurs) {
+        std::vector<TuileCite*> toutesLesTuiles;
+        
+        std::vector<TuileCite*> tuiles2 = creerTuiles2j();
+        toutesLesTuiles.insert(toutesLesTuiles.end(), tuiles2.begin(), tuiles2.end());
+        
+        if (nbJoueurs >= 3) {
+            std::vector<TuileCite*> tuiles3 = creerTuiles3j();
+            toutesLesTuiles.insert(toutesLesTuiles.end(), tuiles3.begin(), tuiles3.end());
+        }
+        
+        if (nbJoueurs >= 4) {
+            std::vector<TuileCite*> tuiles4 = creerTuiles4j();
+            toutesLesTuiles.insert(toutesLesTuiles.end(), tuiles4.begin(), tuiles4.end());
+        }
+        
+        return toutesLesTuiles;
     }
 }
