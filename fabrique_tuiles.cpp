@@ -245,7 +245,7 @@ pour une à quatre on prend toutes les cartes*/
             idTuile++,
             new Quartier(idHexagone++, Type::HABITATION),
             new Quartier(idHexagone++, Type::TEMPLE),
-            new Place(idHexagone++, Type::MARCHE, 2),
+            new Place(idHexagone++, Type::MARCHE, 2)
         ));
         //33
         tuiles2j.push_back(new TuileCite(
@@ -271,13 +271,13 @@ pour une à quatre on prend toutes les cartes*/
         //36
         tuiles2j.push_back(new TuileCite(
             idTuile++,
-            new Carriere(idHexagone++)
+            new Carriere(idHexagone++),
             new Quartier(idHexagone++, Type::MARCHE),
             new Quartier(idHexagone++, Type::CASERNE)
         ));
         //37
         tuiles2j.push_back(new(TuileCite
-            idTuile++
+            idTuile++,
             new Carriere(idHexagone++),
             new Carriere(idHexagone++),
             new Place(idHexagone++, Type::HABITATION, 1)
@@ -296,11 +296,96 @@ pour une à quatre on prend toutes les cartes*/
         size_t idTuile = 38; // dans les 2j l'id se termine à 37, donc on prend la suite
         size_t idHexagone = 112; // de même avec 3x37=111 donc on commence à 112
 
+        //38
+       tuiles2j.push_back(new TuileCite(
+            idTuile++,
+            new Carriere(idHexagone++),
+            new Quartier(idHexagone++, Type::MARCHE),
+            new Quartier(idHexagone++, Type::HABITATION)
+        ));
+        //39
+        tuiles2j.push_back(new TuileCite(
+            idTuile++,
+            new Quartier(idHexagone++, Type::CASERNE),
+            new Quartier(idHexagone++, Type::MARCHE),
+            new Quartier(idHexagone++, Type::HABITATION)
+        ));
+        //40
+        tuiles2j.push_back(new TuileCite(
+            idTuile++,
+            new Place(idHexagone++, Type::MARCHE, 2),
+            new Carriere(idHexagone++),
+            new Carriere(idHexagone++)
+        ));
+        //41
+       tuiles2j.push_back(new TuileCite(
+            idTuile++,
+            new Carriere(idHexagone++),
+            new Quartier(idHexagone++, Type::JARDIN),
+            new Quartier(idHexagone++, Type::CASERNE)
+        ));
+        //42
+        tuiles2j.push_back(new TuileCite(
+            idTuile++,
+            new Quartier(idHexagone++, Type::MARCHE),
+            new Quartier(idHexagone++, Type::TEMPLE),
+            new Place(idHexagone++, Type::HABITATION, 1)
+        ));
+        //43
+       tuiles2j.push_back(new TuileCite(
+            idTuile++,
+            new Carriere(idHexagone++),
+            new Quartier(idHexagone++, Type::HABITATION),
+            new Quartier(idHexagone++, Type::MARCHE)
+        ));
+        //44
+        tuiles2j.push_back(new TuileCite(
+            idTuile++,
+            new Carriere(idHexagone++),
+            new Quartier(idHexagone++, Type::HABITATION),
+            new Quartier(idHexagone++, Type::HABITATION)
+        ));
+        //45
+        tuiles2j.push_back(new TuileCite(
+            idTuile++,
+            new Quartier(idHexagone++, Type::CASERNE),
+            new Quartier(idHexagone++, Type::HABITATION),
+            new Place(idHexagone++, Type::JARDIN, 3)
+        ));
+        //46
+        tuiles2j.push_back(new TuileCite(
+            idTuile++,
+            new Quartier(idHexagone++, Type::HABITATION),
+            new Carriere(idHexagone++),
+            new Carriere(idHexagone++)
+        ));
+        //47
+        tuiles2j.push_back(new TuileCite(
+            idTuile++,
+            new Carriere(idHexagone++),
+            new Place(idHexagone++, Type::CASERNE, 2),
+            new Quartier(idHexagone++, Type::HABITATION)
+        ));
+        //48
+        tuiles2j.push_back(new TuileCite(
+            idTuile++,
+            new Place(idHexagone++, Type::TEMPLE, 2),
+            new Carriere(idHexagone++),
+            new Carriere(idHexagone++)
+        ));
+        //49
+        tuiles2j.push_back(new TuileCite(
+            idTuile++,
+            new Carriere(idHexagone++),
+            new Quartier(idHexagone++, Type::HABITATION),
+            new Quartier(idHexagone++, Type::TEMPLE)
+        ));
 
 
-        if (tuiles3j.size() != 37) {
+
+        if (tuiles3j.size() != 12) {
             throw GameException("Erreur: nombre de tuiles incorrect (" + 
-                              std::to_string(tuiles3j.size()) + " au lieu de 37)");
+                              std::to_string(tuiles3j.size()) + " au lieu de 12)");
         }
         
         return tuiles3j;
@@ -308,14 +393,98 @@ pour une à quatre on prend toutes les cartes*/
 
     std::vector<TuileCite*> creerTuiles4j() {
         std::vector<TuileCite*> tuiles4j; //uniquement les tuiles pour 4 joueurs (penser à rajouter les 2j et 3j)
-        size_t idTuile = 1;
-        size_t idHexagone = 1;
+        size_t idTuile = 50;
+        size_t idHexagone = 148;
+
+        //50
+        tuiles2j.push_back(new TuileCite(
+            idTuile++,
+            new Carriere(idHexagone++),
+            new Place(idHexagone++, Type::MARCHE, 2),
+            new Quartier(idHexagone++, Type::TEMPLE)
+        ));
+        //51
+        tuiles2j.push_back(new TuileCite(
+            idTuile++,
+            new Carriere(idHexagone++),
+            new Place(idHexagone++, Type::HABITATION, 1),
+            new Quartier(idHexagone++, Type::MARCHE)
+        ));
+        //52
+        tuiles2j.push_back(new TuileCite(
+            idTuile++,
+            new Carriere(idHexagone++),
+            new Quartier(idHexagone++, Type::MARCHE),
+            new Quartier(idHexagone++, Type::HABITATION)
+        ));
+        //53
+        tuiles2j.push_back(new TuileCite(
+            idTuile++,
+            new Carriere(idHexagone++),
+            new Quartier(idHexagone++, Type::HABITATION),
+            new Quartier(idHexagone++, Type::JARDIN)
+        ));
+        //54
+        tuiles2j.push_back(new TuileCite(
+            idTuile++,
+            new Quartier(idHexagone++, Type::MARCHE),
+            new Quartier(idHexagone++, Type::HABITATION),
+            new Place(idHexagone++, Type::TEMPLE, 2)
+        ));
+        //55
+        tuiles2j.push_back(new TuileCite(
+            idTuile++,
+            new Place(idHexagone++, Type::CASERNE, 2),
+            new Carriere(idHexagone++),
+            new Carriere(idHexagone++)
+        ));
+        //56
+        tuiles2j.push_back(new TuileCite(
+            idTuile++,
+            new Quartier(idHexagone++, Type::CASERNE),
+            new Carriere(idHexagone++),
+            new Carriere(idHexagone++)
+        ));
+        //57
+        tuiles2j.push_back(new TuileCite(
+            idTuile++,
+            new Carriere(idHexagone++),
+            new Quartier(idHexagone++, Type::TEMPLE),
+            new Quartier(idHexagone++, Type::HABITATION)
+        ));
+        //58
+        tuiles2j.push_back(new TuileCite(
+            idTuile++,
+            new Carriere(idHexagone++),
+            new Quartier(idHexagone++, Type::HABITATION),
+            new Quartier(idHexagone++, Type::CASERNE)
+        ));
+        //59
+        tuiles2j.push_back(new TuileCite(
+            idTuile++,
+            new Carriere(idHexagone++),
+            new Quartier(idHexagone++, Type::CASERNE),
+            new Quartier(idHexagone++, Type::HABITATION)
+        ));
+        //60
+        tuiles2j.push_back(new TuileCite(
+            idTuile++,
+            new Carriere(idHexagone++),
+            new Quartier(idHexagone++, Type::HABITATION),
+            new Quartier(idHexagone++, Type::HABITATION)
+        ));
+        //61
+        tuiles2j.push_back(new TuileCite(
+            idTuile++,
+            new Quartier(idHexagone++, Type::HABITATION),
+            new Quartier(idHexagone++, Type::MARCHE),
+            new Place(idHexagone++, Type::JARDIN, 3)
+        ));
 
 
-
-        if (tuiles4j.size() != 37) {
+        if (tuiles4j.size() != 12) {
             throw GameException("Erreur: nombre de tuiles incorrect (" + 
-                              std::to_string(tuiles4j.size()) + " au lieu de 37)");
+                              std::to_string(tuiles4j.size()) + " au lieu de 12)");
         }
         
         return tuiles4j;
@@ -325,7 +494,8 @@ pour une à quatre on prend toutes les cartes*/
     // Fonction pour créer les 4 tuiles de départ
     std::vector<TuileDepart*> creer4TuileDepart() {
         std::vector<TuileCite*> TuilesDepart; 
-        size_t idTuile = 1;
+        size_t idTuile = 62;
+        size_t idHexagone = 184;
 
         tuiles.push_back(new TuileCite(
             idTuile++,
