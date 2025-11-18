@@ -2,14 +2,19 @@
 #include "GameExcep_Enums.h"
 namespace Akropolis {
 
-/*Je créer 4 fonctions pour créer :
+/*J'ai fait 5 fonctions pour créer :
 - les tuiles 2+
 - 3+
 - 4
 - les tuiles de départ
+- les tuiles necessaires selon le nombre de joueur :    
+     std::vector<TuileCite*> creerToutesTuiles(int nbJoueurs) 
+
 pour une partie à 2 joueurs on prendra uniquement les cartes de la première fct plus celles de départ
 pour une à trois joueurs, on prend les cartes 2+ et 3+ et celles de départ
-pour une à quatre on prend toutes les cartes*/
+pour une à quatre on prend toutes les cartes
+
+*/
     
     std::vector<TuileCite*> creerTuiles2j() {
         std::vector<TuileCite*> tuiles2j; //uniquement les tuiles pour deux jouers 
