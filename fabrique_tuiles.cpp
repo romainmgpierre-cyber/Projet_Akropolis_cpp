@@ -1,14 +1,20 @@
 #include "Pioche_ChoixTuile.h"
 #include "GameExcep_Enums.h"
 namespace Akropolis {
+
+/*Je créer 4 fonctions pour créer :
+- les tuiles 2+
+- 3+
+- 4
+- les tuiles de départ
+pour une partie à 2 joueurs on prendra uniquement les cartes de la première fct plus celles de départ
+pour une à trois joueurs, on prend les cartes 2+ et 3+ et celles de départ
+pour une à quatre on prend toutes les cartes*/
     
-    // pour créer toutes les tuiles d'un coup
-    std::vector<TuileCite*> creerToutesTuilesAkropolis() {
-        std::vector<TuileCite*> tuiles;
+    std::vector<TuileCite*> creerTuiles2j() {
+        std::vector<TuileCite*> tuiles2j; //uniquement les tuiles pour deux jouers 
         size_t idTuile = 1;
         size_t idHexagone = 1;
-        
-        
         
         //1
         tuiles.push_back(new TuileCite(
@@ -70,16 +76,42 @@ namespace Akropolis {
                               std::to_string(tuiles.size()) + " au lieu de 60)");
         }
         
-        return tuiles;
+        return tuiles2j;
     }
     
-    // Fonction pour créer la tuile de départ
-    TuileDepart* creerTuileDepart() {
-        Place* centre = new Carriere(idHexDepart++);
-        Carriere* c1 = new Carriere(idHexDepart++);
-        Carriere* c2 = new Carriere(idHexDepart++);
-        Carriere* c3 = new Carriere(idHexDepart++);
+    // Fonction pour créer les 4 tuiles de départ
+    std::vector<TuileDepart*> creer4TuileDepart() {
+        std::vector<TuileCite*> TuilesDepart; 
+        size_t idTuile = 1;
+
+        tuiles.push_back(new TuileCite(
+            idTuile++,
+            new Place(idHexagone++, Type::HABITATION, 1);
+            new Carriere(idHexDepart++),
+            new Carriere(idHexDepart++),
+            new Carriere(idHexDepart++)));
+
+        tuiles.push_back(new TuileCite(
+            idTuile++,
+            new Place(idHexagone++, Type::HABITATION, 1);
+            new Carriere(idHexDepart++),
+            new Carriere(idHexDepart++),
+            new Carriere(idHexDepart++))):
+
+        tuiles.push_back(new TuileCite(
+            idTuile++,
+            new Place(idHexagone++, Type::HABITATION, 1);
+            new Carriere(idHexDepart++),
+            new Carriere(idHexDepart++),
+            new Carriere(idHexDepart++)));
+
+        tuiles.push_back(new TuileCite(
+            idTuile++,
+            new Place(idHexagone++, Type::HABITATION, 1);
+            new Carriere(idHexDepart++),
+            new Carriere(idHexDepart++),
+            new Carriere(idHexDepart++)));
         
-        return new TuileDepart(0, centre, c1, c2, c3);
+        return TuilesDepart;
     }
 }
