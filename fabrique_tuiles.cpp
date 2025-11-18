@@ -52,8 +52,8 @@ pour une à quatre on prend toutes les cartes*/
         //5
         tuiles2j.push_back(new TuileCite(
             idTuile++,
-            new Quartier(idHexagone++, Type::MARCHE),
             new Quartier(idHexagone++, Type::HABITATION),
+            new Quartier(idHexagone++, Type::MARCHE),
             new Place(idHexagone++, Type::CASERNE, 2)
         ));
                 
@@ -61,8 +61,8 @@ pour une à quatre on prend toutes les cartes*/
         tuiles2j.push_back(new TuileCite(
             idTuile++,
             new Place(idHexagone++, Type::CASERNE, 2),
-            new Quartier(idHexagone++, Type::HABITATION),
-            new Carriere(idHexagone++)
+            new Carriere(idHexagone++),
+            new Quartier(idHexagone++, Type::HABITATION)
         ));
         
         //7
@@ -76,8 +76,8 @@ pour une à quatre on prend toutes les cartes*/
         tuiles2j.push_back(new TuileCite(
             idTuile++,
             new Place(idHexagone++, Type::CASERNE, 2),
-            new Quartier(idHexagone++, Type::HABITATION),
-            new Quartier(idHexagone++, Type::TEMPLE)
+            new Quartier(idHexagone++, Type::TEMPLE),
+            new Quartier(idHexagone++, Type::HABITATION)
         ));
         //9
         tuiles2j.push_back(new TuileCite(
@@ -96,8 +96,8 @@ pour une à quatre on prend toutes les cartes*/
         //11
         tuiles2j.push_back(new TuileCite(
             idTuile++,
-            new Quartier(idHexagone++, Type::MARCHE),
             new Quartier(idHexagone++, Type::HABITATION),
+            new Quartier(idHexagone++, Type::MARCHE),
             new Quartier(idHexagone++, Type::TEMPLE)
         ));
         //12
@@ -117,8 +117,8 @@ pour une à quatre on prend toutes les cartes*/
         //14
         tuiles2j.push_back(new TuileCite(
             idTuile++,
-            new Quartier(idHexagone++, Type::MARCHE),
             new Quartier(idHexagone++, Type::HABITATION),
+            new Quartier(idHexagone++, Type::MARCHE),
             new Quartier(idHexagone++, Type::JARDIN)
         ));
         //15
@@ -152,8 +152,8 @@ pour une à quatre on prend toutes les cartes*/
         //19
         tuiles2j.push_back(new TuileCite(
             idTuile++,
-            new Quartier(idHexagone++, Type::CASERNE),
             new Quartier(idHexagone++, Type::MARCHE),
+            new Quartier(idHexagone++, Type::CASERNE),
             new Carriere(idHexagone++)
         ));
         //20
@@ -180,8 +180,8 @@ pour une à quatre on prend toutes les cartes*/
         //23
         tuiles2j.push_back(new TuileCite(
             idTuile++,
-            new Quartier(idHexagone++, Type::CASERNE),
             new Quartier(idHexagone++, Type::HABITATION),
+            new Quartier(idHexagone++, Type::CASERNE),
             new Quartier(idHexagone++, Type::JARDIN)
         ));
         //24
@@ -194,8 +194,8 @@ pour une à quatre on prend toutes les cartes*/
         //25
         tuiles2j.push_back(new TuileCite(
             idTuile++,
-            new Place(idHexagone++, Type::HABITATION, 1),
             new Quartier(idHexagone++, Type::MARCHE),
+            new Place(idHexagone++, Type::HABITATION, 1),
             new Quartier(idHexagone++, Type::CASERNE)
         ));
         //26
@@ -222,8 +222,8 @@ pour une à quatre on prend toutes les cartes*/
         //29
         tuiles2j.push_back(new TuileCite(
             idTuile++,
-            new Quartier(idHexagone++, Type::TEMPLE),
             new Carriere(idHexagone++),
+            new Quartier(idHexagone++, Type::TEMPLE),
             new Quartier(idHexagone++, Type::MARCHE)
         ));
         //30
@@ -243,22 +243,22 @@ pour une à quatre on prend toutes les cartes*/
         //32
         tuiles2j.push_back(new TuileCite(
             idTuile++,
+            new Quartier(idHexagone++, Type::HABITATION),
             new Quartier(idHexagone++, Type::TEMPLE),
             new Place(idHexagone++, Type::MARCHE, 2),
-            new Quartier(idHexagone++, Type::HABITATION)
         ));
         //33
         tuiles2j.push_back(new TuileCite(
             idTuile++,
-            new Quartier(idHexagone++, Type::MARCHE),
-            new Carriere(idHexagone++),
+            new Quartier(idHexagone++, Type::HABITATION),
+            new Quartier(idHexagone++, Type::TEMPLE),
             new Quartier(idHexagone++, Type::CASERNE)
         ));
         //34
         tuiles2j.push_back(new TuileCite(
             idTuile++,
-            new Quartier(idHexagone++, Type::CASERNE),
             new Carriere(idHexagone++),
+            new Quartier(idHexagone++, Type::CASERNE),
             new Quartier(idHexagone++, Type::MARCHE)
         ));
         //35
@@ -271,8 +271,8 @@ pour une à quatre on prend toutes les cartes*/
         //36
         tuiles2j.push_back(new TuileCite(
             idTuile++,
+            new Carriere(idHexagone++)
             new Quartier(idHexagone++, Type::MARCHE),
-            new Quartier(idHexagone++, Type::HABITATION),
             new Quartier(idHexagone++, Type::CASERNE)
         ));
         //37
