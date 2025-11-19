@@ -9,6 +9,7 @@
 
 using namespace std;
 namespace Akropolis{
+    
     class GameException {
 	public:
 		GameException(const string& i) :info(i) {}
@@ -16,7 +17,10 @@ namespace Akropolis{
 	private:
 		string info;
 	};
-
+    class PartieAnnulee : public GameException {
+        public:
+            PartieAnnulee(const string& msg) : GameException(msg) {}
+        };
     enum class Couleur { rouge, violet, vert, bleu, jaune, gris };
     enum class Etoile { un=1, deux=2, trois=3 };
     

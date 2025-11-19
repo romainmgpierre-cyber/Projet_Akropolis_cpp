@@ -4,6 +4,7 @@
 #include <iostream>
 #include <algorithm> 
 #include <limits>
+#include <sstream>
 
 namespace Akropolis {
 
@@ -135,25 +136,36 @@ namespace Akropolis {
                  << " (Cout: " << choixTuile->calculerCout(i) << ")" << endl;
         }
 
-        // Choix tuile et paiement
-        size_t index;
+        // --- MODIFICATION 1 : Choix tuile avec option Quitter ---
+        size_t index = 0;
         while(true) {
-            cout << "Choix (0-" << dispos.size()-1 << ") : ";
-            if (cin >> index && index < dispos.size()) {
+            cout << "Choix (0-" << dispos.size()-1 << ", ou 'q' pour quitter) : ";
+            string input;
+            cin >> input; // On lit une chaine
+
+            // Vérification sortie
+            if (input == "q" || input == "Q") {
+                // Assurez-vous que PartieAnnulee est déclaré dans GameExcep_Enums.h
+                throw PartieAnnulee("Le joueur a quitté la partie."); 
+            }
+
+            // Tentative de conversion en nombre
+            stringstream ss(input);
+            if ((ss >> index) && index < dispos.size()) {
                 size_t coutP = choixTuile->calculerCout(index);
                 if (joueur->peutPayerPierres(coutP)) {
-                    joueur->retirerPierres(coutP);
-                    break;
+                    joueur->retirerPierres(coutP); // Paiement validé
+                    break; // On sort de la boucle de choix
                 } else {
                     cout << "Pas assez de pierres (" << joueur->getNbPierres() << " pierres dispo)." << endl;
                 }
             } else {
-                cin.clear(); cin.ignore(1000, '\n');
                 cout << "Entree invalide." << endl;
             }
         }
 
-        TuileCite* tuile = choixTuile->choisirTuile(joueur,index);
+        // Récupération de la tuile (le joueur est maintenant passé en paramètre comme demandé précédemment)
+        TuileCite* tuile = choixTuile->choisirTuile(joueur, index);
         
         // Logique de placement
         cout << "Votre Cite :" << endl;
@@ -175,31 +187,27 @@ namespace Akropolis {
                  << (coups[i].recouvrement ? " [Recouvrement]" : " [Sol]") << endl;
         }
 
-        size_t choixCoup;
+        // --- MODIFICATION 2 : Choix placement avec option Quitter ---
+        size_t choixCoup = 0;
         while (true) {
-            cout << "Votre placement (1-" << coups.size() << ") : ";
-            if (cin >> choixCoup && choixCoup >= 1 && choixCoup <= coups.size()) {
+            cout << "Votre placement (1-" << coups.size() << ", ou 'q' pour quitter) : ";
+            string input;
+            cin >> input;
+
+            if (input == "q" || input == "Q") {
+                // Important : on remet la tuile dans le choix ou on la supprime pour éviter les fuites ?
+                // Ici, on lance juste l'exception, le destructeur de Partie nettoiera.
+                throw PartieAnnulee("Le joueur a quitté la partie.");
+            }
+
+            stringstream ss(input);
+            if ((ss >> choixCoup) && choixCoup >= 1 && choixCoup <= coups.size()) {
                 break;
             }
-            cin.clear(); cin.ignore(1000, '\n');
             cout << "Invalide." << endl;
         }
 
-        // CORRECTION IMPORTANTE : Appel direct à la Cité
         joueur->getCite()->placerTuile(tuile, coups[choixCoup-1]);
         cout << "Tuile placee avec succes." << endl;
-    }
-
-
-    void Partie::activerVariante(const string& nom) {
-        for (auto& v : variantes) if (v.getNom() == nom) v.activer();
-    }
-    void Partie::desactiverVariante(const string& nom) {
-        for (auto& v : variantes) if (v.getNom() == nom) v.desactiver();
-    }
-    vector<Variante> Partie::getVariantesActives() const {
-        vector<Variante> actives;
-        for (const auto& v : variantes) if (v.estActive()) actives.push_back(v);
-        return actives;
     }
 }
