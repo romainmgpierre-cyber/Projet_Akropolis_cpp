@@ -69,7 +69,7 @@ bool readStringOrQuit(string& value, const string& prompt) {
 // --- FONCTION PRINCIPALE ---
 
 int main() {
-    //test commit
+
     // 1. Encapsuler toute la logique dans un try-catch
     try {
         cout << "Bienvenue dans AKROPOLIS - Mode console" << endl; 
