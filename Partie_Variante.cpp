@@ -5,7 +5,7 @@
 #include <algorithm> 
 #include <limits>
 #include <sstream>
-
+using namespace std;
 namespace Akropolis {
 
 
@@ -53,32 +53,59 @@ namespace Akropolis {
 
     // Initialisation
 
+        // Ces fonctions viennent de fabrique_tuiles.cpp
+    extern std::vector<TuileCite*> creerToutesTuiles(int nbJoueurs);
+    extern std::vector<TuileDepart*> creer4TuileDepart();
 
+
+    
     void Partie::initialiserTuiles() {
-        // Remplir la pioche - Cette fonction peut changer par la suite lorsqu'on aura toutes nos tuiles
+        // --- PROBLÈME RÉSOLU ICI : UTILISATION DE LA FABRIQUE ---
 
-        for (size_t i = 0; i < 60; ++i) {
-            HexagoneConstruction* h1 = new Quartier(i*3 + 1, Type::HABITATION);
-            HexagoneConstruction* h2 = new Carriere(i*3 + 2);
-            HexagoneConstruction* h3 = new Place(i*3 + 3, Type::MARCHE, 1);
-            
+        // 1. Créer la liste de Tuiles Cité en fonction du nombre de joueurs
+        std::vector<TuileCite*> toutesLesTuiles = creerToutesTuiles(joueurs.size());
         
-            TuileCite* tuile = new TuileCite(i, h1, h2, h3);
-            
-            pioche->ajouterTuile(tuile); 
+        // 2. Remplacer l'ancien objet Pioche par un nouveau rempli avec les vraies tuiles
+        // Suppression de l'ancienne pioche (pour la sécurité, même si le destructeur de Partie le fait)
+        delete pioche; 
+        
+        // Crée une nouvelle Pioche et lui transfère la propriété des Tuiles Cité
+        pioche = new Pioche(1, toutesLesTuiles.size());
+        
+        // Remplir la Pioche avec les tuiles de la fabrique
+        for (TuileCite* t : toutesLesTuiles) {
+            pioche->ajouterTuile(t);
         }
 
-        // Tuiles de départ
-        for (size_t i = 0; i < joueurs.size(); ++i) {
-            Place* centre = new Place(1000 + i, Type::MARCHE);
-            Carriere* c1 = new Carriere(1001 + i);
-            Carriere* c2 = new Carriere(1002 + i);
-            Carriere* c3 = new Carriere(1003 + i);
-            
-            TuileDepart* td = new TuileDepart(i, centre, c1, c2, c3);
-            tuilesDepart.push_back(td);
-            joueurs[i]->getCite()->initialiserCite(td);
+        // Videz le vecteur temporaire pour ne pas appeler delete deux fois
+        // Note: La Pioche doit prendre possession de ces pointeurs et les gérer.
+        // Puisque votre Pioche a un destructeur qui fait 'delete t', c'est bon.
+        toutesLesTuiles.clear();
+
+
+        // --- GESTION DES TUILES DE DÉPART (Début du plateau) ---
+
+        // 3. Créer et affecter les 4 tuiles de départ
+        // Suppression de l'ancien contenu de tuilesDepart (si existant)
+        for (TuileDepart* td : tuilesDepart) delete td;
+        tuilesDepart.clear();
+        
+        tuilesDepart = creer4TuileDepart();
+        
+        // 4. Initialiser la Cité de chaque joueur avec sa tuile de départ
+        if (tuilesDepart.size() < joueurs.size()) {
+             throw GameException("Nombre de tuiles de depart insuffisant pour le nombre de joueurs.");
         }
+        
+        for (size_t i = 0; i < joueurs.size(); ++i) {
+            // Note: Joueur[i] prend la tuile Depart[i]
+            // Le joueur a déjà sa cité (initialisée dans son constructeur)
+            joueurs[i]->getCite()->initialiserCite(tuilesDepart[i]);
+        }
+        
+        // Note: La Pioche est maintenant remplie aléatoirement (grâce à la logique de pioche et à la fabrique)
+        
+
     }
 
     void Partie::lancerPartie() {
@@ -91,6 +118,56 @@ namespace Akropolis {
     }
 
 
+    void afficherHexagoneVisuel(HexagoneConstruction* hex, ostream& os) {
+    // La couleur est remplacée par le nom du type ou du quartier
+
+        if (Place* p = dynamic_cast<Place*>(hex)) {
+            // Ex: [P MAR *]
+            string nomType = p->getType().getNom().substr(0, 3);
+            string upperNom = "";
+            for(char c : nomType) upperNom += toupper(c);
+
+            os << "[P " << upperNom << " ";
+            // Ajout d'une chaîne d'étoiles
+            for(size_t i = 0; i < p->getNbEtoile(); ++i) {
+                os << "*"; 
+            }
+            os << "]";
+
+        } else if (dynamic_cast<Carriere*>(hex)) {
+            // Ex: [CAR]
+            os << "[CAR]";
+
+        } else if (Quartier* q = dynamic_cast<Quartier*>(hex)) {
+            // Ex: [HAB]
+            string nomType = q->getType().getNom().substr(0, 3);
+            string upperNom = "";
+            for(char c : nomType) upperNom += toupper(c);
+            
+            os << "[" << upperNom << "]";
+        }
+    }
+
+
+    // Helper pour afficher une tuile complète dans la rivière
+    void afficherTuileDansLaRiviere(const ChoixTuile* choixTuile, size_t index, ostream& os) {
+        // 1. Récupérer la tuile et les données
+        const auto& dispos = choixTuile->getTuilesDisponibles();
+        TuileCite* t = dispos[index];
+        size_t coutPierre = choixTuile->calculerCout(index);
+
+        os << "[" << index << "] Tuile #" << t->getId() 
+        << " (Coût: " << coutPierre << "p) : ";
+        
+        // 2. Afficher les 3 hexagones de la tuile triangulaire côte à côte
+        // Nous utilisons la fonction d'affichage visuel existante.
+        afficherHexagoneVisuel(t->getHexagone(0), os);
+        os << "-";
+        afficherHexagoneVisuel(t->getHexagone(1), os);
+        os << "-";
+        afficherHexagoneVisuel(t->getHexagone(2), os);
+        os << endl;
+    }
     // Boucle Principale
 
     void Partie::boucleDeJeu() {
@@ -129,12 +206,15 @@ namespace Akropolis {
             return;
         }
 
-        // Affichage rivière
+        cout << "\n--- Tuiles Disponibles ---" << endl;
         const auto& dispos = choixTuile->getTuilesDisponibles();
+        
+        // Remplacement de l'ancienne boucle simple :
         for (size_t i = 0; i < dispos.size(); ++i) {
-            cout << "[" << i << "] Tuile #" << dispos[i]->getId() 
-                 << " (Cout: " << choixTuile->calculerCout(i) << ")" << endl;
+            // Utilisation de la nouvelle fonction pour un affichage clair
+            afficherTuileDansLaRiviere(choixTuile, i, cout);
         }
+        cout << "--------------------------" << endl;
 
         // --- MODIFICATION 1 : Choix tuile avec option Quitter ---
         size_t index = 0;
