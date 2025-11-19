@@ -50,7 +50,7 @@ namespace Akropolis{
             return index; 
         }
 
-        TuileCite* choisirTuile(size_t index);
+        TuileCite* choisirTuile(Joueur* joueur,size_t index);
         bool ajouterTuile(TuileCite* tuile);  
 
         const vector<TuileCite*>& getTuilesDisponibles() const {

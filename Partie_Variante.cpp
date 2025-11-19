@@ -153,7 +153,7 @@ namespace Akropolis {
             }
         }
 
-        TuileCite* tuile = choixTuile->choisirTuile(index);
+        TuileCite* tuile = choixTuile->choisirTuile(joueur,index);
         
         // Logique de placement
         cout << "Votre Cite :" << endl;

@@ -496,41 +496,23 @@ pour une à quatre on prend toutes les cartes
     }
 
 
-    // Fonction pour créer les 4 tuiles de départ
     std::vector<TuileDepart*> creer4TuileDepart() {
-        std::vector<TuileCite*> TuilesDepart; 
+        std::vector<TuileDepart*> tuilesDepart; // Type de retour corrigé
         size_t idTuile = 62;
-        size_t idHexagone = 184;
+        size_t idHexagone = 184; // On réutilise idHexagone
 
-        tuiles.push_back(new TuileDepart(
-            idTuile++,
-            new Place(idHexagone++, Type::HABITATION, 1);
-            new Carriere(idHexDepart++),
-            new Carriere(idHexDepart++),
-            new Carriere(idHexDepart++)));
-
-        tuiles.push_back(new TuileDepart(
-            idTuile++,
-            new Place(idHexagone++, Type::HABITATION, 1);
-            new Carriere(idHexDepart++),
-            new Carriere(idHexDepart++),
-            new Carriere(idHexDepart++))):
-
-        tuiles.push_back(new TuileDepart(
-            idTuile++,
-            new Place(idHexagone++, Type::HABITATION, 1);
-            new Carriere(idHexDepart++),
-            new Carriere(idHexDepart++),
-            new Carriere(idHexDepart++)));
-
-        tuiles.push_back(new TuileDepart(
-            idTuile++,
-            new Place(idHexagone++, Type::HABITATION, 1);
-            new Carriere(idHexDepart++),
-            new Carriere(idHexDepart++),
-            new Carriere(idHexDepart++)));
+        for (int i = 0; i < 4; ++i) {
+            // Toutes les tuiles de départ ont la même structure: Place HABITATION (Bleu) 1 étoile
+            tuilesDepart.push_back(new TuileDepart(
+                idTuile++,
+                new Place(idHexagone++, Type::HABITATION, 1),
+                new Carriere(idHexagone++),
+                new Carriere(idHexagone++),
+                new Carriere(idHexagone++))
+            );
+        }
         
-        return TuilesDepart;
+        return tuilesDepart;
     }
 
     std::vector<TuileCite*> creerToutesTuiles(int nbJoueurs) {

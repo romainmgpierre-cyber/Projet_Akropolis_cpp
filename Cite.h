@@ -58,7 +58,7 @@ namespace Akropolis{
         void afficher(ostream& f) const; // Modifié
 
         size_t getNbTuilesPosees() const { return tuiles_posees.size(); }
-        const map<CoordHex, pair<HexagoneConstruction*, unsigned int>>& getPlateau() const {
+        const map<CoordHex, std::pair<HexagoneConstruction*, unsigned int> >& getPlateau() const {
             return plateau;
         }
 

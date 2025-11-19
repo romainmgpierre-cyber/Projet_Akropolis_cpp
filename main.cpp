@@ -4,17 +4,25 @@
 #include "CoordHex.h"
 #include "HexCons_Carr_Quart_Place.h"
 #include "Joueur.h"
-#include "Partie_Variante.h"
-#include "Pioche_ChoixTuile.h"
+#include "Partie_Variante.h" 
+#include "Pioche_ChoixTuile.h" 
 #include "Score.h"
 #include "Type.h"
+#include <iostream>
+#include <string>
+#include <limits> // AJOUTÉ : Nécessaire pour numeric_limits
 
 using namespace std;
+using namespace Akropolis;
 
 void clearInputBuffer() {
     cin.clear();
     cin.ignore(numeric_limits<streamsize>::max(), '\n');
 }
+
+
+
+
 
 int main() {
     cout << "Bienvenue dans AKROPOLIS - Mode console" << endl; 
@@ -100,8 +108,8 @@ cout << "========================================\n\n" << endl;
                 clearInputBuffer();
                 difficulteChoisie = 0;
             }
-        } while (difficulteChoisie == 0)
-        clearInputBuffer();
+        } while (difficulteChoisie == 0);
+        
 
         NiveauDifficulte diff;
         if (difficulteChoisie == 1) {
