@@ -49,63 +49,85 @@ namespace Akropolis{
         vector<CoupPossible> coups;
         TuileCite* tuileTest = tuile.clone(); // Pour tester les permutations
 
+        // --- NOUVELLE LOGIQUE "AU SOL" ---
+        // // 1. Créer la "frontière élargie" pour les placements au sol.
+        // Elle contient 'frontiere' + tous les voisins vides de 'frontiere'.
+        set<CoordHex> frontiereElargie = frontiere;
+        for (const CoordHex& pos : frontiere) {
+            for (int i = 0; i < 6; ++i) {
+                CoordHex voisin = pos.voisin(i);
+                // Si le voisin est vide (pas dans plateau), on l'ajoute aux candidats 'Ancre'
+                if (plateau.find(voisin) == plateau.end()) {
+                    frontiereElargie.insert(voisin);
+                }
+            }
+        }
+        // --- FIN NOUVELLE LOGIQUE ---
+
+
         // Boucle 1 : Les 2 formes géométriques (V et ^)
         for (int forme = 0; forme < 2; forme++) {
-            
-            // Définir les 2 coordonnées relatives (par rapport à l'ancre (0,0))
+
             CoordHex rel1 = (forme == 0) ? CoordHex(0, 1) : CoordHex(0, -1);
-            CoordHex rel2 = (forme == 0) ? CoordHex(-1, 1) : CoordHex(1, -1); 
+            CoordHex rel2 = (forme == 0) ? CoordHex(-1, 1) : CoordHex(1, -1);
 
             // Boucle 2 : Les 3 permutations de contenu
             for (int perm = 0; perm < 3; perm++) {
-                
+
                 int rotation_id = (forme * 3) + perm; // ID unique 0-5
 
-                // -Chercher les placements "AU SOL" (Adjacence)
-                // 'frontiere' contient toutes les ancres potentielles
-                for (const CoordHex& ancre : frontiere) {
+                // --- RECHERCHE "AU SOL" (MODIFIÉE) ---
+                // On itère sur la 'frontiereElargie' au lieu de 'frontiere'
+                for (const CoordHex& ancre : frontiereElargie) {
                     CoordHex pos1 = ancre + rel1;
                     CoordHex pos2 = ancre + rel2;
-                    
-                    // Si les 2 autres cases sont aussi vides
-                    if (plateau.find(pos1) == plateau.end() &&
-                        plateau.find(pos2) == plateau.end()) {
-                        
-                        // C'est un coup "au sol" valide (hauteur 1)
-                        coups.push_back({ancre, rotation_id, false, 1});
-                    }
-                }
 
-                // Chercher les placements "EN HAUTEUR" (Recouvrement)
+                    // Condition A: Les 3 cases (ancre, pos1, pos2) doivent être VIDES
+                    if (plateau.find(ancre) == plateau.end() && // ancre doit être vide
+                        plateau.find(pos1) == plateau.end() &&
+                        plateau.find(pos2) == plateau.end()) {
+
+                        // Condition B: AU MOINS UN des 3 doit toucher la frontière d'origine
+                        if (frontiere.count(ancre) > 0 || frontiere.count(pos1) > 0 || frontiere.count(pos2) > 0) {
+                            // C'est un coup "au sol" valide (hauteur 1)
+                            coups.push_back({ancre, rotation_id, false, 1});
+                        }
+                    }
+                } // --- FIN RECHERCHE "AU SOL" ---
+
+
+                // --- RECHERCHE "EN HAUTEUR" (Inchangée) ---
                 // Itérer sur toutes les cases DÉJÀ OCCUPÉES
                 for (const auto& paire : plateau) {
-                    const CoordHex& ancre = paire.first; // La clé (position)
-                    const auto& data = paire.second;     // La valeur (pair<Hexagone*, int>)
+                    const CoordHex& ancre = paire.first;
+                    const auto& data = paire.second;
 
                     CoordHex pos1 = ancre + rel1;
                     CoordHex pos2 = ancre + rel2;
 
-                    // Si les 3 cases (ancre, pos1, pos2) sont TOUTES OCCUPÉES
                     auto it1 = plateau.find(pos1);
                     auto it2 = plateau.find(pos2);
-                    
+
+                    // Si les 3 cases (ancre, pos1, pos2) sont TOUTES OCCUPÉES
                     if (it1 != plateau.end() && it2 != plateau.end()) {
-                        
-                        // Trouver la hauteur max des 3 cases couvertes
-                        unsigned int h_ancre = data.second; // data est la paire {Hexagone*, hauteur}
+
+                        unsigned int h_ancre = data.second;
                         unsigned int h1 = it1->second.second;
                         unsigned int h2 = it2->second.second;
                         unsigned int nouvelleHauteur = max({h_ancre, h1, h2}) + 1;
-                        
+
+                        // TODO: Ajouter la validation (ex: pas de Carrière sur Carrière)
+                        // if (estUnCoupValide(ancre, pos1, pos2, ...))
                         coups.push_back({ancre, rotation_id, true, nouvelleHauteur});
                     }
-            }
+                } // --- FIN RECHERCHE "EN HAUTEUR" ---
+
                 tuileTest->rotationHoraire(); // Permute les hexagones pour le test suivant
             }
         }
-        
+
         delete tuileTest; // Libérer le clone
-        
+
         // TODO: Dé-dupliquer les coups (plusieurs rotations peuvent donner le même coup)
         return coups;
     }

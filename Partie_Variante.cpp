@@ -5,6 +5,7 @@
 #include <algorithm> 
 #include <limits>
 #include <sstream>
+#include <set>
 using namespace std;
 namespace Akropolis {
 
@@ -202,92 +203,130 @@ namespace Akropolis {
         remplirChoixTuile();
 
         if (choixTuile->getNombreTuiles() == 0) {
-            cout << "Plus de tuiles disponibles." << endl;
-            return;
+           cout << "Plus de tuiles disponibles." << endl;
+           return;
         }
-
         cout << "\n--- Tuiles Disponibles ---" << endl;
         const auto& dispos = choixTuile->getTuilesDisponibles();
-        
-        // Remplacement de l'ancienne boucle simple :
+
         for (size_t i = 0; i < dispos.size(); ++i) {
-            // Utilisation de la nouvelle fonction pour un affichage clair
             afficherTuileDansLaRiviere(choixTuile, i, cout);
         }
         cout << "--------------------------" << endl;
 
-        // --- MODIFICATION 1 : Choix tuile avec option Quitter ---
+        // --- Choix tuile avec option Quitter ---
         size_t index = 0;
         while(true) {
             cout << "Choix (0-" << dispos.size()-1 << ", ou 'q' pour quitter) : ";
             string input;
-            cin >> input; // On lit une chaine
-
-            // Vérification sortie
-            if (input == "q" || input == "Q") {
-                // Assurez-vous que PartieAnnulee est déclaré dans GameExcep_Enums.h
-                throw PartieAnnulee("Le joueur a quitté la partie."); 
-            }
-
-            // Tentative de conversion en nombre
-            stringstream ss(input);
-            if ((ss >> index) && index < dispos.size()) {
-                size_t coutP = choixTuile->calculerCout(index);
-                if (joueur->peutPayerPierres(coutP)) {
-                    joueur->retirerPierres(coutP); // Paiement validé
-                    break; // On sort de la boucle de choix
-                } else {
-                    cout << "Pas assez de pierres (" << joueur->getNbPierres() << " pierres dispo)." << endl;
-                }
-            } else {
-                cout << "Entree invalide." << endl;
-            }
-        }
-
-        // Récupération de la tuile (le joueur est maintenant passé en paramètre comme demandé précédemment)
-        TuileCite* tuile = choixTuile->choisirTuile(joueur, index);
-        
-        // Logique de placement
-        cout << "Votre Cite :" << endl;
-        joueur->getCite()->afficher(cout);
-
-        // Génération des coups
-        auto coups = joueur->getCite()->genererCoupsValides(*tuile);
-        
-        if (coups.empty()) {
-            cout << "Aucun placement possible ! La tuile est defaussee." << endl;
-            delete tuile;
-            return;
-        }
-
-        cout << "Coups possibles :" << endl;
-        for (size_t i = 0; i < coups.size(); ++i) {
-            cout << (i+1) << ". Pos: (q=" << coups[i].ancre.getQ() << ", r=" << coups[i].ancre.getR() << ") "
-                 << "Rot: " << coups[i].rotation 
-                 << (coups[i].recouvrement ? " [Recouvrement]" : " [Sol]") << endl;
-        }
-
-        // --- MODIFICATION 2 : Choix placement avec option Quitter ---
-        size_t choixCoup = 0;
-        while (true) {
-            cout << "Votre placement (1-" << coups.size() << ", ou 'q' pour quitter) : ";
-            string input;
             cin >> input;
 
             if (input == "q" || input == "Q") {
-                // Important : on remet la tuile dans le choix ou on la supprime pour éviter les fuites ?
-                // Ici, on lance juste l'exception, le destructeur de Partie nettoiera.
-                throw PartieAnnulee("Le joueur a quitté la partie.");
-            }
-
-            stringstream ss(input);
-            if ((ss >> choixCoup) && choixCoup >= 1 && choixCoup <= coups.size()) {
-                break;
-            }
-            cout << "Invalide." << endl;
+            throw PartieAnnulee("Le joueur a quitté la partie.");
         }
 
-        joueur->getCite()->placerTuile(tuile, coups[choixCoup-1]);
+        stringstream ss(input);
+        if ((ss >> index) && index < dispos.size()) {
+            size_t coutP = choixTuile->calculerCout(index);
+            if (joueur->peutPayerPierres(coutP)) {
+                joueur->retirerPierres(coutP);
+                break;
+            } else {
+                cout << "Pas assez de pierres (" << joueur->getNbPierres() << " pierres dispo)." << endl;
+            }
+        } else {
+            cout << "Entree invalide." << endl;
+        }
+    }
+
+    TuileCite* tuile = choixTuile->choisirTuile(joueur, index);
+
+    cout << "Votre Cite :" << endl;
+    joueur->getCite()->afficher(cout);
+
+    // --- DÉBUT DE LA NOUVELLE LOGIQUE DE PLACEMENT ---
+
+    // 1. Génération de TOUS les coups possibles (toutes rotations confondues)
+    auto tousCoups = joueur->getCite()->genererCoupsValides(*tuile);
+
+    if (tousCoups.empty()) {
+        cout << "Aucun placement possible ! La tuile est defaussee." << endl;
+        delete tuile;
+        return;
+    }
+
+    // 2. Isoler les rotations uniques valides
+    set<int> rotationsUniques;
+    for (const auto& coup : tousCoups) {
+        rotationsUniques.insert(coup.rotation);
+    }
+
+    // Afficher les rotations disponibles
+    cout << "\n--- Orientations disponibles (Rotations de contenu/forme) ---" << endl;
+    vector<int> rotationsVec(rotationsUniques.begin(), rotationsUniques.end());
+    for(size_t i = 0; i < rotationsVec.size(); ++i) {
+        cout << (i+1) << ". Rotation: " << rotationsVec[i] << endl;
+    }
+    cout << "---------------------------------------------------------" << endl;
+
+    // 3. Choix de la rotation
+    int rotationChoisie = -1;
+    size_t indexRotation = 0;
+    while(true) {
+        cout << "Choix d'Orientation (1-" << rotationsVec.size() << ", ou 'q' pour quitter) : ";
+        string input;
+        cin >> input;
+
+        if (input == "q" || input == "Q") {
+            throw PartieAnnulee("Le joueur a quitté la partie.");
+        }
+
+        stringstream ss(input);
+        if ((ss >> indexRotation) && indexRotation >= 1 && indexRotation <= rotationsVec.size()) {
+            rotationChoisie = rotationsVec[indexRotation - 1];
+            break;
+        }
+        cout << "Choix d'orientation invalide." << endl;
+    }
+
+    // 4. Filtrer les coups pour ne garder que la rotation choisie
+    vector<Cite::CoupPossible> coupsFiltres;
+    for (const auto& coup : tousCoups) {
+        if (coup.rotation == rotationChoisie) {
+            coupsFiltres.push_back(coup);
+        }
+    }
+
+    // 5. Afficher les positions valides pour cette rotation
+    cout << "\nCoups possibles pour la Rotation " << rotationChoisie << " :" << endl;
+    for (size_t i = 0; i < coupsFiltres.size(); ++i) {
+        // Affichage plus clair de la position (Ancre) et du type de placement
+        cout << (i+1) << ". Position (q=" << coupsFiltres[i].ancre.getQ()
+             << ", r=" << coupsFiltres[i].ancre.getR() << ") "
+             << (coupsFiltres[i].recouvrement ? " [Recouvrement H:" : " [Sol H:")
+             << coupsFiltres[i].hauteur << "]" << endl;
+    }
+
+    // 6. Choix du placement final
+    size_t choixCoup = 0;
+    while (true) {
+        cout << "Votre placement (1-" << coupsFiltres.size() << ", ou 'q' pour quitter) : ";
+        string input;
+        cin >> input;
+
+        if (input == "q" || input == "Q") {
+            throw PartieAnnulee("Le joueur a quitté la partie.");
+        }
+
+        stringstream ss(input);
+        if ((ss >> choixCoup) && choixCoup >= 1 && choixCoup <= coupsFiltres.size()) {
+            break;
+        }
+        cout << "Invalide." << endl;
+        }
+
+        // Le placement se fait sur la liste filtrée
+        joueur->getCite()->placerTuile(tuile, coupsFiltres[choixCoup-1]);
         cout << "Tuile placee avec succes." << endl;
     }
 }
