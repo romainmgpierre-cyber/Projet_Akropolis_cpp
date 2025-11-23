@@ -52,8 +52,7 @@ namespace Akropolis{
         vector<CoupPossible> genererCoupsValides(const TuileCite& tuile) const;
 
         // Appliquer le coup choisi
-        void placerTuile(TuileCite* tuile, const CoupPossible& coup);
-
+        int placerTuile(TuileCite* tuile, const CoupPossible& coup); //Modifié
 
         void afficher(ostream& f) const; // Modifié
 
