@@ -20,3 +20,6 @@ Remarques entre le deuxième et le troisième rapport
 2. Remaniement des tâches, l'idée est d'avoir une première version jouable en mode console de 1 à 4 joueurs d'ici 2 semaines à partir du 11/11. Nous avons donc repriorisé les tâches, Samuel et Gabriel s'occupent de la gestion des coordonnées et des positionnements sur la grille, Antoine de traiter la gestion et la répartition des pierres entre les différentes entités, romain de développer les premières parties factices en mode console et Louise de créer toutes les tuiles et de les gérer dans la pioche et dans choix tuiles.
 3. Changement entre Joueurs et TalbeauScore, les deux classes s'appelaient entre elles, on fait donc en sorte que une seule appel l'autre (penser à faire la modif dans l'UML)
 4. On commençait à avoir trop de classes dans les fichiers Akropolis.h et Akropolis.cpp, on avait tendance à s'y perdre, on a donc crééer un fichier par classe ou groupe de classes
+5. Problème : quand un joueur n'a pas assez de pierres et qu'il sélectionne une mauvaise tuile, le jeu s'arrête
+6. Il faudrait mieux expliciter à quoi corresponde les rotations
+7. Il faudrait afficher le nombre de pierre et le score du joueur lorsque c'est à son tour de jouer 
