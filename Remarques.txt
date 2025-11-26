@@ -23,3 +23,4 @@ Remarques entre le deuxième et le troisième rapport
 5. Problème : quand un joueur n'a pas assez de pierres et qu'il sélectionne une mauvaise tuile, le jeu s'arrête
 6. Il faudrait mieux expliciter à quoi corresponde les rotations
 7. Il faudrait afficher le nombre de pierre et le score du joueur lorsque c'est à son tour de jouer 
+8. Il faut pouvoir revenir en arrière et changer de tuiles tant que le joueur ne valide pas le placement de la tuile
