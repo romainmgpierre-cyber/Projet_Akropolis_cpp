@@ -180,7 +180,7 @@ namespace Akropolis {
         const auto& dispos = choixTuile->getTuilesDisponibles();
         TuileCite* t = dispos[index];
 
-        //afichage de la tuile hexagones
+        // afichage de la tuile hexagonese
         os<<"La tuile choisie en rotation 1 : \n";
         os<<"            ________ \n";
         os<<"           /        \\  \n";
