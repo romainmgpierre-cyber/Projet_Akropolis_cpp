@@ -121,7 +121,6 @@ namespace Akropolis {
 
     void afficherHexagoneVisuel(HexagoneConstruction* hex, ostream& os) {
     // La couleur est remplacée par le nom du type ou du quartier
-
         if (Place* p = dynamic_cast<Place*>(hex)) {
             // Ex: [P MAR *]
             string nomType = p->getType().getNom().substr(0, 3);
@@ -131,21 +130,27 @@ namespace Akropolis {
             os << "[P " << upperNom << " ";
             // Ajout d'une chaîne d'étoiles
             for(size_t i = 0; i < p->getNbEtoile(); ++i) {
-                os << "*"; 
+                os << "*";
+            }
+            //pour que la taille du str soit la même dans tout les cas
+            if ( p->getNbEtoile() == 1) {
+                os << "  ";
+            }else if (p->getNbEtoile() == 2) {
+                os << " ";
             }
             os << "]";
 
         } else if (dynamic_cast<Carriere*>(hex)) {
             // Ex: [CAR]
-            os << "[CAR]";
+            os << "[   CAR   ]";
 
         } else if (Quartier* q = dynamic_cast<Quartier*>(hex)) {
             // Ex: [HAB]
             string nomType = q->getType().getNom().substr(0, 3);
             string upperNom = "";
             for(char c : nomType) upperNom += toupper(c);
-            
-            os << "[" << upperNom << "]";
+
+            os << "[   " << upperNom << "   ]";
         }
     }
 
@@ -167,6 +172,33 @@ namespace Akropolis {
         afficherHexagoneVisuel(t->getHexagone(1), os);
         os << "-";
         afficherHexagoneVisuel(t->getHexagone(2), os);
+        os << endl;
+    }
+
+    void afficherTuileCiteASCII(const ChoixTuile* choixTuile, size_t index, ostream& os) {
+        // 1. Récupérer la tuile et les données
+        const auto& dispos = choixTuile->getTuilesDisponibles();
+        TuileCite* t = dispos[index];
+
+        //afichage de la tuile hexagones
+        os<<"La tuile choisie en rotation 1 : \n";
+        os<<"            ________ \n";
+        os<<"           /        \\  \n";
+        os<<"          /          \\ \n";
+        os<<"  ,------(";
+        afficherHexagoneVisuel(t->getHexagone(0), os);
+        os<<")\n";
+        os<<" /        \\         / \n";
+        os<<"/";
+        afficherHexagoneVisuel(t->getHexagone(2), os);
+        os<<"\\______/ \n";
+        os<<"\\          /        \\ \n";
+        os<<" \\        /          \\ \n";
+        os<<"  \\______(";
+        afficherHexagoneVisuel(t->getHexagone(1), os);
+        os<<") \n";
+        os<<"          \\         / \n";
+        os<<"           \\_______/ \n";
         os << endl;
     }
     // Boucle Principale
@@ -216,6 +248,7 @@ namespace Akropolis {
 
         // --- Choix tuile avec option Quitter ---
         size_t index = 0;
+
         while(true) {
             cout << "Choix (0-" << dispos.size()-1 << ", ou 'q' pour quitter) : ";
             string input;
@@ -225,11 +258,14 @@ namespace Akropolis {
             throw PartieAnnulee("Le joueur a quitté la partie.");
         }
 
+
         stringstream ss(input);
         if ((ss >> index) && index < dispos.size()) {
             size_t coutP = choixTuile->calculerCout(index);
             if (joueur->peutPayerPierres(coutP)) {
                 joueur->retirerPierres(coutP);
+                // Affichage de la tuilecite choisie en ASCII
+                afficherTuileCiteASCII(choixTuile, index, cout);
                 break;
             } else {
                 cout << "Pas assez de pierres (" << joueur->getNbPierres() << " pierres dispo)." << endl;
@@ -237,12 +273,10 @@ namespace Akropolis {
         } else {
             cout << "Entree invalide." << endl;
         }
+
     }
 
     TuileCite* tuile = choixTuile->choisirTuile(joueur, index);
-
-    cout << "Votre Cite :" << endl;
-    joueur->getCite()->afficher(cout);
 
     // --- DÉBUT DE LA NOUVELLE LOGIQUE DE PLACEMENT ---
 
@@ -268,7 +302,9 @@ namespace Akropolis {
         cout << (i+1) << ". Rotation: " << rotationsVec[i] << endl;
     }
     cout << "---------------------------------------------------------" << endl;
-
+    // Afichage de la citée du joueur
+    cout << "Votre Cite :" << endl;
+    joueur->getCite()->afficher(cout);
     // 3. Choix de la rotation
     int rotationChoisie = -1;
     size_t indexRotation = 0;
