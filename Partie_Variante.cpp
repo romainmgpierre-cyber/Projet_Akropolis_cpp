@@ -162,7 +162,7 @@ namespace Akropolis {
         TuileCite* t = dispos[index];
         size_t coutPierre = choixTuile->calculerCout(index);
 
-        os << "[" << index << "] Tuile #" << t->getId() 
+        os << "[" << index << "]. Tuile #" << t->getId()
         << " (Coût: " << coutPierre << "p) : ";
         
         // 2. Afficher les 3 hexagones de la tuile triangulaire côte à côte
@@ -181,7 +181,7 @@ namespace Akropolis {
         TuileCite* t = dispos[index];
 
         // afichage de la tuile hexagonese
-        os<<"La tuile choisie en rotation 1 : \n";
+        os<<"La tuile choisie en rotation 0 : \n";
         os<<"            ________ \n";
         os<<"           /        \\  \n";
         os<<"          /          \\ \n";
@@ -228,7 +228,6 @@ namespace Akropolis {
 
 
     // Tour du Joueur
-  
 
     void Partie::gererTourJoueur(Joueur* joueur) {
         cout << "\n=== Tour de " << joueur->getNom() << " ===" << endl;
@@ -299,7 +298,7 @@ namespace Akropolis {
     cout << "\n--- Orientations disponibles (Rotations de contenu/forme) ---" << endl;
     vector<int> rotationsVec(rotationsUniques.begin(), rotationsUniques.end());
     for(size_t i = 0; i < rotationsVec.size(); ++i) {
-        cout << (i+1) << ". Rotation: " << rotationsVec[i] << endl;
+        cout <<"["<< (i) << "]"<<". Rotation: " << rotationsVec[i] << endl;
     }
     cout << "---------------------------------------------------------" << endl;
     // Afichage de la citée du joueur

@@ -1,4 +1,4 @@
-/*#include "Cite.h"
+#include "Cite.h"
 #include "TuileCite_TuileDep.h"
 #include "GameExcep_Enums.h"
 #include "CoordHex.h"
@@ -71,10 +71,10 @@ bool readStringOrQuit(string& value, const string& prompt) {
 // --- FONCTION PRINCIPALE ---
 
 int main() {
-    QApplication a(argc, argv);
+    /*QApplication a(argc, argv);
     MainWindow w;
     w.show();
-    return a.exec();
+    return a.exec();*/
 
     // 1. Encapsuler toute la logique dans un try-catch
     try {
@@ -162,15 +162,15 @@ int main() {
 
     return 0;
 }
-*/
+
 
 #include "MainWindow.h"
 #include <QApplication>
-
+/*
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
     MainWindow w;
     w.show();
     return a.exec();
-}
+}*/
