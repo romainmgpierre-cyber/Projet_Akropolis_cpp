@@ -1,6 +1,7 @@
 #ifndef CoordHex_H
 #define CoordHex_H
 #include <array>
+#include <cmath>
 using namespace std;
 namespace Akropolis{
     class CoordHex {

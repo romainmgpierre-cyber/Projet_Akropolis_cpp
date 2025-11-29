@@ -1,4 +1,4 @@
-#include "Cite.h"
+/*#include "Cite.h"
 #include "TuileCite_TuileDep.h"
 #include "GameExcep_Enums.h"
 #include "CoordHex.h"
@@ -75,7 +75,7 @@ int main() {
     MainWindow w;
     w.show();
     return a.exec();
-    /*
+
     // 1. Encapsuler toute la logique dans un try-catch
     try {
         cout << "Bienvenue dans AKROPOLIS - Mode console" << endl; 
@@ -160,5 +160,17 @@ int main() {
         return 1;
     }
 
-    return 0;*/
+    return 0;
+}
+*/
+
+#include "MainWindow.h"
+#include <QApplication>
+
+int main(int argc, char *argv[])
+{
+    QApplication a(argc, argv);
+    MainWindow w;
+    w.show();
+    return a.exec();
 }

@@ -1,29 +1,31 @@
 #include "HexGridWidget.h"
 #include <QPainter>
 #include <QtMath>
+// Il faut inclure les sous-classes pour pouvoir les détecter
+#include "HexCons_Carr_Quart_Place.h"
 
 using namespace Akropolis;
 
 HexGridWidget::HexGridWidget(QWidget *parent) : QWidget(parent)
 {
     setMouseTracking(true);
-    offset = QPointF(400, 300); // Centre arbitraire
+    offset = QPointF(400, 300); // Centre arbitraire initial
 }
 
 void HexGridWidget::setCite(const Cite* cite) {
     citeALire = cite;
-    update(); // Redessine le widget
+    update();
 }
 
-// Conversion des couleurs de votre enum vers Qt
 QColor HexGridWidget::typeToColor(Couleur c) const {
+    // CORRECTION : Utilisation des minuscules comme dans votre GameExcep_Enums.h
     switch(c) {
-    case Couleur::BLEU: return QColor(33, 150, 243); // Habitation
-    case Couleur::JAUNE: return QColor(255, 235, 59); // Place
-    case Couleur::ROUGE: return QColor(244, 67, 54);  // Caserne
-    case Couleur::VIOLET: return QColor(156, 39, 176); // Temple
-    case Couleur::VERT: return QColor(76, 175, 80);   // Parc
-    case Couleur::GRIS: return QColor(158, 158, 158); // Carrière
+    case Couleur::bleu: return QColor(33, 150, 243); // Habitation
+    case Couleur::jaune: return QColor(255, 235, 59); // Place
+    case Couleur::rouge: return QColor(244, 67, 54);  // Caserne
+    case Couleur::violet: return QColor(156, 39, 176); // Temple
+    case Couleur::vert: return QColor(76, 175, 80);   // Parc
+    case Couleur::gris: return QColor(158, 158, 158); // Carrière
     default: return Qt::white;
     }
 }
@@ -38,26 +40,21 @@ CoordHex HexGridWidget::pixelToHex(QPointF point) const {
     QPointF p = point - offset;
     double q = (qSqrt(3)/3.0 * p.x() - 1.0/3.0 * p.y()) / hexSize;
     double r = (2.0/3.0 * p.y()) / hexSize;
-
     return CoordHex(qRound(q), qRound(r));
 }
 
 void HexGridWidget::paintEvent(QPaintEvent *event) {
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
-    painter.fillRect(rect(), QColor(240, 240, 240)); // Fond gris clair
+    painter.fillRect(rect(), QColor(240, 240, 240));
 
     if (!citeALire) return;
 
-    // DESSINER LE PLATEAU EXISTANT
-    // On itère sur la map du plateau de la classe Cité
     for (auto const& [coord, paire] : citeALire->getPlateau()) {
         HexagoneConstruction* hex = paire.first;
         int hauteur = paire.second;
         dessinerHexagone(painter, coord, hex, hauteur);
     }
-
-
 }
 
 void HexGridWidget::dessinerHexagone(QPainter& painter, CoordHex coord, HexagoneConstruction* hex, int hauteur) {
@@ -68,13 +65,25 @@ void HexGridWidget::dessinerHexagone(QPainter& painter, CoordHex coord, Hexagone
         poly << center + QPointF(hexSize * cos(angle), hexSize * sin(angle));
     }
 
-    // Couleur de fond selon le Type
-    QColor baseColor = typeToColor(hex->getType().getCouleur());
+    // --- CORRECTION MAJEURE : DÉTECTION DU TYPE ---
+    QColor baseColor = Qt::white;
+    int nbEtoiles = 0;
 
-    // Effet de hauteur (plus foncé si plus bas)
+    // On vérifie le type réel de l'objet (Polymorphisme)
+    if (Quartier* q = dynamic_cast<Quartier*>(hex)) {
+        baseColor = typeToColor(q->getType().getCouleur());
+    }
+    else if (Place* p = dynamic_cast<Place*>(hex)) {
+        baseColor = typeToColor(p->getType().getCouleur());
+        nbEtoiles = p->getNbEtoile(); // CORRECTION : getNbEtoile() et non getEtoiles()
+    }
+    else if (Carriere* c = dynamic_cast<Carriere*>(hex)) {
+        baseColor = typeToColor(Couleur::gris);
+    }
+
+    // Dessin
     if (hauteur > 1) {
-        // Ajouter un effet d'ombre ou bordure épaisse pour la hauteur
-        painter.setPen(QPen(Qt::black, 3));
+        painter.setPen(QPen(Qt::black, 3)); // Bordure épaisse si en hauteur
     } else {
         painter.setPen(QPen(Qt::gray, 1));
     }
@@ -82,22 +91,26 @@ void HexGridWidget::dessinerHexagone(QPainter& painter, CoordHex coord, Hexagone
     painter.setBrush(baseColor);
     painter.drawPolygon(poly);
 
-    // Dessin des étoiles
-    if (hex->getEtoiles() > 0) {
+    // Dessin des étoiles si nécessaire
+    if (nbEtoiles > 0) {
         painter.setPen(Qt::black);
-        painter.drawText(QRectF(center.x()-10, center.y()-10, 20, 20), Qt::AlignCenter,
-                         QString("⭐").repeated(hex->getEtoiles()));
+        painter.drawText(QRectF(center.x()-15, center.y()-10, 30, 20), Qt::AlignCenter,
+                         QString("⭐").repeated(nbEtoiles));
     }
 
-
+    // Debug : Coordonnées
+    painter.setPen(Qt::darkGray);
+    QFont font = painter.font();
+    font.setPointSize(8);
+    painter.setFont(font);
+    // painter.drawText(center + QPointF(0, 15), QString("%1,%2").arg(coord.getQ()).arg(coord.getR()));
 }
 
 void HexGridWidget::mousePressEvent(QMouseEvent *event) {
     if (event->button() == Qt::LeftButton) {
         CoordHex hex = pixelToHex(event->position());
-        emit hexClicked(hex); // Envoie le signal à la MainWindow
+        emit hexClicked(hex);
     }
-    // Gestion du déplacement (pan) avec clic droit ou milieu
     if (event->button() == Qt::RightButton) {
         isDragging = true;
         lastMousePos = event->pos();
@@ -110,5 +123,11 @@ void HexGridWidget::mouseMoveEvent(QMouseEvent *event) {
         offset += delta;
         lastMousePos = event->pos();
         update();
+    }
+}
+
+void HexGridWidget::mouseReleaseEvent(QMouseEvent *event) {
+    if (event->button() == Qt::RightButton) {
+        isDragging = false;
     }
 }

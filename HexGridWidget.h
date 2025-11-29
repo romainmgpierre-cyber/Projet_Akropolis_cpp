@@ -25,7 +25,7 @@ protected:
     void paintEvent(QPaintEvent *event) override;
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override; // Pour le survol
-
+    void mouseReleaseEvent(QMouseEvent *event) override;
 signals:
     // Signal émis quand on clique sur une case (q, r)
     void hexClicked(Akropolis::CoordHex coord);
