@@ -1,4 +1,4 @@
-#include "Cite.h"
+/*#include "Cite.h"
 #include "TuileCite_TuileDep.h"
 #include "GameExcep_Enums.h"
 #include "CoordHex.h"
@@ -13,6 +13,8 @@
 #include <limits> 
 #include <sstream>      // Pour la conversion string -> int
 #include <algorithm>    // Pour std::transform et std::tolower
+#include "MainWindow.h"
+#include <QApplication>
 
 using namespace std;
 using namespace Akropolis;
@@ -69,6 +71,10 @@ bool readStringOrQuit(string& value, const string& prompt) {
 // --- FONCTION PRINCIPALE ---
 
 int main() {
+    QApplication a(argc, argv);
+    MainWindow w;
+    w.show();
+    return a.exec();
 
     // 1. Encapsuler toute la logique dans un try-catch
     try {
@@ -155,4 +161,16 @@ int main() {
     }
 
     return 0;
+}
+*/
+
+#include "MainWindow.h"
+#include <QApplication>
+
+int main(int argc, char *argv[])
+{
+    QApplication a(argc, argv);
+    MainWindow w;
+    w.show();
+    return a.exec();
 }

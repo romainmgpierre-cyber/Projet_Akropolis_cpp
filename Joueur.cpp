@@ -33,10 +33,13 @@ namespace Akropolis {
     }
 
     void Joueur::placerTuile(TuileCite* tuile, const Cite::CoupPossible& coup) {
-        // Délègue simplement à la méthode de la Cité
-        // C'est ici qu'on fait le lien entre l'ancienne méthode "ajouterTuile"
-        // et la nouvelle logique "placerTuile" avec coordonnées.
-        cite->placerTuile(tuile, coup);
+        // La Cité place la tuile et nous retourne le nombre de pierres gagnées.
+        int pierresGagnees = cite->placerTuile(tuile, coup);
+
+        // Le joueur ajoute les pierres à son inventaire
+        if (pierresGagnees > 0) {
+            ajouterPierres(pierresGagnees);
+        }
     }
 
     void Joueur::afficher(ostream& f) const {

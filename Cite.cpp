@@ -132,7 +132,7 @@ namespace Akropolis{
         return coups;
     }
 
-    void Cite::placerTuile(TuileCite* tuile, const CoupPossible& coup) {
+    int Cite::placerTuile(TuileCite* tuile, const CoupPossible& coup) {
         // 1. Appliquer les rotations/permutations à la *vraie* tuile
         // (coup.rotation / 3) donne la forme (0 ou 1)
         // (coup.rotation % 3) donne le nb de permutations
@@ -154,31 +154,27 @@ namespace Akropolis{
         tuiles_posees.push_back(tuile); // La Cité prend possession
 
         // --- LOGIQUE DE GAIN DE PIERRES PAR RECOUVREMENT ---
-    int pierresGagnees = 0;
+        int pierresGagnees = 0;
 
-    // Vérifie si la tuile est posée en hauteur (recouvrement)
-    if (coup.recouvrement) {
-        // On vérifie les 3 cases couvertes
-        array<CoordHex, 3> casesCouvertes = {pos0, pos1, pos2};
-        
-        for (const auto& caseCouvee : casesCouvertes) {
-            // Regarde quel hexagone était présent à la coordonnée avant le placement
-            auto it = plateau.find(caseCouvee);
-            if (it != plateau.end()) {
-                HexagoneConstruction* hexCouvert = it->second.first;
-                
-                // Si l'hexagone couvert était une Carrière
-                if (dynamic_cast<Carriere*>(hexCouvert)) {
-                    pierresGagnees++;
+        // Vérifie si la tuile est posée en hauteur (recouvrement)
+        if (coup.recouvrement) {
+            // On vérifie les 3 cases couvertes
+            array<CoordHex, 3> casesCouvertes = {pos0, pos1, pos2};
+            
+            for (const auto& caseCouvee : casesCouvertes) {
+                // Regarde quel hexagone était présent à la coordonnée avant le placement
+                auto it = plateau.find(caseCouvee);
+                if (it != plateau.end()) {
+                    HexagoneConstruction* hexCouvert = it->second.first;
+                    
+                    // Si l'hexagone couvert était une Carrière
+                    if (dynamic_cast<Carriere*>(hexCouvert)) {
+                        pierresGagnees++;
+                    }
                 }
             }
         }
-    }
-    
-    // Le joueur qui a placé la tuile gagne les pierres.
-    // NOTE: Il faut que la méthode Partie::gererTourJoueur passe le Joueur
-    // et appelle Joueur::ajouterPierres(pierresGagnees) après avoir appelé placerTuile.
-
+        
         // Mettre à jour le plateau (la carte)
         plateau[pos0] = { tuile->getHexagone(0), coup.hauteur };
         plateau[pos1] = { tuile->getHexagone(1), coup.hauteur };
@@ -188,6 +184,9 @@ namespace Akropolis{
         mettreAJourFrontiere(pos0);
         mettreAJourFrontiere(pos1);
         mettreAJourFrontiere(pos2);
+
+        // On retourne le nombre de pierres gagnées
+        return pierresGagnees;
     }
 
 
