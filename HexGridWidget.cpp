@@ -6,7 +6,7 @@ using namespace Akropolis;
 
 HexGridWidget::HexGridWidget(QWidget *parent) : QWidget(parent)
 {
-    setMouseTracking(true); // Important pour suivre la souris sans cliquer
+    setMouseTracking(true);
     offset = QPointF(400, 300); // Centre arbitraire
 }
 
@@ -39,7 +39,6 @@ CoordHex HexGridWidget::pixelToHex(QPointF point) const {
     double q = (qSqrt(3)/3.0 * p.x() - 1.0/3.0 * p.y()) / hexSize;
     double r = (2.0/3.0 * p.y()) / hexSize;
 
-    // Arrondi axial simple (pourrait être amélioré pour plus de précision aux bords)
     return CoordHex(qRound(q), qRound(r));
 }
 
@@ -50,7 +49,7 @@ void HexGridWidget::paintEvent(QPaintEvent *event) {
 
     if (!citeALire) return;
 
-    // 1. DESSINER LE PLATEAU EXISTANT
+    // DESSINER LE PLATEAU EXISTANT
     // On itère sur la map du plateau de la classe Cité
     for (auto const& [coord, paire] : citeALire->getPlateau()) {
         HexagoneConstruction* hex = paire.first;
@@ -58,8 +57,7 @@ void HexGridWidget::paintEvent(QPaintEvent *event) {
         dessinerHexagone(painter, coord, hex, hauteur);
     }
 
-    // 2. DESSINER LA TUILE FANTÔME (SI ACTIVE)
-    // Ici, vous ajouteriez la logique pour dessiner la tuile qui suit la souris
+
 }
 
 void HexGridWidget::dessinerHexagone(QPainter& painter, CoordHex coord, HexagoneConstruction* hex, int hauteur) {
@@ -91,9 +89,7 @@ void HexGridWidget::dessinerHexagone(QPainter& painter, CoordHex coord, Hexagone
                          QString("⭐").repeated(hex->getEtoiles()));
     }
 
-    // Debug : Coordonnées
-    // painter.setPen(Qt::black);
-    // painter.drawText(center, QString("%1,%2").arg(coord.getQ()).arg(coord.getR()));
+
 }
 
 void HexGridWidget::mousePressEvent(QMouseEvent *event) {

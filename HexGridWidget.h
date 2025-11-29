@@ -4,8 +4,8 @@
 #include <QWidget>
 #include <QMap>
 #include <QMouseEvent>
-#include "akropolis/Cite.h" // Inclusion de votre classe Cité
-#include "akropolis/CoordHex.h"
+#include "Cite.h"
+#include "CoordHex.h"
 
 class HexGridWidget : public QWidget
 {
@@ -14,7 +14,7 @@ class HexGridWidget : public QWidget
 public:
     explicit HexGridWidget(QWidget *parent = nullptr);
 
-    // On passe un pointeur vers la cité à dessiner
+    // pointeur vers la cité à dessiner
     void setCite(const Akropolis::Cite* cite);
 
     // Pour visualiser la tuile en cours de placement (fantôme)
