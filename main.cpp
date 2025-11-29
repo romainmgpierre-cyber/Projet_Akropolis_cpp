@@ -13,6 +13,8 @@
 #include <limits> 
 #include <sstream>      // Pour la conversion string -> int
 #include <algorithm>    // Pour std::transform et std::tolower
+#include "MainWindow.h"
+#include <QApplication>
 
 using namespace std;
 using namespace Akropolis;
@@ -69,7 +71,11 @@ bool readStringOrQuit(string& value, const string& prompt) {
 // --- FONCTION PRINCIPALE ---
 
 int main() {
-
+    QApplication a(argc, argv);
+    MainWindow w;
+    w.show();
+    return a.exec();
+    /*
     // 1. Encapsuler toute la logique dans un try-catch
     try {
         cout << "Bienvenue dans AKROPOLIS - Mode console" << endl; 
@@ -154,5 +160,5 @@ int main() {
         return 1;
     }
 
-    return 0;
+    return 0;*/
 }
