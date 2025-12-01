@@ -264,19 +264,26 @@ namespace Akropolis {
             }
 
             stringstream ss(input);
-            if ((ss >> index) && index < dispos.size()) {
-                size_t coutP = choixTuile->calculerCout(index);
-                if (joueur->peutPayerPierres(coutP)) {
-                    joueur->retirerPierres(coutP);
-                    // Affichage de la tuilecite choisie en ASCII
-                    afficherTuileCiteASCII(choixTuile, index, cout);
-                    break;
-                } else {
-                    cout << "Pas assez de pierres (" << joueur->getNbPierres() << " pierres dispo)." << endl;
-                }
+        if ((ss >> index) && index < dispos.size()) {
+            size_t coutP = choixTuile->calculerCout(index);
+            
+            // --- CORRECTION ICI ---
+            if (joueur->peutPayerPierres(coutP)) {
+                // NE PAS FAIRE CA : joueur->retirerPierres(coutP); 
+                // On vérifie juste qu'il PEUT payer pour valider la saisie.
+                // Le paiement réel se fera dans choixTuile->choisirTuile() juste après.
+                
+                afficherTuileCiteASCII(choixTuile, index, cout);
+                break; 
             } else {
-                cout << "Entree invalide." << endl;
+                // Ce message s'affiche correctement sans planter
+                cout << "Pas assez de pierres ! (Coût: " << coutP 
+                     << ", Vous avez: " << joueur->getNbPierres() << ")" << endl;
             }
+            // ----------------------
+        } else {
+            cout << "Entree invalide." << endl;
+        }
         }
 
         TuileCite* tuile = choixTuile->choisirTuile(joueur, index);
