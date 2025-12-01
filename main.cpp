@@ -11,10 +11,11 @@
 #include <iostream>
 #include <string>
 #include <limits> 
+#include "Score.h" // <--- AJOUTÉ
 #include <sstream>      // Pour la conversion string -> int
 #include <algorithm>    // Pour std::transform et std::tolower
-#include "MainWindow.h"
-#include <QApplication>
+// #include "MainWindow.h"
+// #include <QApplication>
 
 using namespace std;
 using namespace Akropolis;
@@ -144,6 +145,24 @@ int main() {
         
         // La boucle de jeu doit aussi lancer l'exception PartieAnnulee si le joueur quitte.
         partie.lancerPartie(); 
+  
+        cout << "\n\n*****************************************" << endl;
+        cout << "* RÉSULTATS FINAUX                      *" << endl;
+        cout << "*****************************************" << endl;
+        
+        TableauScore calculateurFinal;
+        
+        // On récupère la liste des joueurs via l'accesseur de Partie
+        const vector<Joueur*>& tousLesJoueurs = partie.getJoueurs();
+        
+        // On affiche le détail pour chaque joueur
+        for(const auto& joueur : tousLesJoueurs) {
+            calculateurFinal.afficherDetailsScore(*joueur, cout);
+            cout << endl;
+        }
+        
+        cout << "*****************************************" << endl;
+        cout << "Merci d'avoir joué !" << endl;
 
     } catch (const PartieAnnulee& e) {
         // 5. Bloc de capture pour la sortie demandée par le joueur
@@ -164,13 +183,13 @@ int main() {
 }
 
 
-#include "MainWindow.h"
-#include <QApplication>
-/*
-int main(int argc, char *argv[])
-{
-    QApplication a(argc, argv);
-    MainWindow w;
-    w.show();
-    return a.exec();
-}*/
+// #include "MainWindow.h"
+// #include <QApplication>
+// /*
+// int main(int argc, char *argv[])
+// {
+//     QApplication a(argc, argv);
+//     MainWindow w;
+//     w.show();
+//     return a.exec();
+// }*/
