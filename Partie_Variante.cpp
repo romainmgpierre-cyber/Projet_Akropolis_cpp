@@ -39,11 +39,11 @@ namespace Akropolis {
 
     // Gestion Joueurs
 
-    void Partie::ajouterJoueur(const string& nom) {
+    void Partie::ajouterJoueur(const string& nom, bool estIA) {
         if (etat != EtatPartie::NON_DEMARREE) {
             throw GameException("Impossible d'ajouter : la partie a deja commence.");
         }
-        Joueur* nouveauJoueur = new Joueur(nom);
+        Joueur* nouveauJoueur = new Joueur(nom, estIA);
         joueurs.push_back(nouveauJoueur);
     }
 
@@ -62,18 +62,18 @@ namespace Akropolis {
     // Initialisation
 
     void Partie::initialiserTuiles() {
-        // --- PRÉPARATION DU GÉNÉRATEUR ALÉATOIRE (C++17) ---
+        
         // On utilise l'horloge système pour générer une graine unique
         unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
         std::default_random_engine rng(seed);
 
-        // 1. Création des tuiles via la fabrique
+        // Création des tuiles via la fabrique
         std::vector<TuileCite*> toutesLesTuiles = creerToutesTuiles(joueurs.size());
         
-        // 2. Mélange aléatoire avec std::shuffle
+        // Mélange aléatoire avec std::shuffle
         std::shuffle(toutesLesTuiles.begin(), toutesLesTuiles.end(), rng);
         
-        // 3. Remplissage de la Pioche
+        // Remplissage de la Pioche
         delete pioche; 
         pioche = new Pioche(1, toutesLesTuiles.size());
         
@@ -82,7 +82,7 @@ namespace Akropolis {
         }
         toutesLesTuiles.clear(); // La pioche possède maintenant les pointeurs
 
-        // 4. Gestion des Tuiles de Départ
+        // Gestion des Tuiles de Départ
         for (TuileDepart* td : tuilesDepart) delete td;
         tuilesDepart.clear();
         
@@ -96,14 +96,29 @@ namespace Akropolis {
         }
         
         for (size_t i = 0; i < joueurs.size(); ++i) {
-            tuilesDepart.push_back(departsDisponibles[i]);
-            joueurs[i]->getCite()->initialiserCite(departsDisponibles[i]);
+            
+            
+            // Configuration IA
+            if (joueurs[i]->isIA()) {
+                
+                joueurs[i]->ajouterPierres(1); // L'IA commence avec 2 pierres, elle en a deja 1 par defaut
+                
+                // On ne donne pas la tuile de départ à l'IA car son score est compté virtuellement.
+                // On la supprime simplement pour éviter les fuites de mémoire.
+                delete departsDisponibles[i];
+                 
+            } else { // L'IA n'utilise pas initialiserCite() car elle ne construit pas.
+                tuilesDepart.push_back(departsDisponibles[i]);
+                joueurs[i]->getCite()->initialiserCite(departsDisponibles[i]);
+            }
         }
         
         // Nettoyage des tuiles de départ inutilisées
         for (size_t i = joueurs.size(); i < departsDisponibles.size(); ++i) {
             delete departsDisponibles[i];
         }
+
+        
     }
 
     void Partie::lancerPartie() {
@@ -215,31 +230,78 @@ namespace Akropolis {
 
     void Partie::gererTourJoueur(Joueur* joueur) {
         cout << "\n========================================" << endl;
-        cout << "   TOUR DE : " << joueur->getNom() ;
+        cout << "   TOUR DE : " << joueur->getNom();
+        if (joueur->isIA()) cout << " (Illustre Architecte)";
         cout << " (" << joueur->getNbPierres() << " pierres)" << endl;
         cout << "========================================" << endl;
-        
-        TableauScore calculateurScore;
-        calculateurScore.afficherDetailsScore(*joueur, cout);
-        cout << "========================================\n" << endl;
 
+        // On s'assure que le chantier est plein au début du tour
         remplirChoixTuile();
 
         if (choixTuile->getNombreTuiles() == 0) {
            cout << "Plus de tuiles disponibles." << endl;
            return;
         }
+
+        
+        //                 LOGIQUE INTELLIGENCE ARTIFICIELLE
+        
+        if (joueur->isIA()) {
+            const auto& dispos = choixTuile->getTuilesDisponibles();
+            int indexChoisi = -1;
+            int coutMin = 999;
+
+            // cherche la tuile la moins chère contenant une Place
+            for (size_t i = 0; i < dispos.size(); ++i) {
+                size_t coutTuile = choixTuile->calculerCout(i);
+                
+                // Si la tuile a une place et que l'IA peut la payer et qu'elle est moins chère que la précédente trouvée
+                if (dispos[i]->contientPlace() && joueur->peutPayerPierres(coutTuile)) {
+                    if ((int)coutTuile < coutMin) {
+                        coutMin = coutTuile;
+                        indexChoisi = i;
+                    }
+                }
+            }
+
+            // Si aucune tuile avec Place n'est accessible, l'IA prend la 1ère du chantier
+            if (indexChoisi == -1) {
+                cout << "L'IA ne trouve pas de Place abordable, elle prend la premiere tuile." << endl;
+                indexChoisi = 0; 
+                // On suppose que l'IA peut toujours payer la 1ère tuile (coût 0 ou faible).
+                
+            }
+
+            cout << "-> L'Illustre Architecte choisit la tuile n°" << indexChoisi 
+                 << " (Cout: " << choixTuile->calculerCout(indexChoisi) << " pierres)." << endl;
+
+            //Les pierres dépensées par l'IA retournent à la réserve (comportement par défaut)
+            TuileCite* tuile = choixTuile->choisirTuile(joueur, indexChoisi);
+
+            // L'IA ne place pas la tuile, elle la stocke simplement
+            joueur->recupererTuileIA(tuile);
+            return; 
+        }
+
+        
+        //LOGIQUE JOUEUR HUMAIN
+        
+
+        // Affichage du score actuel
+        TableauScore calculateurScore;
+        calculateurScore.afficherDetailsScore(*joueur, cout);
+        cout << "========================================\n" << endl;
+
+        // Affichage de la Rivière (Chantier)
         cout << "\n--- Tuiles Disponibles ---" << endl;
         const auto& dispos = choixTuile->getTuilesDisponibles();
-
         for (size_t i = 0; i < dispos.size(); ++i) {
             afficherTuileDansLaRiviere(choixTuile, i, cout);
         }
-        //Permet d'avoir le nb de pierre au moment de choisir sa tuile 
         cout << " Vous avez actuellement " << joueur->getNbPierres() << " pierres." << endl;
         cout << "--------------------------" << endl;
 
-        // --- Choix tuile ---
+        // Choix de la tuile
         size_t index = 0;
 
         while(true) {
@@ -247,20 +309,32 @@ namespace Akropolis {
             string input;
             cin >> input;
 
-            if (input == "q" || input == "Q") {
-                throw PartieAnnulee("Le joueur a quitté la partie.");
-            }
+            if (input == "q" || input == "Q") throw PartieAnnulee("Le joueur a quitte la partie.");
 
             stringstream ss(input);
             if ((ss >> index) && index < dispos.size()) {
                 size_t coutP = choixTuile->calculerCout(index);
                 
                 if (joueur->peutPayerPierres(coutP)) {
-                    // Vérification uniquement, pas de paiement ici !
+                    // Confirmation visuelle (ASCII Art)
                     afficherTuileCiteASCII(choixTuile, index, cout);
-                    break; 
+                    
+                    // Gestion du paiement en mode solo
+                    // En solo les pierres payées vont à l'IA
+                    if (mode == ModeJeu::SOLO && coutP > 0) {
+                        for (Joueur* j : joueurs) {
+                            if (j->isIA()) {
+                                j->ajouterPierres(coutP);
+                                cout << "--> (Mode Solo) Vos " << coutP << " pierre(s) sont donnees a l'Illustre Architecte." << endl;
+                                break; 
+                            }
+                        }
+                    }
+                    
+                    
+                    break;
                 } else {
-                    cout << "Pas assez de pierres ! (Coût: " << coutP 
+                    cout << "Pas assez de pierres ! (Cout: " << coutP 
                          << ", Vous avez: " << joueur->getNbPierres() << ")" << endl;
                 }
             } else {
@@ -268,9 +342,10 @@ namespace Akropolis {
             }
         }
 
+        // Achat de la tuile (retrait des pierres du joueur et récupération de l'objet)
         TuileCite* tuile = choixTuile->choisirTuile(joueur, index);
 
-        // --- Logique de Placement ---
+        //Placement de la tuile
 
         auto tousCoups = joueur->getCite()->genererCoupsValides(*tuile);
 
@@ -280,40 +355,39 @@ namespace Akropolis {
             return;
         }
 
+        // Tri et affichage des rotations disponibles
         set<int> rotationsUniques;
         for (const auto& coup : tousCoups) {
             rotationsUniques.insert(coup.rotation);
         }
 
-        cout << "\n--- Orientations disponibles (Rotations de contenu/forme) ---" << endl;
+        cout << "\n--- Orientations disponibles ---" << endl;
         vector<int> rotationsVec(rotationsUniques.begin(), rotationsUniques.end());
         for(size_t i = 0; i < rotationsVec.size(); ++i) {
             cout <<"["<< (i+1) << "]"<<". Rotation: " << rotationsVec[i] << endl;
         }
-        cout << "---------------------------------------------------------" << endl;
         
         cout << "Votre Cite :" << endl;
         joueur->getCite()->afficher(cout);
         
+        // Sélection de l'orientation
         int rotationChoisie = -1;
         size_t indexRotation = 0;
         while(true) {
-            cout << "Choix d'Orientation (1-" << rotationsVec.size() << ", ou 'q' pour quitter) : ";
+            cout << "Choix d'Orientation (1-" << rotationsVec.size() << ", ou 'q') : ";
             string input;
             cin >> input;
-
-            if (input == "q" || input == "Q") {
-                throw PartieAnnulee("Le joueur a quitté la partie.");
-            }
+            if (input == "q" || input == "Q") throw PartieAnnulee("Le joueur a quitte.");
 
             stringstream ss(input);
             if ((ss >> indexRotation) && indexRotation >= 1 && indexRotation <= rotationsVec.size()) {
                 rotationChoisie = rotationsVec[indexRotation - 1];
                 break;
             }
-            cout << "Choix d'orientation invalide." << endl;
+            cout << "Invalide." << endl;
         }
 
+        // Filtrage des coups selon la rotation choisie
         vector<Cite::CoupPossible> coupsFiltres;
         for (const auto& coup : tousCoups) {
             if (coup.rotation == rotationChoisie) {
@@ -321,7 +395,7 @@ namespace Akropolis {
             }
         }
 
-        cout << "\nCoups possibles pour la Rotation " << rotationChoisie << " :" << endl;
+        cout << "\nEmplacements possibles pour la Rotation " << rotationChoisie << " :" << endl;
         for (size_t i = 0; i < coupsFiltres.size(); ++i) {
             cout << (i+1) << ". Position (q=" << coupsFiltres[i].ancre.getQ()
                  << ", r=" << coupsFiltres[i].ancre.getR() << ") "
@@ -329,15 +403,13 @@ namespace Akropolis {
                  << coupsFiltres[i].hauteur << "]" << endl;
         }
 
+        // Sélection de la position finale
         size_t choixCoup = 0;
         while (true) {
-            cout << "Votre placement (1-" << coupsFiltres.size() << ", ou 'q' pour quitter) : ";
+            cout << "Votre placement (1-" << coupsFiltres.size() << ", ou 'q') : ";
             string input;
             cin >> input;
-
-            if (input == "q" || input == "Q") {
-                throw PartieAnnulee("Le joueur a quitté la partie.");
-            }
+            if (input == "q" || input == "Q") throw PartieAnnulee("Le joueur a quitte.");
 
             stringstream ss(input);
             if ((ss >> choixCoup) && choixCoup >= 1 && choixCoup <= coupsFiltres.size()) {
@@ -346,6 +418,7 @@ namespace Akropolis {
             cout << "Invalide." << endl;
         }
 
+        // Application du coup et gain de pierres éventuel
         int pierresGagnees = joueur->getCite()->placerTuile(tuile, coupsFiltres[choixCoup-1]);
         
         if (pierresGagnees > 0) {

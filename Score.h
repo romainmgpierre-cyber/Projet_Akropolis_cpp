@@ -4,7 +4,7 @@
 #include <map>
 #include <iostream>
 #include "Joueur.h"
-#include "GameExcep_Enums.h" // Assurez-vous d'avoir accès à Couleur et toString
+#include "GameExcep_Enums.h" 
 
 using namespace std;
 
@@ -15,8 +15,8 @@ namespace Akropolis {
         int nbEtoiles;      // Nombre d'étoiles 
         int valeurTuiles;   // Somme des hauteurs des tuiles valides
         
-        int totalOfficiel() const { return (nbEtoiles + 1) * valeurTuiles; } // +1 car les étoiles s'ajoutent au multiplicateur de base 1 ? 
-        // NOTE : Dans les règles officielles Akropolis, c'est Score = ValeurTuiles * NbEtoiles.
+        int totalOfficiel() const { return (nbEtoiles) * valeurTuiles; } 
+        
     };
 
     // --- Tableau des scores ---
@@ -71,6 +71,7 @@ namespace Akropolis {
             }
             return total;
         }
+        int calculerScoreIA(const Joueur& joueurIA, NiveauDifficulte diff) const; //Score pour l'IA
     };
 }
 

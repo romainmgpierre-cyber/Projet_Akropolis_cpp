@@ -17,10 +17,11 @@ namespace Akropolis {
         string nom; 
         int nbPierres; 
         Cite* cite;
+        bool estIA = false;
         
     public : 
         
-        Joueur(const string& nom);
+        Joueur(const string& nom, bool estIA = false);
         ~Joueur();
         
         Joueur(const Joueur&) = delete;
@@ -31,6 +32,11 @@ namespace Akropolis {
         Cite* getCite() const { return cite; }
         
         void setNom(const string& nouveauNom);
+
+        bool isIA() const { return estIA; }
+        
+        void recupererTuileIA(TuileCite* tuile); // Méthode pour l'IA qui contourne la logique de placement standard
+        
 
         void ajouterPierre() { nbPierres++; }
         void ajouterPierres(int n);
