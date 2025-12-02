@@ -6,6 +6,8 @@
 #include <QLabel>
 #include <QVBoxLayout>
 #include <QWidget>
+#include <QProgressBar>
+#include <QFrame>
 #include "HexGridWidget.h"
 #include "Partie_Variante.h"
 
