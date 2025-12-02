@@ -3,53 +3,270 @@
 #include <QMouseEvent>
 #include "HexCons_Carr_Quart_Place.h"
 #include <QMessageBox>
+#include <QPropertyAnimation>
+#include <QGraphicsOpacityEffect>
 
 using namespace Akropolis;
+RiviereWidget::RiviereWidget(QWidget *parent) : QWidget(parent) {
+    setMinimumHeight(200);
+    setMouseTracking(true);
+
+    setStyleSheet(
+        "RiviereWidget {"
+        "  background: qlineargradient(x1:0, y1:0, x2:1, y2:0, "
+        "              stop:0 #ffffff, stop:1 #f5f7fa);"
+        "  border: 2px solid #e0e0e0;"
+        "  border-radius: 12px;"
+        "}"
+        );
+}
+
+void RiviereWidget::setChoixTuile(Akropolis::ChoixTuile* choix) {
+    choixActuel = choix;
+    update();
+}
+
+void RiviereWidget::enterEvent(QEnterEvent *event) {
+    setCursor(Qt::PointingHandCursor);
+}
+
+void RiviereWidget::leaveEvent(QEvent *event) {
+    hoveredIndex = -1;
+    update();
+}
+
+void RiviereWidget::mouseMoveEvent(QMouseEvent *event) {
+    if (!choixActuel) return;
+
+    int nbTuiles = choixActuel->getTuilesDisponibles().size();
+    if (nbTuiles == 0) return;
+
+    int largeurCase = width() / nbTuiles;
+    int newIndex = static_cast<int>(event->position().x()) / largeurCase;
+
+    if (newIndex != hoveredIndex && newIndex >= 0 && newIndex < nbTuiles) {
+        hoveredIndex = newIndex;
+        update();
+    }
+}
+
+
+void RiviereWidget::mousePressEvent(QMouseEvent *event) {
+    if (!choixActuel) return;
+    int nbTuiles = choixActuel->getTuilesDisponibles().size();
+    if (nbTuiles == 0) return;
+
+    int largeurCase = width() / nbTuiles;
+    int index = static_cast<int>(event->position().x()) / largeurCase;
+    if (index >= 0 && index < nbTuiles) {
+        emit tuileChoisie(index);
+    }
+}
+
+QColor RiviereWidget::typeToColor(Couleur c) const {
+    switch(c) {
+    case Akropolis::Couleur::bleu: return QColor(33, 150, 243);
+    case Akropolis::Couleur::jaune: return QColor(255, 235, 59);
+    case Akropolis::Couleur::rouge: return QColor(244, 67, 54);
+    case Akropolis::Couleur::violet: return QColor(156, 39, 176);
+    case Akropolis::Couleur::vert: return QColor(76, 175, 80);
+    case Akropolis::Couleur::gris: return QColor(158, 158, 158);
+    default: return Qt::white;
+    }
+}
+
+void RiviereWidget::dessinerTuile(QPainter& painter, TuileCite* tuile, int xOffset, int yOffset, bool hovered) {
+    QPoint offsets[3] = {QPoint(0,0), QPoint(30, -18), QPoint(60, 0)};
+
+    for(int i=0; i<3; i++) {
+        HexagoneConstruction* hex = tuile->getHexagone(i);
+        QColor col = Qt::white;
+
+        if (auto* q = dynamic_cast<Quartier*>(hex))
+            col = typeToColor(q->getType().getCouleur());
+        else if (auto* p = dynamic_cast<Place*>(hex))
+            col = typeToColor(p->getType().getCouleur());
+        else if (dynamic_cast<Carriere*>(hex))
+            col = typeToColor(Couleur::gris);
+
+        int x = xOffset + offsets[i].x();
+        int y = yOffset + offsets[i].y();
+
+        // Ombre
+        if (hovered) {
+            painter.setPen(Qt::NoPen);
+            painter.setBrush(QColor(0, 0, 0, 60));
+            painter.drawEllipse(x+2, y+2, 26, 26);
+        }
+
+        // Hexagone avec dégradé
+        QRadialGradient grad(x+13, y+13, 15);
+        grad.setColorAt(0, col.lighter(120));
+        grad.setColorAt(1, col);
+
+        painter.setBrush(grad);
+        painter.setPen(QPen(col.darker(130), hovered ? 3 : 2));
+        painter.drawEllipse(x, y, 26, 26);    }
+}
+
+void RiviereWidget::paintEvent(QPaintEvent *event) {
+    QPainter painter(this);
+    painter.setRenderHint(QPainter::Antialiasing);
+
+    painter.fillRect(rect(), QColor(220, 220, 220)); // Fond gris clair
+
+    // Titre
+    painter.setPen(QColor(60, 60, 60));
+    QFont titleFont = painter.font();
+    titleFont.setPointSize(12);
+    titleFont.setBold(true);
+    painter.setFont(titleFont);
+    painter.drawText(10, 25, "Marché (Rivière)");
+    if (!choixActuel) return;
+
+    auto tuiles = choixActuel->getTuilesDisponibles();
+    if (tuiles.empty()) {
+        painter.drawText(rect(), Qt::AlignCenter, "Aucune tuile disponible");
+        return;
+    };
+
+    int largeurCase = width() / tuiles.size();
+
+    for(size_t i=0; i < tuiles.size(); ++i) {
+        int x = i * largeurCase/2 - 30;
+        int y = height() / 2;
+
+        bool hovered = (static_cast<int>(i) == hoveredIndex);
+
+        // Cadre de sélection
+        if (hovered) {
+            painter.setPen(QPen(QColor(33, 150, 243), 3));
+            painter.setBrush(QColor(33, 150, 243, 30));
+            painter.drawRoundedRect(x-10, y-40, 80, 120, 8, 8);
+        }
+
+        dessinerTuile(painter, tuiles[i], x, y);
+
+        // Afficher le coût
+        int cout = choixActuel->calculerCout(i);
+        painter.setPen(Qt::NoPen);
+        painter.setBrush(cout > 0 ? QColor(244, 67, 54) : QColor(76, 175, 80));
+        painter.drawRoundedRect(x+20, y+50, 40, 24, 12, 12);
+
+        painter.setPen(Qt::white);
+        QFont font = painter.font();
+        font.setBold(true);
+        painter.setFont(font);
+        painter.drawText(QRect(x+20, y+50, 40, 24), Qt::AlignCenter,
+                         QString("%1").arg(cout));    }
+}
+
+
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
     // 1. Initialisation du Jeu
     partie = new Partie(1, ModeJeu::SOLO);
-    partie->ajouterJoueur("Joueur GUI");
+    partie->ajouterJoueur("Joueur 1");
     partie->initialiserTuiles();
-    // partie->lancerPartie(); // ATTENTION: Ne pas appeler ça si ça contient une boucle while(true) !
 
     // 2. Initialisation
     QWidget *centralWidget = new QWidget;
     setCentralWidget(centralWidget);
-    QHBoxLayout *mainLayout = new QHBoxLayout(centralWidget);
+    layoutPrincipal = new QHBoxLayout(centralWidget);
+    layoutPrincipal->setSpacing(20);
+    layoutPrincipal->setContentsMargins(20, 20, 20, 20);
 
     // Partie Gauche : La Grille
     gridWidget = new HexGridWidget;
-    mainLayout->addWidget(gridWidget, 1);
+    gridWidget->setMinimumSize(600, 600);
+    layoutPrincipal->addWidget(gridWidget, 2);
 
     // Partie Droite : Contrôles
     QWidget *sidePanel = new QWidget;
+    sidePanel->setMaximumWidth(350);
     QVBoxLayout *sideLayout = new QVBoxLayout(sidePanel);
+    sideLayout->setSpacing(15);
 
-    infoLabel = new QLabel("Bienvenue dans Akropolis");
-    infoLabel->setStyleSheet("font-weight: bold; font-size: 14px;");
-    sideLayout->addWidget(infoLabel);
+    // === PANEL JOUEUR ===
+    panelJoueur = new QFrame;
+    panelJoueur->setStyleSheet(
+        "QFrame {"
+        "  background: white;"
+        "  border: 2px solid #e0e0e0;"
+        "  border-radius: 12px;"
+        "  padding: 15px;"
+        "}"
+        );
+    QVBoxLayout *panelLayout = new QVBoxLayout(panelJoueur);
+
+
+    infoLabel = new QLabel("Joueur 1");
+    infoLabel->setStyleSheet("font-size: 18px; font-weight: bold; color: #2c3e50;"
+);
+    panelLayout->addWidget(infoLabel);
+
+    statutLabel = new QLabel("Choisissez une tuile");
+    statutLabel->setStyleSheet("font-size: 14px; color: #7f8c8d;");
+    panelLayout->addWidget(statutLabel);
+
+    progressBar = new QProgressBar;
+    progressBar->setRange(0, 100);
+    progressBar->setValue(0);
+    progressBar->setStyleSheet(
+        "QProgressBar {"
+        "  border: 2px solid #e0e0e0;"
+        "  border-radius: 8px;"
+        "  text-align: center;"
+        "  height: 25px;"
+        "}"
+        "QProgressBar::chunk {"
+        "  background: qlineargradient(x1:0, y1:0, x2:1, y2:0, "
+        "              stop:0 #4CAF50, stop:1 #8BC34A);"
+        "  border-radius: 6px;"
+        "}"
+        );
+    panelLayout->addWidget(progressBar);
+
+    sideLayout->addWidget(panelJoueur);
 
     // Widget Rivière
+    QLabel *labelRiviere = new QLabel("Marché");
+    labelRiviere->setStyleSheet("font-size: 16px; font-weight: bold; color: #34495e;");
+    sideLayout->addWidget(labelRiviere);
+
     riviereWidget = new RiviereWidget;
-    sideLayout->addWidget(new QLabel("--- Rivière (Marché) ---"));
     sideLayout->addWidget(riviereWidget);
 
-    btnRotation = new QPushButton("Pivoter (R)");
-    btnRotation->setEnabled(false); // Désactivé tant qu'on n'a pas choisi de tuile
+
+    QLabel *labelControles = new QLabel("Contrôles");
+    labelControles->setStyleSheet("font-size: 16px; font-weight: bold; color: #34495e;");
+    sideLayout->addWidget(labelControles);
+
+    btnRotation = new ModernButton("Pivoter (R)");
+    btnRotation->setEnabled(false);
     sideLayout->addWidget(btnRotation);
 
-    QPushButton* btnPasser = new QPushButton("Debug: Passer Tour"); // Au cas où
-    sideLayout->addWidget(btnPasser);
+    btnUndo = new ModernButton("Annuler");
+    btnUndo->setEnabled(false);
+    sideLayout->addWidget(btnUndo);
+
+    btnRecentrer = new ModernButton("Recentrer");
+    sideLayout->addWidget(btnRecentrer);
 
     sideLayout->addStretch();
-    mainLayout->addWidget(sidePanel, 0);
+    layoutPrincipal->addWidget(sidePanel, 0);
+
+    setStyleSheet("QMainWindow { background: #f5f7fa; }");
+    setWindowTitle("Akropolis - Édition Moderne");
+    resize(1200, 800);
 
     // 3. Connexions
     connect(gridWidget, &HexGridWidget::hexClicked, this, &MainWindow::onHexClicked);
     connect(btnRotation, &QPushButton::clicked, this, &MainWindow::onRotationClicked);
+    connect(btnRecentrer, &QPushButton::clicked, this, &MainWindow::onRecentrerClicked);
+    connect(btnUndo, &QPushButton::clicked, this, &MainWindow::onUndoClicked);
     connect(riviereWidget, &RiviereWidget::tuileChoisie, this, &MainWindow::onTuileChoisie);
 
     // 4. Démarrage
@@ -61,7 +278,7 @@ MainWindow::~MainWindow() {
     delete partie;
 }
 void MainWindow::onTuileChoisie(int index) {
-    if (tuileSelectionnee) return; // Déjà une tuile en main
+    if (tuileSelectionnee) return;
 
     Joueur* j = partie->getJoueurActuel();
     ChoixTuile* choix = partie->getChoixTuile();
@@ -73,23 +290,28 @@ void MainWindow::onTuileChoisie(int index) {
         // On récupère la tuile et on la sort de la rivière
         tuileSelectionnee = choix->choisirTuile(j, index);
         rotationActuelle = 0;
+        etatActuel = EtatJeu::PLACEMENT_TUILE;
 
         // Feedback visuel : on montre le fantôme sur la grille
         gridWidget->setTuileFantome(tuileSelectionnee, CoordHex(0,0), 0);
 
         mettreAJourInterface();
     } else {
-        QMessageBox::warning(this, "Pas assez de pierres", "Vous ne pouvez pas payer cette tuile.");
+        QMessageBox::warning(this, "Impossible",
+                             QString("Vous avez besoin de %1 pierres. Vous n'en avez que %2.")
+                                 .arg(cout).arg(j->getNbPierres()));
     }
 }
 void MainWindow::onRotationClicked() {
-    // Logique de rotation de la tuile en main (à implémenter dans Partie ou ici)
-    // tuileSelectionnee->rotationHoraire();
-    gridWidget->update();
+    if (!tuileSelectionnee) return;
+
+    // Logique de rotation (à implémenter selon modèle)
+    rotationActuelle = (rotationActuelle + 1) % 6;
+    gridWidget->setTuileFantome(tuileSelectionnee, CoordHex(0,0), rotationActuelle);
 }
 
 void MainWindow::onHexClicked(CoordHex coord) {
-    if (!tuileSelectionnee) return;
+    if (!tuileSelectionnee || etatActuel != EtatJeu::PLACEMENT_TUILE) return;
 
     Joueur* j = partie->getJoueurActuel();
     Cite* cite = j->getCite();
@@ -113,7 +335,7 @@ void MainWindow::onHexClicked(CoordHex coord) {
             tuileSelectionnee = nullptr;
             gridWidget->clearTuileFantome();
             partie->passerTour();
-            mettreAJourInterface();
+            passerAuJoueurSuivant();
         } else {
             // Feedback silencieux ou sonore (coup invalide)
             QMessageBox::information(this, "Info", "Placement invalide ici.");
@@ -121,6 +343,56 @@ void MainWindow::onHexClicked(CoordHex coord) {
     } catch (const std::exception& e) {
         QMessageBox::warning(this, "Erreur", e.what());
     }
+}
+void MainWindow::passerAuJoueurSuivant() {
+    // Vérifier fin de partie
+    verifierFinPartie();
+
+    if (etatActuel == EtatJeu::FIN_PARTIE) {
+        afficherScore();
+        return;
+    }
+
+    // Passer au joueur suivant
+    partie->passerTour();
+    etatActuel = EtatJeu::CHOIX_RIVIERE;
+
+    // Animation de transition
+    animerTransition();
+
+    mettreAJourInterface();
+}
+
+void MainWindow::verifierFinPartie() {
+    // Vérifier si la pioche est vide (à adapter selon votre logique)
+    if (partie->getChoixTuile()->getTuilesDisponibles().empty()) {
+        etatActuel = EtatJeu::FIN_PARTIE;
+    }
+}
+
+void MainWindow::afficherScore() {
+    QString message = " FIN DE PARTIE \n\n";
+
+    for (auto* joueur : partie->getJoueurs()) {
+        message += QString("%1 : %2 points\n")
+        .arg(QString::fromStdString(joueur->getNom()))
+            .arg(joueur->calculerScore());
+    }
+
+    QMessageBox::information(this, "Partie terminée", message);
+}
+
+void MainWindow::animerTransition() {
+    // Effet de fondu sur le panel joueur
+    auto* effect = new QGraphicsOpacityEffect(panelJoueur);
+    panelJoueur->setGraphicsEffect(effect);
+
+    auto* anim = new QPropertyAnimation(effect, "opacity");
+    anim->setDuration(500);
+    anim->setStartValue(1.0);
+    anim->setKeyValueAt(0.5, 0.3);
+    anim->setEndValue(1.0);
+    anim->start(QAbstractAnimation::DeleteWhenStopped);
 }
 
 void MainWindow::mettreAJourInterface() {
@@ -131,99 +403,34 @@ void MainWindow::mettreAJourInterface() {
                            .arg(j->calculerScore())
                            .arg(etatActuel == EtatJeu::CHOIX_RIVIERE ? "Choisir une tuile" : "Placer la tuile"));
 
-    // On change la cité affichée dans le widget
+    QString statut = (etatActuel == EtatJeu::CHOIX_RIVIERE)
+                         ? "Choisissez une tuile dans le marché"
+                         : "Placez la tuile sur la grille";
+    statutLabel->setText(statut);
+
+    /* Progress bar (exemple: nombre de tours)
+    int progression = (partie->getJoueurActuel() * 100) / 12; // Supposons 12 tours max
+    progressBar->setValue(progression);*/
+
+    // Mise à jour de la grille
     gridWidget->setCite(j->getCite());
 
-    // Update Rivière
+    // Mise à jour de la rivière
     partie->remplirChoixTuile();
     riviereWidget->setChoixTuile(partie->getChoixTuile());
 
-    // Gestion activation boutons
+    // Activation des boutons
     btnRotation->setEnabled(etatActuel == EtatJeu::PLACEMENT_TUILE);
+    btnUndo->setEnabled(false); // À implémenter
     riviereWidget->setEnabled(etatActuel == EtatJeu::CHOIX_RIVIERE);
 }
-void MainWindow::onPasserTourClicked() {
-    // Pour l'instant, on ne fait rien ou on met à jour l'interface
-    // C'est ici que vous mettrez la logique : partie->joueurSuivant();
-    mettreAJourInterface();
+
+void MainWindow::onUndoClicked() {
+    // À implémenter : annuler le dernier coup
 }
 
-
-RiviereWidget::RiviereWidget(QWidget *parent) : QWidget(parent) {
-    setMinimumHeight(150);
+void MainWindow::onRecentrerClicked() {
+    // Recentrer la vue (à implémenter dans HexGridWidget)
+    gridWidget->update();
 }
 
-void RiviereWidget::setChoixTuile(Akropolis::ChoixTuile* choix) {
-    choixActuel = choix;
-    update();
-}
-
-void RiviereWidget::mousePressEvent(QMouseEvent *event) {
-    if (!choixActuel) return;
-    // Détection simple : on divise la largeur par le nombre de tuiles
-    int nbTuiles = choixActuel->getTuilesDisponibles().size();
-    if (nbTuiles == 0) return;
-
-    int largeurCase = width() / nbTuiles;
-    int index = static_cast<int>(event->position().x()) / largeurCase;
-    if (index >= 0 && index < nbTuiles) {
-        emit tuileChoisie(index);
-    }
-}
-
-QColor RiviereWidget::typeToColor(Akropolis::Couleur c) const {
-    // Même logique de couleur que HexGridWidget, simplifiée ici
-    switch(c) {
-    case Akropolis::Couleur::bleu: return QColor(33, 150, 243);
-    case Akropolis::Couleur::jaune: return QColor(255, 235, 59);
-    case Akropolis::Couleur::rouge: return QColor(244, 67, 54);
-    case Akropolis::Couleur::violet: return QColor(156, 39, 176);
-    case Akropolis::Couleur::vert: return QColor(76, 175, 80);
-    case Akropolis::Couleur::gris: return QColor(158, 158, 158);
-    default: return Qt::white;
-    }
-}
-
-void RiviereWidget::dessinerTuile(QPainter& painter, Akropolis::TuileCite* tuile, int xOffset, int yOffset) {
-    // Dessin simplifié des 3 hexagones d'une tuile (forme triangle)
-    // Hex 0 (0,0), Hex 1 (0,-1), Hex 2 (-1, 0) par exemple, selon votre modèle
-    // Ici on fait une représentation visuelle "à plat" pour l'interface
-
-    QPoint offsets[3] = {QPoint(0,0), QPoint(25, -15), QPoint(50, 0)}; // Position arbitraire pour joli rendu
-
-    for(int i=0; i<3; i++) {
-        Akropolis::HexagoneConstruction* hex = tuile->getHexagone(i);
-        QColor col = Qt::white;
-
-        if (auto* q = dynamic_cast<Akropolis::Quartier*>(hex)) col = typeToColor(q->getType().getCouleur());
-        else if (auto* p = dynamic_cast<Akropolis::Place*>(hex)) col = typeToColor(p->getType().getCouleur());
-        else if (dynamic_cast<Akropolis::Carriere*>(hex)) col = typeToColor(Akropolis::Couleur::gris);
-
-        painter.setBrush(col);
-        painter.drawEllipse(xOffset + offsets[i].x(), yOffset + offsets[i].y(), 20, 20);
-    }
-}
-
-void RiviereWidget::paintEvent(QPaintEvent *event) {
-    QPainter painter(this);
-    painter.fillRect(rect(), QColor(220, 220, 220)); // Fond gris clair
-
-    if (!choixActuel) return;
-
-    auto tuiles = choixActuel->getTuilesDisponibles();
-    if (tuiles.empty()) return;
-
-    int largeurCase = width() / tuiles.size();
-
-    for(size_t i=0; i < tuiles.size(); ++i) {
-        int x = i * largeurCase + 20;
-        int y = height() / 2;
-
-        dessinerTuile(painter, tuiles[i], x, y);
-
-        // Afficher le coût
-        int cout = choixActuel->calculerCout(i);
-        painter.setPen(Qt::black);
-        painter.drawText(x, y + 40, QString("Coût: %1").arg(cout));
-    }
-}
