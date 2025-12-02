@@ -1,17 +1,25 @@
 #include "Partie_Variante.h"
 #include "HexCons_Carr_Quart_Place.h"
 #include "GameExcep_Enums.h"
+#include "Score.h"  
 #include <iostream>
 #include <algorithm> 
 #include <limits>
 #include <sstream>
 #include <set>
+#include <vector> 
+#include <random> // AJOUTÉ : Pour std::shuffle et default_random_engine
+#include <chrono> // AJOUTÉ : Pour la graine (seed) basée sur le temps
+
 using namespace std;
 namespace Akropolis {
 
+    // --- DÉCLARATIONS EXTERNES POUR LA FABRIQUE ---
+    extern std::vector<TuileCite*> creerToutesTuiles(int nbJoueurs);
+    extern std::vector<TuileDepart*> creer4TuileDepart();
+    // ----------------------------------------------
 
     // Constructeur & Destructeur
-
 
     Partie::Partie(size_t id, ModeJeu mode) 
         : id(id), mode(mode), etat(EtatPartie::NON_DEMARREE), 
@@ -31,12 +39,11 @@ namespace Akropolis {
 
     // Gestion Joueurs
 
-
-    void Partie::ajouterJoueur(const string& nom) {
+    void Partie::ajouterJoueur(const string& nom, int numeroJoueur) {
         if (etat != EtatPartie::NON_DEMARREE) {
             throw GameException("Impossible d'ajouter : la partie a deja commence.");
         }
-        Joueur* nouveauJoueur = new Joueur(nom);
+        Joueur* nouveauJoueur = new Joueur(nom, numeroJoueur); //Initialise le nb de pierres du joueur en fonction de son tour 
         joueurs.push_back(nouveauJoueur);
     }
 
@@ -54,59 +61,49 @@ namespace Akropolis {
 
     // Initialisation
 
-        // Ces fonctions viennent de fabrique_tuiles.cpp
-    extern std::vector<TuileCite*> creerToutesTuiles(int nbJoueurs);
-    extern std::vector<TuileDepart*> creer4TuileDepart();
-
-
-    
     void Partie::initialiserTuiles() {
-        // --- PROBLÈME RÉSOLU ICI : UTILISATION DE LA FABRIQUE ---
+        // --- PRÉPARATION DU GÉNÉRATEUR ALÉATOIRE (C++17) ---
+        // On utilise l'horloge système pour générer une graine unique
+        unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+        std::default_random_engine rng(seed);
 
-        // 1. Créer la liste de Tuiles Cité en fonction du nombre de joueurs
+        // 1. Création des tuiles via la fabrique
         std::vector<TuileCite*> toutesLesTuiles = creerToutesTuiles(joueurs.size());
         
-        // 2. Remplacer l'ancien objet Pioche par un nouveau rempli avec les vraies tuiles
-        // Suppression de l'ancienne pioche (pour la sécurité, même si le destructeur de Partie le fait)
-        delete pioche; 
+        // 2. Mélange aléatoire avec std::shuffle
+        std::shuffle(toutesLesTuiles.begin(), toutesLesTuiles.end(), rng);
         
-        // Crée une nouvelle Pioche et lui transfère la propriété des Tuiles Cité
+        // 3. Remplissage de la Pioche
+        delete pioche; 
         pioche = new Pioche(1, toutesLesTuiles.size());
         
-        // Remplir la Pioche avec les tuiles de la fabrique
         for (TuileCite* t : toutesLesTuiles) {
             pioche->ajouterTuile(t);
         }
+        toutesLesTuiles.clear(); // La pioche possède maintenant les pointeurs
 
-        // Videz le vecteur temporaire pour ne pas appeler delete deux fois
-        // Note: La Pioche doit prendre possession de ces pointeurs et les gérer.
-        // Puisque votre Pioche a un destructeur qui fait 'delete t', c'est bon.
-        toutesLesTuiles.clear();
-
-
-        // --- GESTION DES TUILES DE DÉPART (Début du plateau) ---
-
-        // 3. Créer et affecter les 4 tuiles de départ
-        // Suppression de l'ancien contenu de tuilesDepart (si existant)
+        // 4. Gestion des Tuiles de Départ
         for (TuileDepart* td : tuilesDepart) delete td;
         tuilesDepart.clear();
         
-        tuilesDepart = creer4TuileDepart();
+        std::vector<TuileDepart*> departsDisponibles = creer4TuileDepart();
         
-        // 4. Initialiser la Cité de chaque joueur avec sa tuile de départ
-        if (tuilesDepart.size() < joueurs.size()) {
+        // Mélange aléatoire des départs
+        std::shuffle(departsDisponibles.begin(), departsDisponibles.end(), rng);
+        
+        if (departsDisponibles.size() < joueurs.size()) {
              throw GameException("Nombre de tuiles de depart insuffisant pour le nombre de joueurs.");
         }
         
         for (size_t i = 0; i < joueurs.size(); ++i) {
-            // Note: Joueur[i] prend la tuile Depart[i]
-            // Le joueur a déjà sa cité (initialisée dans son constructeur)
-            joueurs[i]->getCite()->initialiserCite(tuilesDepart[i]);
+            tuilesDepart.push_back(departsDisponibles[i]);
+            joueurs[i]->getCite()->initialiserCite(departsDisponibles[i]);
         }
         
-        // Note: La Pioche est maintenant remplie aléatoirement (grâce à la logique de pioche et à la fabrique)
-        
-
+        // Nettoyage des tuiles de départ inutilisées
+        for (size_t i = joueurs.size(); i < departsDisponibles.size(); ++i) {
+            delete departsDisponibles[i];
+        }
     }
 
     void Partie::lancerPartie() {
@@ -120,48 +117,43 @@ namespace Akropolis {
 
 
     void afficherHexagoneVisuel(HexagoneConstruction* hex, ostream& os) {
-    // La couleur est remplacée par le nom du type ou du quartier
-
         if (Place* p = dynamic_cast<Place*>(hex)) {
-            // Ex: [P MAR *]
             string nomType = p->getType().getNom().substr(0, 3);
             string upperNom = "";
             for(char c : nomType) upperNom += toupper(c);
 
             os << "[P " << upperNom << " ";
-            // Ajout d'une chaîne d'étoiles
             for(size_t i = 0; i < p->getNbEtoile(); ++i) {
-                os << "*"; 
+                os << "*";
+            }
+            if ( p->getNbEtoile() == 1) {
+                os << "  ";
+            }else if (p->getNbEtoile() == 2) {
+                os << " ";
             }
             os << "]";
 
         } else if (dynamic_cast<Carriere*>(hex)) {
-            // Ex: [CAR]
-            os << "[CAR]";
+            os << "[   CAR   ]";
 
         } else if (Quartier* q = dynamic_cast<Quartier*>(hex)) {
-            // Ex: [HAB]
             string nomType = q->getType().getNom().substr(0, 3);
             string upperNom = "";
             for(char c : nomType) upperNom += toupper(c);
-            
-            os << "[" << upperNom << "]";
+
+            os << "[   " << upperNom << "   ]";
         }
     }
 
 
-    // Helper pour afficher une tuile complète dans la rivière
     void afficherTuileDansLaRiviere(const ChoixTuile* choixTuile, size_t index, ostream& os) {
-        // 1. Récupérer la tuile et les données
         const auto& dispos = choixTuile->getTuilesDisponibles();
         TuileCite* t = dispos[index];
         size_t coutPierre = choixTuile->calculerCout(index);
 
-        os << "[" << index << "] Tuile #" << t->getId() 
-        << " (Coût: " << coutPierre << "p) : ";
+        os << "[" << index << "]. Tuile #" << t->getId()
+        << " (Cout: " << coutPierre << "p) : ";
         
-        // 2. Afficher les 3 hexagones de la tuile triangulaire côte à côte
-        // Nous utilisons la fonction d'affichage visuel existante.
         afficherHexagoneVisuel(t->getHexagone(0), os);
         os << "-";
         afficherHexagoneVisuel(t->getHexagone(1), os);
@@ -169,6 +161,32 @@ namespace Akropolis {
         afficherHexagoneVisuel(t->getHexagone(2), os);
         os << endl;
     }
+
+    void afficherTuileCiteASCII(const ChoixTuile* choixTuile, size_t index, ostream& os) {
+        const auto& dispos = choixTuile->getTuilesDisponibles();
+        TuileCite* t = dispos[index];
+
+        os<<"La tuile choisie en rotation 0 : \n";
+        os<<"            ________ \n";
+        os<<"           /        \\  \n";
+        os<<"          /          \\ \n";
+        os<<"  ,------(";
+        afficherHexagoneVisuel(t->getHexagone(0), os);
+        os<<")\n";
+        os<<" /        \\         / \n";
+        os<<"/";
+        afficherHexagoneVisuel(t->getHexagone(2), os);
+        os<<"\\______/ \n";
+        os<<"\\          /        \\ \n";
+        os<<" \\        /          \\ \n";
+        os<<"  \\______(";
+        afficherHexagoneVisuel(t->getHexagone(1), os);
+        os<<") \n";
+        os<<"          \\         / \n";
+        os<<"           \\_______/ \n";
+        os << endl;
+    }
+    
     // Boucle Principale
 
     void Partie::boucleDeJeu() {
@@ -176,10 +194,8 @@ namespace Akropolis {
             Joueur* joueur = joueurs[joueurActuelIndex];
             gererTourJoueur(joueur);
             
-            // Joueur suivant
             joueurActuelIndex = (joueurActuelIndex + 1) % joueurs.size();
 
-            // Fin de partie ?
             if (pioche->estVide() && choixTuile->getNombreTuiles() == 0) {
                 etat = EtatPartie::TERMINEE;
             }
@@ -196,10 +212,17 @@ namespace Akropolis {
 
 
     // Tour du Joueur
-  
 
     void Partie::gererTourJoueur(Joueur* joueur) {
-        cout << "\n=== Tour de " << joueur->getNom() << " ===" << endl;
+        cout << "\n========================================" << endl;
+        cout << "   TOUR DE : " << joueur->getNom() ;
+        cout << " (" << joueur->getNbPierres() << " pierres)" << endl;
+        cout << "========================================" << endl;
+        
+        TableauScore calculateurScore;
+        calculateurScore.afficherDetailsScore(*joueur, cout);
+        cout << "========================================\n" << endl;
+
         remplirChoixTuile();
 
         if (choixTuile->getNombreTuiles() == 0) {
@@ -212,121 +235,136 @@ namespace Akropolis {
         for (size_t i = 0; i < dispos.size(); ++i) {
             afficherTuileDansLaRiviere(choixTuile, i, cout);
         }
+        //Permet d'avoir le nb de pierre au moment de choisir sa tuile 
+        cout << " Vous avez actuellement " << joueur->getNbPierres() << " pierres." << endl;
         cout << "--------------------------" << endl;
 
-        // --- Choix tuile avec option Quitter ---
+        // --- Choix tuile ---
         size_t index = 0;
+
         while(true) {
             cout << "Choix (0-" << dispos.size()-1 << ", ou 'q' pour quitter) : ";
             string input;
             cin >> input;
 
             if (input == "q" || input == "Q") {
-            throw PartieAnnulee("Le joueur a quitté la partie.");
-        }
-
-        stringstream ss(input);
-        if ((ss >> index) && index < dispos.size()) {
-            size_t coutP = choixTuile->calculerCout(index);
-            if (joueur->peutPayerPierres(coutP)) {
-                joueur->retirerPierres(coutP);
-                break;
-            } else {
-                cout << "Pas assez de pierres (" << joueur->getNbPierres() << " pierres dispo)." << endl;
+                throw PartieAnnulee("Le joueur a quitté la partie.");
             }
+
+            stringstream ss(input);
+            if ((ss >> index) && index < dispos.size()) {
+                size_t coutP = choixTuile->calculerCout(index);
+                
+                if (joueur->peutPayerPierres(coutP)) {
+                    // Vérification uniquement, pas de paiement ici !
+                    afficherTuileCiteASCII(choixTuile, index, cout);
+                    break; 
+                } else {
+                    cout << "Pas assez de pierres ! (Coût: " << coutP 
+                         << ", Vous avez: " << joueur->getNbPierres() << ")" << endl;
+                }
+            } else {
+                cout << "Entree invalide." << endl;
+            }
+        }
+
+        TuileCite* tuile = choixTuile->choisirTuile(joueur, index);
+
+        // --- Logique de Placement ---
+
+        auto tousCoups = joueur->getCite()->genererCoupsValides(*tuile);
+
+        if (tousCoups.empty()) {
+            cout << "Aucun placement possible ! La tuile est defaussee." << endl;
+            delete tuile;
+            return;
+        }
+
+        set<int> rotationsUniques;
+        for (const auto& coup : tousCoups) {
+            rotationsUniques.insert(coup.rotation);
+        }
+
+        cout << "\n--- Orientations disponibles (Rotations de contenu/forme) ---" << endl;
+        vector<int> rotationsVec(rotationsUniques.begin(), rotationsUniques.end());
+        for(size_t i = 0; i < rotationsVec.size(); ++i) {
+            cout <<"["<< (i+1) << "]"<<". Rotation: " << rotationsVec[i] << endl;
+        }
+        cout << "---------------------------------------------------------" << endl;
+        
+        cout << "Votre Cite :" << endl;
+        joueur->getCite()->afficher(cout);
+        
+        int rotationChoisie = -1;
+        size_t indexRotation = 0;
+        while(true) {
+            cout << "Choix d'Orientation (1-" << rotationsVec.size() << ", ou 'q' pour quitter) : ";
+            string input;
+            cin >> input;
+
+            if (input == "q" || input == "Q") {
+                throw PartieAnnulee("Le joueur a quitté la partie.");
+            }
+
+            stringstream ss(input);
+            if ((ss >> indexRotation) && indexRotation >= 1 && indexRotation <= rotationsVec.size()) {
+                rotationChoisie = rotationsVec[indexRotation - 1];
+                break;
+            }
+            cout << "Choix d'orientation invalide." << endl;
+        }
+
+        vector<Cite::CoupPossible> coupsFiltres;
+        for (const auto& coup : tousCoups) {
+            if (coup.rotation == rotationChoisie) {
+                coupsFiltres.push_back(coup);
+            }
+        }
+
+        cout << "\nCoups possibles pour la Rotation " << rotationChoisie << " :" << endl;
+        for (size_t i = 0; i < coupsFiltres.size(); ++i) {
+            cout << (i+1) << ". Position (q=" << coupsFiltres[i].ancre.getQ()
+                 << ", r=" << coupsFiltres[i].ancre.getR() << ") "
+                 << (coupsFiltres[i].recouvrement ? " [Recouvrement H:" : " [Sol H:")
+                 << coupsFiltres[i].hauteur << "]" << endl;
+        }
+
+        size_t choixCoup = 0;
+        while (true) {
+            cout << "Votre placement (1-" << coupsFiltres.size() << ", ou 'q' pour quitter) : ";
+            string input;
+            cin >> input;
+
+            if (input == "q" || input == "Q") {
+                throw PartieAnnulee("Le joueur a quitté la partie.");
+            }
+
+            stringstream ss(input);
+            if ((ss >> choixCoup) && choixCoup >= 1 && choixCoup <= coupsFiltres.size()) {
+                break;
+            }
+            cout << "Invalide." << endl;
+        }
+
+        int pierresGagnees = joueur->getCite()->placerTuile(tuile, coupsFiltres[choixCoup-1]);
+        
+        if (pierresGagnees > 0) {
+            joueur->ajouterPierres(pierresGagnees);
+            cout << "Tuile placee en hauteur ! " << pierresGagnees << " pierres gagnees !" << endl;
         } else {
-            cout << "Entree invalide." << endl;
+            cout << "Tuile placee avec succes." << endl;
         }
     }
 
-    TuileCite* tuile = choixTuile->choisirTuile(joueur, index);
-
-    cout << "Votre Cite :" << endl;
-    joueur->getCite()->afficher(cout);
-
-    // --- DÉBUT DE LA NOUVELLE LOGIQUE DE PLACEMENT ---
-
-    // 1. Génération de TOUS les coups possibles (toutes rotations confondues)
-    auto tousCoups = joueur->getCite()->genererCoupsValides(*tuile);
-
-    if (tousCoups.empty()) {
-        cout << "Aucun placement possible ! La tuile est defaussee." << endl;
-        delete tuile;
-        return;
+    void Partie::activerVariante(const string& nom) {
+        for (auto& v : variantes) if (v.getNom() == nom) v.activer();
     }
-
-    // 2. Isoler les rotations uniques valides
-    set<int> rotationsUniques;
-    for (const auto& coup : tousCoups) {
-        rotationsUniques.insert(coup.rotation);
+    void Partie::desactiverVariante(const string& nom) {
+        for (auto& v : variantes) if (v.getNom() == nom) v.desactiver();
     }
-
-    // Afficher les rotations disponibles
-    cout << "\n--- Orientations disponibles (Rotations de contenu/forme) ---" << endl;
-    vector<int> rotationsVec(rotationsUniques.begin(), rotationsUniques.end());
-    for(size_t i = 0; i < rotationsVec.size(); ++i) {
-        cout << (i+1) << ". Rotation: " << rotationsVec[i] << endl;
-    }
-    cout << "---------------------------------------------------------" << endl;
-
-    // 3. Choix de la rotation
-    int rotationChoisie = -1;
-    size_t indexRotation = 0;
-    while(true) {
-        cout << "Choix d'Orientation (1-" << rotationsVec.size() << ", ou 'q' pour quitter) : ";
-        string input;
-        cin >> input;
-
-        if (input == "q" || input == "Q") {
-            throw PartieAnnulee("Le joueur a quitté la partie.");
-        }
-
-        stringstream ss(input);
-        if ((ss >> indexRotation) && indexRotation >= 1 && indexRotation <= rotationsVec.size()) {
-            rotationChoisie = rotationsVec[indexRotation - 1];
-            break;
-        }
-        cout << "Choix d'orientation invalide." << endl;
-    }
-
-    // 4. Filtrer les coups pour ne garder que la rotation choisie
-    vector<Cite::CoupPossible> coupsFiltres;
-    for (const auto& coup : tousCoups) {
-        if (coup.rotation == rotationChoisie) {
-            coupsFiltres.push_back(coup);
-        }
-    }
-
-    // 5. Afficher les positions valides pour cette rotation
-    cout << "\nCoups possibles pour la Rotation " << rotationChoisie << " :" << endl;
-    for (size_t i = 0; i < coupsFiltres.size(); ++i) {
-        // Affichage plus clair de la position (Ancre) et du type de placement
-        cout << (i+1) << ". Position (q=" << coupsFiltres[i].ancre.getQ()
-             << ", r=" << coupsFiltres[i].ancre.getR() << ") "
-             << (coupsFiltres[i].recouvrement ? " [Recouvrement H:" : " [Sol H:")
-             << coupsFiltres[i].hauteur << "]" << endl;
-    }
-
-    // 6. Choix du placement final
-    size_t choixCoup = 0;
-    while (true) {
-        cout << "Votre placement (1-" << coupsFiltres.size() << ", ou 'q' pour quitter) : ";
-        string input;
-        cin >> input;
-
-        if (input == "q" || input == "Q") {
-            throw PartieAnnulee("Le joueur a quitté la partie.");
-        }
-
-        stringstream ss(input);
-        if ((ss >> choixCoup) && choixCoup >= 1 && choixCoup <= coupsFiltres.size()) {
-            break;
-        }
-        cout << "Invalide." << endl;
-        }
-
-        // Le placement se fait sur la liste filtrée
-        joueur->getCite()->placerTuile(tuile, coupsFiltres[choixCoup-1]);
-        cout << "Tuile placee avec succes." << endl;
+    vector<Variante> Partie::getVariantesActives() const {
+        vector<Variante> actives;
+        for (const auto& v : variantes) if (v.estActive()) actives.push_back(v);
+        return actives;
     }
 }

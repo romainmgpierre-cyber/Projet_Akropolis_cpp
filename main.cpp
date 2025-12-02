@@ -4,18 +4,21 @@
 #include "CoordHex.h"
 #include "HexCons_Carr_Quart_Place.h"
 #include "Joueur.h"
-#include "Partie_Variante.h" 
-#include "Pioche_ChoixTuile.h" 
+#include "Partie_Variante.h"
+#include "Pioche_ChoixTuile.h"
 #include "Score.h"
 #include "Type.h"
 #include <iostream>
 #include <string>
-#include <limits> 
+#include <limits>
+#include "Score.h" // <--- AJOUTÉ
 #include <sstream>      // Pour la conversion string -> int
 #include <algorithm>    // Pour std::transform et std::tolower
-#include "MainWindow.h"
-#include <QApplication>
-/*
+// #include "MainWindow.h"
+// #include <QApplication>
+#include <cstdlib> // Pour srand, rand
+#include <ctime>   // Pour time
+
 using namespace std;
 using namespace Akropolis;
 
@@ -41,11 +44,11 @@ bool readIntOrQuit(int& value, int min, int max, const string& prompt) {
     while (true) {
         cout << prompt << " ('q' pour quitter) : ";
         string input;
-        
+
         if (!getline(cin, input) || input.empty()) {
             throw PartieAnnulee("Lecture interrompue.");
         }
-        
+
         checkQuit(input); // Vérifie si l'utilisateur veut quitter
 
         stringstream ss(input);
@@ -71,14 +74,17 @@ bool readStringOrQuit(string& value, const string& prompt) {
 // --- FONCTION PRINCIPALE ---
 
 int main() {
-    QApplication a(argc, argv);
+    /*QApplication a(argc, argv);
     MainWindow w;
     w.show();
-    return a.exec();
+    return a.exec();*/
 
+    // --- INITIALISATION DE L'ALÉATOIRE (TRÈS IMPORTANT) ---
+    // Utilise l'heure actuelle comme graine pour que la suite soit différente à chaque lancement
+    std::srand(static_cast<unsigned int>(std::time(nullptr)));
     // 1. Encapsuler toute la logique dans un try-catch
     try {
-        cout << "Bienvenue dans AKROPOLIS - Mode console" << endl; 
+        cout << "Bienvenue dans AKROPOLIS - Mode console" << endl;
         cout << "=======================================" << endl;
         // ... (RAPPEL DES RÈGLES) ...
         cout << "========================================\n\n" << endl;
@@ -88,7 +94,7 @@ int main() {
         int modeChoisi = 0;
         // Utilisation de la fonction d'aide pour la saisie
         readIntOrQuit(modeChoisi, 1, 2, "Choisissez votre mode de jeu (1: Solo / 2: Multijoueur)");
-        
+
         ModeJeu mode;
         if (modeChoisi == 1) {
             mode = ModeJeu::SOLO;
@@ -113,22 +119,22 @@ int main() {
             if (!readStringOrQuit(nom, "Nom du Joueur " + to_string(i + 1))) {
                 // Ce bloc est techniquement inutile car checkQuit() lance déjà l'exception, mais on le laisse.
             }
-            
+
             if (nom.empty()) {
                 nom = "Joueur" + to_string(i + 1);
             }
-            
-            partie.ajouterJoueur(nom);
+
+            partie.ajouterJoueur(nom,i+1);
         }
 
         // 4. Gestion de la difficulté (Solo)
         if (mode == ModeJeu::SOLO) {
-            partie.ajouterJoueur("Illustre Constructeur");  
+            partie.ajouterJoueur("Illustre Constructeur",1);
             int difficulteChoisie = 0;
-            
+
             // Utilisation de la fonction d'aide
             readIntOrQuit(difficulteChoisie, 1, 3, "Niveau de difficulté de l'Illustre Constructeur (1: Facile / 2: Moyen / 3: Difficile)");
-            
+
             NiveauDifficulte diff;
             if (difficulteChoisie == 1) {
                 diff = NiveauDifficulte::FACILE;
@@ -141,15 +147,33 @@ int main() {
         }
 
         cout << "\n\n Paramétrage terminé. Lancement de la partie..." << endl;
-        
+
         // La boucle de jeu doit aussi lancer l'exception PartieAnnulee si le joueur quitte.
-        partie.lancerPartie(); 
+        partie.lancerPartie();
+
+        cout << "\n\n*****************************************" << endl;
+        cout << "* RÉSULTATS FINAUX                      *" << endl;
+        cout << "*****************************************" << endl;
+
+        TableauScore calculateurFinal;
+
+        // On récupère la liste des joueurs via l'accesseur de Partie
+        const vector<Joueur*>& tousLesJoueurs = partie.getJoueurs();
+
+        // On affiche le détail pour chaque joueur
+        for(const auto& joueur : tousLesJoueurs) {
+            calculateurFinal.afficherDetailsScore(*joueur, cout);
+            cout << endl;
+        }
+
+        cout << "*****************************************" << endl;
+        cout << "Merci d'avoir joué !" << endl;
 
     } catch (const PartieAnnulee& e) {
         // 5. Bloc de capture pour la sortie demandée par le joueur
         cout << "\n\n=== FIN DE PARTIE PRÉMATURÉE ===\n" << endl;
         cout << e.getInfo() << endl;
-        return 0; 
+        return 0;
     } catch (const GameException& e) {
         // Bloc de capture pour les erreurs logiques du jeu
         cerr << "\n ERREUR FATALE DU JEU: " << e.getInfo() << endl;
@@ -162,16 +186,15 @@ int main() {
 
     return 0;
 }
-*/
 
-#include "MainWindow.h"
-#include <QApplication>
 
-int main(int argc, char *argv[])
-{
-    QApplication a(argc, argv);
-    MainWindow w;
-    w.show();
-    return a.exec();
-}
-
+// #include "MainWindow.h"
+// #include <QApplication>
+// /*
+// int main(int argc, char *argv[])
+// {
+//     QApplication a(argc, argv);
+//     MainWindow w;
+//     w.show();
+//     return a.exec();
+// }*/
