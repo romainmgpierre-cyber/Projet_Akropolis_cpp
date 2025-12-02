@@ -109,6 +109,7 @@ namespace Akropolis {
     void Partie::lancerPartie() {
         if (joueurs.empty()) throw GameException("Pas assez de joueurs.");
         initialiserTuiles();
+        remplirChoixTuile();
         etat = EtatPartie::EN_COURS;
         joueurActuelIndex = 0;
         cout << "--- La Partie Commence ! ---" << endl;
@@ -204,11 +205,19 @@ namespace Akropolis {
     }
 
     void Partie::remplirChoixTuile() {
-        while (choixTuile->getNombreTuiles() <= 1 && !pioche->estVide()) {
-            TuileCite* t = pioche->piocher();
-            choixTuile->ajouterTuile(t);
+    // La boucle continue tant que le marché n'est pas rempli à son maximum 
+    while (choixTuile->getNombreTuiles() < ChoixTuile::getMaxTuiles()) {
+        if (pioche->estVide()) {
+            // Le jeu continue si la pioche est vide, mais le marché ne sera pas complet.
+            cout << "Attention : Pioche épuisée. Le marché de tuiles n'est pas complet." << endl;
+            break; 
         }
+        // Pioche la tuile du dessus de la Pioche
+        TuileCite* nouvelleTuile = pioche->piocher();
+        // L'ajoute au ChoixTuile (elle sera la tuile de coût 0, 1, 2 ou 3 selon l'ordre)
+        choixTuile->ajouterTuile(nouvelleTuile);
     }
+}
 
 
     // Tour du Joueur
@@ -269,7 +278,7 @@ namespace Akropolis {
         }
 
         TuileCite* tuile = choixTuile->choisirTuile(joueur, index);
-
+        remplirChoixTuile();
         // --- Logique de Placement ---
 
         auto tousCoups = joueur->getCite()->genererCoupsValides(*tuile);
