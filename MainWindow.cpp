@@ -168,7 +168,7 @@ MainWindow::MainWindow(QWidget *parent)
 {
     // 1. Initialisation du Jeu
     partie = new Partie(1, ModeJeu::SOLO);
-    partie->ajouterJoueur("Joueur 1");
+    partie->ajouterJoueur("Joueur 1", 1);
     partie->initialiserTuiles();
 
     // 2. Initialisation
