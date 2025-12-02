@@ -16,6 +16,8 @@
 #include <algorithm>    // Pour std::transform et std::tolower
 // #include "MainWindow.h"
 // #include <QApplication>
+#include <cstdlib> // Pour srand, rand
+#include <ctime>   // Pour time
 
 using namespace std;
 using namespace Akropolis;
@@ -77,6 +79,9 @@ int main() {
     w.show();
     return a.exec();*/
 
+    // --- INITIALISATION DE L'ALÉATOIRE (TRÈS IMPORTANT) ---
+    // Utilise l'heure actuelle comme graine pour que la suite soit différente à chaque lancement
+    std::srand(static_cast<unsigned int>(std::time(nullptr)));
     // 1. Encapsuler toute la logique dans un try-catch
     try {
         cout << "Bienvenue dans AKROPOLIS - Mode console" << endl; 
