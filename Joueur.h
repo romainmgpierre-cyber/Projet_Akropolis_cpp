@@ -21,7 +21,7 @@ namespace Akropolis {
         
     public : 
         
-        Joueur(const string& nom, bool estIA = false);
+        Joueur(const string& nom, int numeroJoueur, bool estIA = false);
         ~Joueur();
         
         Joueur(const Joueur&) = delete;

@@ -61,8 +61,7 @@ namespace Akropolis{
         vector<Variante> getVariantesDisponibles() const{ return variantes; }
         vector<Variante> getVariantesActives() const;
         void initialiserTuiles();
-        void ajouterJoueur(const string& nom, bool estIA = false);
-        void retirerJoueur(const string& nom);
+        void ajouterJoueur(const std::string& nom, int numeroJoueur, bool estIA = false);        void retirerJoueur(const string& nom);
         void setDifficulte(NiveauDifficulte diff) { difficulte = diff; }
         NiveauDifficulte getDifficulte() const { return difficulte; }
         void ajouterVariante(const Variante& v) { variantes.push_back(v); }

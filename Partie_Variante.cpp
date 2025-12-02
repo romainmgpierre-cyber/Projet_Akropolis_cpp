@@ -39,11 +39,11 @@ namespace Akropolis {
 
     // Gestion Joueurs
 
-    void Partie::ajouterJoueur(const string& nom, bool estIA) {
+    void Partie::ajouterJoueur(const string& nom, int numeroJoueur, bool estIA) {
         if (etat != EtatPartie::NON_DEMARREE) {
             throw GameException("Impossible d'ajouter : la partie a deja commence.");
         }
-        Joueur* nouveauJoueur = new Joueur(nom, estIA);
+        Joueur* nouveauJoueur = new Joueur(nom, numeroJoueur, estIA); //Initialise le nb de pierres du joueur en fonction de son tour 
         joueurs.push_back(nouveauJoueur);
     }
 
@@ -124,6 +124,7 @@ namespace Akropolis {
     void Partie::lancerPartie() {
         if (joueurs.empty()) throw GameException("Pas assez de joueurs.");
         initialiserTuiles();
+        remplirChoixTuile();
         etat = EtatPartie::EN_COURS;
         joueurActuelIndex = 0;
         cout << "--- La Partie Commence ! ---" << endl;
@@ -219,11 +220,19 @@ namespace Akropolis {
     }
 
     void Partie::remplirChoixTuile() {
-        while (choixTuile->getNombreTuiles() <= 1 && !pioche->estVide()) {
-            TuileCite* t = pioche->piocher();
-            choixTuile->ajouterTuile(t);
+    // La boucle continue tant que le marché n'est pas rempli à son maximum 
+    while (choixTuile->getNombreTuiles() < ChoixTuile::getMaxTuiles()) {
+        if (pioche->estVide()) {
+            // Le jeu continue si la pioche est vide, mais le marché ne sera pas complet.
+            cout << "Attention : Pioche épuisée. Le marché de tuiles n'est pas complet." << endl;
+            break; 
         }
+        // Pioche la tuile du dessus de la Pioche
+        TuileCite* nouvelleTuile = pioche->piocher();
+        // L'ajoute au ChoixTuile (elle sera la tuile de coût 0, 1, 2 ou 3 selon l'ordre)
+        choixTuile->ajouterTuile(nouvelleTuile);
     }
+}
 
 
     // Tour du Joueur
@@ -280,6 +289,24 @@ namespace Akropolis {
 
             // L'IA ne place pas la tuile, elle la stocke simplement
             joueur->recupererTuileIA(tuile);
+
+           
+            TableauScore scoreHelper;
+            // On utilise la difficulté stockée dans la partie (this->difficulte)
+            int scoreActuel = scoreHelper.calculerScoreIA(*joueur, this->difficulte);
+            
+            cout << "\n   [ STATUT IA ]" << endl;
+            cout << "   - Nombre de tuiles : " << joueur->getCite()->getTuiles().size() << endl; // Note: +1 virtuel pour le départ
+            cout << "   - Pierres en reserve : " << joueur->getNbPierres() << endl;
+            cout << "   - SCORE ACTUEL : " << scoreActuel << " points" << endl;
+            cout << "----------------------------------------\n" << endl;
+
+            
+            // Indispensable pour ne pas que le tour passe instantanément
+            cout << "(Appuyez sur Entree pour continuer...)" << endl;
+            cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Vide le buffer
+            cin.get(); // Attend l'appui sur Entrée
+
             return; 
         }
 
@@ -344,8 +371,8 @@ namespace Akropolis {
 
         // Achat de la tuile (retrait des pierres du joueur et récupération de l'objet)
         TuileCite* tuile = choixTuile->choisirTuile(joueur, index);
-
-        //Placement de la tuile
+        remplirChoixTuile();
+        // --- Logique de Placement ---
 
         auto tousCoups = joueur->getCite()->genererCoupsValides(*tuile);
 

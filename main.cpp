@@ -88,20 +88,23 @@ int main() {
         // Création de la partie
         Partie partie(1, mode);
 
-        // Configuration selon le mode
+    
+        // 4. Gestion de la difficulté (Solo)
         if (mode == ModeJeu::SOLO) {
             // MODE SOLO
+            int i = 1;
             string nomJoueur;
             if (readStringOrQuit(nomJoueur, "Entrez votre nom")) {
                 if (nomJoueur.empty()) nomJoueur = "Architecte";
-                partie.ajouterJoueur(nomJoueur); // Joueur Humain
+                
+                partie.ajouterJoueur(nomJoueur, 1); 
             }
-
-            // Ajout de l'Illustre Architecte (IA)
             
-            partie.ajouterJoueur("Illustre Architecte", true); 
-
-            // Choix de la difficulté
+            
+            
+            // On ajoute l'IA (qui sera le joueur 2)
+            partie.ajouterJoueur("Illustre Constructeur", 2, true);  
+            
             int difficulteChoisie = 0;
             cout << "\n--- Niveaux de difficulte ---" << endl;
             cout << "1. Hippodamos (Facile) : Quartiers comptent niveau 1." << endl; 
@@ -117,7 +120,8 @@ int main() {
             
             partie.setDifficulte(diff);
 
-        } else {
+        } 
+        else {
             // --- MODE MULTIJOUEUR ---
             int nbJoueursHumains;
             readIntOrQuit(nbJoueursHumains, 2, 4, "Nombre de joueurs (2 a 4)");
@@ -126,7 +130,7 @@ int main() {
                 string nom;
                 readStringOrQuit(nom, "Nom du Joueur " + to_string(i + 1));
                 if (nom.empty()) nom = "Joueur" + to_string(i + 1);
-                partie.ajouterJoueur(nom); // isIA = false par défaut
+                partie.ajouterJoueur(nom, i); // isIA = false par défaut
             }
         }
 

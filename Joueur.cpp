@@ -4,8 +4,8 @@
 
 namespace Akropolis {
 
-    Joueur::Joueur(const string& nom, bool estIA) 
-        : nom(nom), nbPierres(1), estIA(estIA) // Règle officielle : on commence souvent avec 1 pierre (ou ajuster selon règle)
+    Joueur::Joueur(const string& nom, int numeroJoueur, bool estIA) 
+        : nom(nom), nbPierres(numeroJoueur), estIA(estIA) // Le 1er joueur a 1 pierre, le 2ème 2, etc.
     {
         cite = new Cite();
     }
