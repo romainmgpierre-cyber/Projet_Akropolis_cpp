@@ -108,15 +108,15 @@ namespace Akropolis{
                 bool valide = false;
 
                 if (coul == Couleur::jaune) { // Marché
-                    bool adjacentMarché = false;
+                    bool adjacentMarche = false;
                     for(int i=0; i<6; ++i) {
                         auto it = plateau.find(pos.voisin(i));
                         if(it != plateau.end()){
                             if(Quartier* qV = dynamic_cast<Quartier*>(it->second.first))
-                                if(qV->getType().getCouleur() == Couleur::jaune) adjacentMarché = true;
+                                if(qV->getType().getCouleur() == Couleur::jaune) adjacentMarche = true;
                         }
                     }
-                    if(!adjacentMarché) valide = true;
+                    if(!adjacentMarche) valide = true;
 
                 } else if (coul == Couleur::rouge) { // Caserne
                     if (estEnPeripherie(pos, plateau)) valide = true;

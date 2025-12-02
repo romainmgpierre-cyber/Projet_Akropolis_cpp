@@ -66,8 +66,8 @@ namespace Akropolis {
             // Recalcul complet via la nouvelle méthode
             map<Couleur, ScoreDetail> details = calculerDetails(joueur);
             int total = 0;
-            for(auto const& [couleur, detail] : details) {
-                total += detail.totalOfficiel();
+            for (auto const& entry : details) {
+                total += entry.second.totalOfficiel();
             }
             return total;
         }
