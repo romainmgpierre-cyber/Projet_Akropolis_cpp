@@ -235,6 +235,8 @@ namespace Akropolis {
         for (size_t i = 0; i < dispos.size(); ++i) {
             afficherTuileDansLaRiviere(choixTuile, i, cout);
         }
+        //Permet d'avoir le nb de pierre au moment de choisir sa tuile 
+        cout << " Vous avez actuellement " << joueur->getNbPierres() << " pierres." << endl;
         cout << "--------------------------" << endl;
 
         // --- Choix tuile ---
