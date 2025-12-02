@@ -51,6 +51,7 @@ namespace Akropolis{
         void lancerPartie(); // Initialise tout
         void boucleDeJeu();  // Fait tourner les tours
         void gererTourJoueur(Joueur* joueur); // Logique d'un tour
+        void remplirChoixTuile();
 
         ModeJeu getMode() const { return mode; }
         EtatPartie getEtat() const { return etat; }
@@ -60,6 +61,7 @@ namespace Akropolis{
         Pioche* getPioche() const { return pioche; }
         vector<Variante> getVariantesDisponibles() const{ return variantes; }
         vector<Variante> getVariantesActives() const;
+
         void initialiserTuiles();
         void ajouterJoueur(const string& nom);
         void retirerJoueur(const string& nom);
@@ -67,12 +69,15 @@ namespace Akropolis{
         void ajouterVariante(const Variante& v) { variantes.push_back(v); }
         void activerVariante(const string& nom);
         void desactiverVariante(const string& nom);
+        ChoixTuile* getChoixTuile() const { return choixTuile; }
+        void passerTour() {
+            joueurActuelIndex = (joueurActuelIndex + 1) % joueurs.size();
+        }
     
     private :
     //Helpers Privés
     private:
         
-        void remplirChoixTuile();
         void afficherEtatJeu(Joueur* joueur) const;
         void payerPierres(Joueur* joueur, size_t cout);
 

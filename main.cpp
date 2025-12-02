@@ -1,4 +1,4 @@
-/*#include "Cite.h"
+#include "Cite.h"
 #include "TuileCite_TuileDep.h"
 #include "GameExcep_Enums.h"
 #include "CoordHex.h"
@@ -15,7 +15,7 @@
 #include <algorithm>    // Pour std::transform et std::tolower
 #include "MainWindow.h"
 #include <QApplication>
-
+/*
 using namespace std;
 using namespace Akropolis;
 
@@ -174,3 +174,4 @@ int main(int argc, char *argv[])
     w.show();
     return a.exec();
 }
+

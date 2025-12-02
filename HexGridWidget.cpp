@@ -1,7 +1,6 @@
 #include "HexGridWidget.h"
 #include <QPainter>
 #include <QtMath>
-// Il faut inclure les sous-classes pour pouvoir les détecter
 #include "HexCons_Carr_Quart_Place.h"
 
 using namespace Akropolis;
@@ -18,7 +17,6 @@ void HexGridWidget::setCite(const Cite* cite) {
 }
 
 QColor HexGridWidget::typeToColor(Couleur c) const {
-    // CORRECTION : Utilisation des minuscules comme dans votre GameExcep_Enums.h
     switch(c) {
     case Couleur::bleu: return QColor(33, 150, 243); // Habitation
     case Couleur::jaune: return QColor(255, 235, 59); // Place
@@ -55,6 +53,23 @@ void HexGridWidget::paintEvent(QPaintEvent *event) {
         int hauteur = paire.second;
         dessinerHexagone(painter, coord, hex, hauteur);
     }
+    if (tuileFantome) {
+        // Position pixel de l'ancre du fantôme
+        QPointF center = cubeToPixel(posFantome);
+
+        painter.save(); // Sauvegarde l'état du painter
+        painter.setOpacity(0.6); // Semi-transparent
+
+        // Dessin simple d'un repère vert pour visualiser où on pose
+        painter.setBrush(Qt::green);
+        painter.drawEllipse(center, 15, 15);
+
+        // Optionnel : Dessiner une indication de texte
+        painter.setPen(Qt::black);
+        painter.drawText(center, "Pose");
+
+        painter.restore(); // Restaure l'état normal
+    }
 }
 
 void HexGridWidget::dessinerHexagone(QPainter& painter, CoordHex coord, HexagoneConstruction* hex, int hauteur) {
@@ -65,7 +80,6 @@ void HexGridWidget::dessinerHexagone(QPainter& painter, CoordHex coord, Hexagone
         poly << center + QPointF(hexSize * cos(angle), hexSize * sin(angle));
     }
 
-    // --- CORRECTION MAJEURE : DÉTECTION DU TYPE ---
     QColor baseColor = Qt::white;
     int nbEtoiles = 0;
 
@@ -91,19 +105,16 @@ void HexGridWidget::dessinerHexagone(QPainter& painter, CoordHex coord, Hexagone
     painter.setBrush(baseColor);
     painter.drawPolygon(poly);
 
-    // Dessin des étoiles si nécessaire
     if (nbEtoiles > 0) {
         painter.setPen(Qt::black);
         painter.drawText(QRectF(center.x()-15, center.y()-10, 30, 20), Qt::AlignCenter,
                          QString("⭐").repeated(nbEtoiles));
     }
 
-    // Debug : Coordonnées
     painter.setPen(Qt::darkGray);
     QFont font = painter.font();
     font.setPointSize(8);
     painter.setFont(font);
-    // painter.drawText(center + QPointF(0, 15), QString("%1,%2").arg(coord.getQ()).arg(coord.getR()));
 }
 
 void HexGridWidget::mousePressEvent(QMouseEvent *event) {
@@ -130,4 +141,15 @@ void HexGridWidget::mouseReleaseEvent(QMouseEvent *event) {
     if (event->button() == Qt::RightButton) {
         isDragging = false;
     }
+}
+void HexGridWidget::setTuileFantome(Akropolis::TuileCite* tuile, Akropolis::CoordHex position, int rotation) {
+    this->tuileFantome = tuile;
+    this->posFantome = position;
+    this->rotFantome = rotation;
+    update(); // Force le widget à se redessiner immédiatement pour afficher le fantôme
+}
+
+void HexGridWidget::clearTuileFantome() {
+    this->tuileFantome = nullptr;
+    update(); // Force le widget à se redessiner pour effacer le fantôme
 }
