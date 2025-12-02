@@ -39,11 +39,11 @@ namespace Akropolis {
 
     // Gestion Joueurs
 
-    void Partie::ajouterJoueur(const string& nom) {
+    void Partie::ajouterJoueur(const string& nom, int numeroJoueur) {
         if (etat != EtatPartie::NON_DEMARREE) {
             throw GameException("Impossible d'ajouter : la partie a deja commence.");
         }
-        Joueur* nouveauJoueur = new Joueur(nom);
+        Joueur* nouveauJoueur = new Joueur(nom, numeroJoueur); //Initialise le nb de pierres du joueur en fonction de son tour 
         joueurs.push_back(nouveauJoueur);
     }
 

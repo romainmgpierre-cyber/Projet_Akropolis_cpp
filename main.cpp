@@ -124,12 +124,12 @@ int main() {
                 nom = "Joueur" + to_string(i + 1);
             }
             
-            partie.ajouterJoueur(nom);
+            partie.ajouterJoueur(nom,i+1);
         }
 
         // 4. Gestion de la difficulté (Solo)
         if (mode == ModeJeu::SOLO) {
-            partie.ajouterJoueur("Illustre Constructeur");  
+            partie.ajouterJoueur("Illustre Constructeur",1);  
             int difficulteChoisie = 0;
             
             // Utilisation de la fonction d'aide
