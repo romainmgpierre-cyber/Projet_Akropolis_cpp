@@ -4,8 +4,8 @@
 
 namespace Akropolis {
 
-    Joueur::Joueur(const string& nom, int numeroJoueur) 
-        : nom(nom), nbPierres(numeroJoueur) // Le 1er joueur a 1 pierre, le 2ème 2, etc.
+    Joueur::Joueur(const string& nom, int numeroJoueur, bool estIA) 
+        : nom(nom), nbPierres(numeroJoueur), estIA(estIA) // Le 1er joueur a 1 pierre, le 2ème 2, etc.
     {
         cite = new Cite();
     }
@@ -59,5 +59,12 @@ namespace Akropolis {
         // On délègue le calcul
         return calculateur.calculerScore(*this);
     }
+
+    void Joueur::recupererTuileIA(TuileCite* tuile) {
+        
+        cite->ajouterTuileIA(tuile); // Pour l'IA, on ajoute la tuile à son inventaire
+    }
+
+   
 
 }

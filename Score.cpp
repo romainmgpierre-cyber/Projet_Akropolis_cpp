@@ -208,4 +208,53 @@ namespace Akropolis{
         f << "🏆 LE GAGNANT EST : " << scoresTries[0].first->getNom() << " ! 🏆" << endl;
     }
 
+    // Score pour l'IA
+int TableauScore::calculerScoreIA(const Joueur& joueurIA, NiveauDifficulte diff) const {
+    const auto& tuiles = joueurIA.getCite()->getTuiles();
+    
+
+    
+    map<Couleur, int> nbEtoiles;
+    map<Couleur, int> nbQuartiers;
+    
+    // Valeurs par défaut de la tuile de départ :
+    nbEtoiles[Couleur::bleu] = 1; 
+    int nbCarrieres = 3;         
+
+   
+    for (const auto* tuile : tuiles) {
+        for (size_t i = 0; i < 3; ++i) {
+            HexagoneConstruction* hex = tuile->getHexagone(i);
+
+            if (Place* p = dynamic_cast<Place*>(hex)) {
+                nbEtoiles[p->getType().getCouleur()] += p->getNbEtoile();
+            } 
+            else if (Quartier* q = dynamic_cast<Quartier*>(hex)) {
+                int hauteurVirtuelle = 1;
+                // Règle Difficile (Callicratès) : compte niveau 2
+                if (diff == NiveauDifficulte::DIFFICILE) {
+                    hauteurVirtuelle = 2;
+                }
+                nbQuartiers[q->getType().getCouleur()] += hauteurVirtuelle;
+            }
+            else if (dynamic_cast<Carriere*>(hex)) {
+                nbCarrieres++;
+            }
+        }
+    }
+
+    int scoreTotal = 0;
+
+    for (Couleur c : {Couleur::bleu, Couleur::jaune, Couleur::rouge, Couleur::violet, Couleur::vert}) {
+        scoreTotal += (nbQuartiers[c] * nbEtoiles[c]);
+    }
+
+    // Règle Moyen (Métagénès) : +2 points par carrière
+    if (diff == NiveauDifficulte::MOYEN) {
+        scoreTotal += (nbCarrieres * 2);
+    }
+
+    return scoreTotal;
+}
+
 }

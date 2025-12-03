@@ -221,5 +221,10 @@ namespace Akropolis{
             f << endl;
         }
     }
+    void Cite::ajouterTuileIA(TuileCite* tuile) {
+    // L'IA considère les tuiles comme acquises mais ne les place pas sur le plateau
+        tuiles_posees.push_back(tuile);
+    
+    }
     
 }
