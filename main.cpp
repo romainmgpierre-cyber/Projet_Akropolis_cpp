@@ -8,6 +8,8 @@
 #include "Pioche_ChoixTuile.h"
 #include "Score.h"
 #include "Type.h"
+#include "MainWindow.h"
+#include "HexGridWidget.h"
 #include <iostream>
 #include <string>
 #include <limits>
@@ -18,7 +20,7 @@
 
 using namespace std;
 using namespace Akropolis;
-
+/*
 // DÉCLARATION DES FONCTIONS D'AIDE
 
 void clearInputBuffer() {
@@ -251,7 +253,7 @@ int main() {
     return 0;
 }
 
-/*
+*/
 #include "MainWindow.h"
 #include <QApplication>
 
@@ -262,4 +264,4 @@ int main(int argc, char *argv[])
     w.show();
     return a.exec();
 }
-*/
+
