@@ -26,6 +26,16 @@ namespace Akropolis {
         tuilesDisponibles.clear();
     }
 
+    void ChoixTuile::remettreTuile(TuileCite* tuile, size_t index) {
+        // On réinsère la tuile à son emplacement d'origine
+        if (index <= tuilesDisponibles.size()) {
+            tuilesDisponibles.insert(tuilesDisponibles.begin() + index, tuile);
+        } else {
+            // Sécurité (ne devrait pas arriver si la logique est bonne)
+            tuilesDisponibles.push_back(tuile);
+        }
+    }
+
     TuileCite* ChoixTuile::choisirTuile(Joueur* joueur, size_t index) {
     if (index >= tuilesDisponibles.size()) {
          throw GameException("Index de tuile invalide dans ChoixTuile.");

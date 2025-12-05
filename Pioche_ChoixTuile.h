@@ -43,7 +43,7 @@ namespace Akropolis{
         }
         
         ~ChoixTuile();
-
+        void remettreTuile(TuileCite* tuile, size_t index);
         
         size_t calculerCout(size_t index) const {
             // Exemple : coût = index (0 pour la 1ère, 1 pour la 2ème...)
