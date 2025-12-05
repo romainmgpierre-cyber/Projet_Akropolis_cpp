@@ -33,7 +33,7 @@ namespace Akropolis{
 
     class ChoixTuile {
     private:
-        static const size_t MAX_TUILES = 6; // Ou autre valeur selon règles
+        static const size_t MAX_TUILES = 4; // Ou autre valeur selon règles
         size_t id;
         vector<TuileCite*> tuilesDisponibles;
     
@@ -57,7 +57,7 @@ namespace Akropolis{
         const vector<TuileCite*>& getTuilesDisponibles() const {
             return tuilesDisponibles;
         }
-        
+        static size_t getMaxTuiles() {return MAX_TUILES;}
         size_t getNombreTuiles() const { return tuilesDisponibles.size(); }
     };
 }
