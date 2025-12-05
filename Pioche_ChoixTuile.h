@@ -50,6 +50,7 @@ namespace Akropolis{
             return index; 
         }
 
+        // Gere le retrait de tuile et le retrait de pierre quand un joueur prend une tuile
         TuileCite* choisirTuile(Joueur* joueur,size_t index);
         bool ajouterTuile(TuileCite* tuile);  
 

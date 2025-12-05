@@ -1,5 +1,7 @@
 #include "Pioche_ChoixTuile.h"
 #include "GameExcep_Enums.h"
+#include <algorithm>
+#include <random>
 namespace Akropolis {
 
 /*J'ai fait 5 fonctions pour créer :
@@ -15,6 +17,8 @@ pour une à trois joueurs, on prend les cartes 2+ et 3+ et celles de départ
 pour une à quatre on prend toutes les cartes
 
 */
+    //declaration de la fonction de mélange;
+    void melangerTuiles(std::vector<TuileCite*>& tuiles);
     
     std::vector<TuileCite*> creerTuiles2j() {
         std::vector<TuileCite*> tuiles2j; //uniquement les tuiles pour deux jouers 
@@ -292,7 +296,7 @@ pour une à quatre on prend toutes les cartes
             throw GameException("Erreur: nombre de tuiles incorrect (" + 
                               std::to_string(tuiles2j.size()) + " au lieu de 37)");
         }
-        
+
         return tuiles2j;
     }
     
@@ -530,7 +534,14 @@ pour une à quatre on prend toutes les cartes
             std::vector<TuileCite*> tuiles4 = creerTuiles4j();
             toutesLesTuiles.insert(toutesLesTuiles.end(), tuiles4.begin(), tuiles4.end());
         }
-        
+        melangerTuiles(toutesLesTuiles);
         return toutesLesTuiles;
+    }
+
+    void melangerTuiles(std::vector<TuileCite*>& tuiles) {
+        // mélange des tuiles après leurs insertion dans le vecteur
+        auto rd = std::random_device{};
+        auto rng = std::default_random_engine{rd()};
+        std::shuffle(std::begin(tuiles), std::end(tuiles), rng);
     }
 }
