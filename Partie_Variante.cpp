@@ -424,7 +424,7 @@ namespace Akropolis {
 
         cout << "\nEmplacements possibles pour la Rotation " << rotationChoisie << " :" << endl;
         for (size_t i = 0; i < coupsFiltres.size(); ++i) {
-            cout << (i+1) << ". Position (q=" << coupsFiltres[i].ancre.getQ()
+            cout <<"["<<(i+1)<<"]"<<". Position (q=" << coupsFiltres[i].ancre.getQ()
                  << ", r=" << coupsFiltres[i].ancre.getR() << ") "
                  << (coupsFiltres[i].recouvrement ? " [Recouvrement H:" : " [Sol H:")
                  << coupsFiltres[i].hauteur << "]" << endl;
