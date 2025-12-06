@@ -4,7 +4,9 @@
 #include <map>
 #include <iostream>
 #include "Joueur.h"
-#include "GameExcep_Enums.h" 
+#include "GameExcep_Enums.h"
+#include "Partie_Variante.h"
+
 
 using namespace std;
 
@@ -73,6 +75,8 @@ namespace Akropolis {
         }
         int calculerScoreIA(const Joueur& joueurIA, NiveauDifficulte diff) const; //Score pour l'IA
     };
+    //prototype
+    void AfficherResultats(Partie& partie);
 }
 
 #endif

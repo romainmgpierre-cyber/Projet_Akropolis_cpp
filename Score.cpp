@@ -3,6 +3,7 @@
 #include <queue>
 #include <algorithm>
 
+
 namespace Akropolis{
 
     // Helpers (déjà présents ou à rajouter)
@@ -256,5 +257,102 @@ int TableauScore::calculerScoreIA(const Joueur& joueurIA, NiveauDifficulte diff)
 
     return scoreTotal;
 }
+    void AfficherResultats(Partie& partie) {
+     //Fin de partie et Résultats
+        cout << "\n\n*****************************************" << endl;
+        cout << "* RÉSULTATS FINAUX                      *" << endl;
+        cout << "*****************************************" << endl;
 
+        TableauScore calculateurFinal;
+        const vector<Joueur*>& tousLesJoueurs = partie.getJoueurs();
+
+        if (partie.getMode() == ModeJeu::SOLO) {
+            // RÉSULTATS SOLO
+            Joueur* humain = nullptr;
+            Joueur* ia = nullptr;
+
+            // Identification des rôles
+            for (auto* j : tousLesJoueurs) {
+                if (j->isIA()) ia = j;
+                else humain = j;
+            }
+
+            if (humain && ia) {
+                // Score Humain (Calcul standard)
+                cout << "\n--- VOTRE CITE (" << humain->getNom() << ") ---" << endl;
+                calculateurFinal.afficherDetailsScore(*humain, cout);
+                int scoreHumain = calculateurFinal.calculerScore(*humain);
+
+                // Score IA (Calcul spécifique selon difficulté)
+                cout << "\n--- ILLUSTRE ARCHITECTE (" << ia->getNom() << ") ---" << endl;
+                // On n'affiche pas les détails complexes pour l'IA, juste le total
+                int scoreIA = calculateurFinal.calculerScoreIA(*ia, partie.getDifficulte());
+
+                cout << "Difficulte : ";
+                switch(partie.getDifficulte()) {
+                case NiveauDifficulte::FACILE: cout << "Facile (Hippodamos)"; break;
+                case NiveauDifficulte::MOYEN: cout << "Moyen (Metagenes)"; break;
+                case NiveauDifficulte::DIFFICILE: cout << "Difficile (Callicrates)"; break;
+                }
+                cout << endl;
+                cout << "SCORE FINAL IA : " << scoreIA << " points." << endl;
+
+                // Comparaison et Verdict
+                cout << "\n*****************************************" << endl;
+                cout << "              VERDICT                    " << endl;
+                cout << "*****************************************" << endl;
+                cout << humain->getNom() << " : " << scoreHumain << " pts | " << humain->getNbPierres() << " pierres" << endl;
+                cout << ia->getNom() << " : " << scoreIA << " pts | " << ia->getNbPierres() << " pierres" << endl;
+                cout << "-----------------------------------------" << endl;
+
+                if (scoreHumain > scoreIA) {
+                    cout << "VICTOIRE ! Vous avez vaincu l'Illustre Architecte !" << endl;
+                }
+                else if (scoreIA > scoreHumain) {
+                    cout << "DEFAITE. L'Illustre Architecte remporte la victoire." << endl;
+                }
+                else {
+                    // EGALITÉ : Départage aux pierres
+                    cout << "EGALITE aux points ! On compare les pierres..." << endl;
+                    if (humain->getNbPierres() > ia->getNbPierres()) {
+                        cout << "Vous avez plus de pierres. VICTOIRE !" << endl;
+                    } else {
+                        // "En cas d'égalité, c'est le joueur ayant le plus de Pierres qui l'emporte."
+
+                        if (ia->getNbPierres() > humain->getNbPierres())
+                            cout << "L'IA a plus de pierres. DEFAITE." << endl;
+                        else
+                            cout << "EGALITE PARFAITE (Points et Pierres) ! Quel match !" << endl;
+                    }
+                }
+            }
+        }
+        else {
+            //RÉSULTATS MULTIJOUEUR (Classique)
+            // On calcule et stocke les scores pour le tri
+            vector<pair<Joueur*, int>> scoresFinaux;
+
+            for(const auto& joueur : tousLesJoueurs) {
+                calculateurFinal.afficherDetailsScore(*joueur, cout);
+                scoresFinaux.push_back({joueur, calculateurFinal.calculerScore(*joueur)});
+                cout << endl;
+            }
+
+            // Tri décroissant pour trouver le vainqueur
+            sort(scoresFinaux.begin(), scoresFinaux.end(),
+                 [](const pair<Joueur*, int>& a, const pair<Joueur*, int>& b) {
+                     if (a.second != b.second) {
+                         return a.second > b.second; // Plus de points d'abord
+                     }
+                     return a.first->getNbPierres() > b.first->getNbPierres(); // Pierres si égalité
+                 });
+
+            cout << "*****************************************" << endl;
+            cout << "VAINQUEUR : " << scoresFinaux[0].first->getNom()
+                 << " avec " << scoresFinaux[0].second << " points !" << endl;
+            cout << "*****************************************" << endl;
+        }
+
+        cout << "\nMerci d'avoir joue a Akropolis !" << endl;
+    }
 }
