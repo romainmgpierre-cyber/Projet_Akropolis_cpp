@@ -5,6 +5,7 @@
 #include "Joueur.h"
 #include "TuileCite_TuileDep.h"
 #include "Pioche_ChoixTuile.h"
+#include "MenuConfiguration.h"
 using namespace std;
 namespace Akropolis{
     class Variante {
@@ -81,12 +82,7 @@ namespace Akropolis{
         void afficherEtatJeu(Joueur* joueur) const;
         void payerPierres(Joueur* joueur, size_t cout);
 
-        
-
-
     };
-
-    
 }
 
 #endif
