@@ -43,6 +43,10 @@ add_executable(akropolis
     Score.cpp Score.h
     TuileCite_TuileDep.cpp TuileCite_TuileDep.h
     Type.cpp Type.h
+        MenuConfiguration.h
+        MenuConfiguration.cpp
+        FonctionsAide.h
+        FonctionsAide.cpp
 )
 
 # 2. LIEZ LA BIBLIOTHÈQUE QT A VOTRE EXÉCUTABLE
