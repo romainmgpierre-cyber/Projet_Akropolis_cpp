@@ -38,8 +38,9 @@ namespace Akropolis{
             if (q != autre.q) return q < autre.q;
             return r < autre.r;
         }
-        
 
+        CoordHex rotate(int rotation) const;
+        
         // Donne le voisin à une direction
         CoordHex voisin(int direction) const {
             static const array<CoordHex, 6> directions = {{

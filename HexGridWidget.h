@@ -15,10 +15,12 @@ class HexGridWidget : public QWidget
 public:
     explicit HexGridWidget(QWidget *parent = nullptr);
     void setCite(const Akropolis::Cite* cite);
-    void setTuileFantome(Akropolis::TuileCite* tuile, Akropolis::CoordHex position, int rotation);
+    void setTuileFantome(Akropolis::TuileCite* tuile, Akropolis::CoordHex position);
     void clearTuileFantome();
     void setZoomLevel(double zoom);
     void animateHexPlacement(Akropolis::CoordHex coord);
+    void rotateFantome(); 
+    int getFantomeRotation() const { return rotFantome; }
 
 protected:
     void paintEvent(QPaintEvent *event) override;

@@ -89,6 +89,7 @@ private slots:
     void onUndoClicked();
     void onRecentrerClicked();
     void onTuileChoisie(int index);
+    void onValidationButtonClicked();
 
 private:
     void mettreAJourInterface();
@@ -104,12 +105,14 @@ private:
     ModernButton *btnRotation;
     ModernButton *btnUndo;
     ModernButton *btnRecentrer;
+    ModernButton *btnValidation;
 
     Akropolis::Partie* partie;
     Akropolis::TuileCite* tuileSelectionnee = nullptr;
     int rotationActuelle = 0;
     EtatJeu etatActuel;
     RiviereWidget *riviereWidget;
+    Akropolis::CoordHex ancreSelectionnee;
 
     QFrame *panelJoueur;
     QHBoxLayout *layoutPrincipal;

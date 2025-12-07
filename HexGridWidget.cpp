@@ -132,35 +132,56 @@ void HexGridWidget::paintEvent(QPaintEvent *event) {
         dessinerHexagone(painter, coord, hex, hauteur, isHovered);
     }
     if (tuileFantome) {
-        QPointF center = cubeToPixel(posFantome);
-
         painter.save();
-        painter.setOpacity(0.6); // Semi-transparent
+        painter.setOpacity(0.7); // Semi-transparent pour la prévisualisation
 
-        /// Anneau pulsant
+        // Positions relatives d'une tuile standard: (0, 0), (1, 0), (0, 1)
+        const std::array<Akropolis::CoordHex, 3> localPositions = {
+            Akropolis::CoordHex(0, 0),
+            Akropolis::CoordHex(1, 0),
+            Akropolis::CoordHex(0, 1)
+        }; 
+        
+        const auto& hexContentArray = tuileFantome->getHexagones();
+        
+        for (size_t i = 0; i < 3; ++i) {
+            
+            Akropolis::CoordHex localCoord = localPositions[i];
+            // 1. Appliquer la rotation locale (avec rotFantome)
+            Akropolis::CoordHex rotatedCoord = localCoord.rotate(rotFantome);
+            
+            // 2. Appliquer la translation (avec posFantome)
+            Akropolis::CoordHex finalCoord = posFantome + rotatedCoord;
+            
+            // 3. Dessiner l'hexagone fantôme (hauteur 1, non survolé)
+            Akropolis::HexagoneConstruction* hexContent = hexContentArray[i];
+            dessinerHexagone(painter, finalCoord, hexContent, 1, false); 
+        }
+
+        // --- Marqueur de placement central (conservé) ---
+        QPointF center = cubeToPixel(posFantome);
+        // Anneau pulsant pour l'animation
         QPen pen(QColor(76, 175, 80), 3);
-        pen.setStyle(Qt::DashLine);
+        pen.setStyle(Qt::DotLine);
         painter.setPen(pen);
         painter.setBrush(Qt::NoBrush);
-        double pulseSize = 20 + 5 * qSin(QTime::currentTime().msec() * 0.01);
+        double pulseSize = 25 + 7 * qSin(QTime::currentTime().msec() * 0.01);
         painter.drawEllipse(center, pulseSize, pulseSize);
 
-        // Icône de placement
+        // Icône centrale
         painter.setPen(Qt::NoPen);
         painter.setBrush(QColor(76, 175, 80));
-        painter.drawEllipse(center, 15, 15);
-
+        painter.drawEllipse(center, 12, 12);
         painter.setPen(Qt::white);
         QFont font = painter.font();
         font.setBold(true);
-        font.setPointSize(12);
+        font.setPointSize(10);
         painter.setFont(font);
         painter.drawText(QRectF(center.x()-10, center.y()-10, 20, 20),
                          Qt::AlignCenter, "+");
 
         painter.restore();
         QTimer::singleShot(50, this, [this](){ update(); });
-
     }
 }
 
@@ -271,10 +292,15 @@ void HexGridWidget::wheelEvent(QWheelEvent *event) {
     update();
 }
 
-void HexGridWidget::setTuileFantome(TuileCite* tuile, CoordHex position, int rotation) {
+void HexGridWidget::setTuileFantome(TuileCite* tuile, CoordHex position) {
     this->tuileFantome = tuile;
     this->posFantome = position;
-    this->rotFantome = rotation;
+    this->rotFantome = 0;
+    update();
+}
+
+void HexGridWidget::rotateFantome() {
+    rotFantome = (rotFantome + 1) % 6; // effectue la rotation 
     update();
 }
 

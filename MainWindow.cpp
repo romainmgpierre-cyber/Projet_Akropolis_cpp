@@ -248,6 +248,20 @@ MainWindow::MainWindow(QWidget *parent)
     btnRotation->setEnabled(false);
     sideLayout->addWidget(btnRotation);
 
+    btnValidation = new ModernButton("Valider Placement");
+    btnValidation->setStyleSheet(
+        "QPushButton {"
+        "  background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #2980b9, stop:1 #3498db);"
+        "  color: white; border: none; border-radius: 8px; padding: 12px 24px;"
+        "  font-size: 14px; font-weight: bold; min-width: 120px;"
+        "}"
+        "QPushButton:hover { background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #3498db, stop:1 #2980b9); }"
+        "QPushButton:pressed { background: #206d9b; }"
+        "QPushButton:disabled { background: #cccccc; color: #666666; }"
+    );
+    btnValidation->setEnabled(false);
+    sideLayout->addWidget(btnValidation);
+
     btnUndo = new ModernButton("Annuler");
     btnUndo->setEnabled(false);
     sideLayout->addWidget(btnUndo);
@@ -265,6 +279,7 @@ MainWindow::MainWindow(QWidget *parent)
     // 3. Connexions
     connect(gridWidget, &HexGridWidget::hexClicked, this, &MainWindow::onHexClicked);
     connect(btnRotation, &QPushButton::clicked, this, &MainWindow::onRotationClicked);
+    connect(btnValidation, &QPushButton::clicked, this, &MainWindow::onValidationButtonClicked);
     connect(btnRecentrer, &QPushButton::clicked, this, &MainWindow::onRecentrerClicked);
     connect(btnUndo, &QPushButton::clicked, this, &MainWindow::onUndoClicked);
     connect(riviereWidget, &RiviereWidget::tuileChoisie, this, &MainWindow::onTuileChoisie);
@@ -292,9 +307,6 @@ void MainWindow::onTuileChoisie(int index) {
         rotationActuelle = 0;
         etatActuel = EtatJeu::PLACEMENT_TUILE;
 
-        // Feedback visuel : on montre le fantôme sur la grille
-        gridWidget->setTuileFantome(tuileSelectionnee, CoordHex(0,0), 0);
-
         mettreAJourInterface();
     } else {
         QMessageBox::warning(this, "Impossible",
@@ -302,12 +314,59 @@ void MainWindow::onTuileChoisie(int index) {
                                  .arg(cout).arg(j->getNbPierres()));
     }
 }
+
 void MainWindow::onRotationClicked() {
     if (!tuileSelectionnee) return;
+    gridWidget->rotateFantome();
+    rotationActuelle = gridWidget->getFantomeRotation();
+}
 
-    // Logique de rotation (à implémenter selon modèle)
-    rotationActuelle = (rotationActuelle + 1) % 6;
-    gridWidget->setTuileFantome(tuileSelectionnee, CoordHex(0,0), rotationActuelle);
+void MainWindow::onValidationButtonClicked() {
+    if (!tuileSelectionnee || etatActuel != EtatJeu::PLACEMENT_TUILE) return;
+
+    Joueur* j = partie->getJoueurActuel();
+    Cite* cite = j->getCite();
+    
+    // 1. Déterminer la rotation finale
+    int finalRotation = gridWidget->getFantomeRotation(); 
+    
+    // 2. Chercher le coup validé par le moteur de jeu qui correspond à l'ancre et à la rotation UI
+    auto coupsValides = cite->genererCoupsValides(*tuileSelectionnee);
+    bool valide = false;
+    
+    // La rotation UI (0-5) correspond aux 6 permutations de CoupPossible.
+    for(const auto& c : coupsValides) {
+        // Le CoupPossible stocke un ID de rotation qui contient la forme (V ou ^) ET la permutation
+        // Comme nous ne savons pas si l'ancre correspond à la forme V (0-2) ou ^ (3-5),
+        // nous testons si une des deux formes correspond à l'ancre et à la permutation choisie (finalRotation % 3)
+        
+        // C'est le CoupPossible que nous devons appliquer (il contient hauteur et recouvrement)
+        if(c.ancre == ancreSelectionnee && c.rotation == finalRotation) { 
+            try {
+                // 3. Appliquer le coup validé
+                cite->placerTuile(tuileSelectionnee, c);
+                valide = true;
+                break;
+            } catch (const std::exception& e) {
+                QMessageBox::warning(this, "Erreur de placement", e.what());
+                return;
+            }
+        }
+    }
+
+    if(valide) {
+        // 4. Nettoyer l'état et passer au joueur suivant
+        tuileSelectionnee = nullptr;
+        gridWidget->clearTuileFantome();
+        
+        btnRotation->setEnabled(false);
+        btnValidation->setEnabled(false);
+        
+        partie->passerTour();
+        passerAuJoueurSuivant();
+    } else {
+        QMessageBox::information(this, "Info", "Placement invalide (ancre/rotation ne correspond pas à un coup légal).");
+    }
 }
 
 void MainWindow::onHexClicked(CoordHex coord) {
