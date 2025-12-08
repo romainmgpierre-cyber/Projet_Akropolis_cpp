@@ -540,8 +540,8 @@ pour une à quatre on prend toutes les cartes
 
     void melangerTuiles(std::vector<TuileCite*>& tuiles) {
         // mélange des tuiles après leurs insertion dans le vecteur
-        auto rd = std::random_device{};
-        auto rng = std::default_random_engine{rd()};
+        std::random_device rd;
+        auto rng = std::default_random_engine(rd());
         std::shuffle(std::begin(tuiles), std::end(tuiles), rng);
     }
 }

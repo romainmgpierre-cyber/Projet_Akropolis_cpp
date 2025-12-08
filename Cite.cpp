@@ -191,40 +191,185 @@ namespace Akropolis{
 
 
 
-    void Cite::afficher(ostream& f) const {
-        if (plateau.empty()) {
-            f << "  (Cité vide)" << endl;
-            return;
-        }
+    // void Cite::afficher(ostream& f) const {
+    //     if (plateau.empty()) {
+    //         f << "  (Cité vide)" << endl;
+    //         return;
+    //     }
 
         
-        for (const auto& paire : plateau) {
-            const CoordHex& coord = paire.first; 
-            const auto& data = paire.second;     
+    //     for (const auto& paire : plateau) {
+    //         const CoordHex& coord = paire.first; 
+    //         const auto& data = paire.second;     
 
-            HexagoneConstruction* hex = data.first;
-            unsigned int hauteur = data.second;
+    //         HexagoneConstruction* hex = data.first;
+    //         unsigned int hauteur = data.second;
 
-            f << "  (q=" << coord.getQ() << ", r=" << coord.getR()<< ") [H:" << hauteur << "] ";
+    //         f << "  (q=" << coord.getQ() << ", r=" << coord.getR()<< ") [H:" << hauteur << "] ";
 
             
-            if (Place* p = dynamic_cast<Place*>(hex)) {
-                f << "Place " << p->getNbEtoile() << "*";
-            } else if (dynamic_cast<Carriere*>(hex)) {
-                f << "Carrière";
-            } else if (Quartier* q = dynamic_cast<Quartier*>(hex)) {
+    //         if (Place* p = dynamic_cast<Place*>(hex)) {
+    //             f << "Place " << p->getNbEtoile() << "*";
+    //         } else if (dynamic_cast<Carriere*>(hex)) {
+    //             f << "Carrière";
+    //         } else if (Quartier* q = dynamic_cast<Quartier*>(hex)) {
                 
-                f << "Quartier " << q->getType().getCouleur(); 
-            } else {
-                f << "Inconnu";
-            }
-            f << endl;
-        }
-    }
+    //             f << "Quartier " << q->getType().getCouleur(); 
+    //         } else {
+    //             f << "Inconnu";
+    //         }
+    //         f << endl;
+    //     }
+    // }
     void Cite::ajouterTuileIA(TuileCite* tuile) {
     // L'IA considère les tuiles comme acquises mais ne les place pas sur le plateau
         tuiles_posees.push_back(tuile);
     
     }
     
+
+
+// Ajout dans Cite.cpp à la fin ou à la place de l'ancien afficher
+
+// Helper pour générer le texte (MAR, CAR, P TEM 2*, etc.)
+string Cite::getEtiquetteHexagone(const CoordHex& pos) const {
+    auto it = plateau.find(pos);
+    
+    // CAS 1 : CASE VIDE -> Coordonnées
+    if (it == plateau.end()) {
+        std::ostringstream ss;
+        ss << pos.getQ() << "," << pos.getR();
+        return ss.str();
+    }
+
+    // CAS 2 : CASE OCCUPÉE
+    HexagoneConstruction* hex = it->second.first;
+    string etiquette = "";
+
+    if (dynamic_cast<Carriere*>(hex)) {
+        return "CAR";
+    } 
+    else if (Quartier* q = dynamic_cast<Quartier*>(hex)) {
+        // On prend les 3 premières lettres du nom en majuscule (ex: MARche -> MAR)
+        string nom = q->getType().getNom();
+        string shortNom = nom.substr(0, 3);
+        for (auto & c: shortNom) c = toupper(c);
+        return shortNom;
+    } 
+    else if (Place* p = dynamic_cast<Place*>(hex)) {
+        // Format : P TEM 2*
+        string nom = p->getType().getNom();
+        string shortNom = nom.substr(0, 3);
+        for (auto & c: shortNom) c = toupper(c);
+        return "P " + shortNom + " " + to_string(p->getNbEtoile()) + "*";
+    }
+
+    return "?";
+}
+
+// Dans Cite.cpp
+
+void Cite::afficherGraphique(ostream& os) const {
+    if (plateau.empty()) {
+        os << "(Cite vide)" << endl;
+        return;
+    }
+
+    // 1. DÉTERMINER LES BORNES
+    int min_col = 1000, max_col = -1000;
+    int min_lig = 1000, max_lig = -1000;
+
+    // On regarde toutes les tuiles posées
+    std::set<CoordHex> zonesAInclure;
+    for(auto const& pair : plateau) zonesAInclure.insert(pair.first);
+    for(auto const& c : frontiere) zonesAInclure.insert(c);
+
+    for (const auto& pos : zonesAInclure) {
+        CoordGrille cg = axialToOffset(pos.getQ(), pos.getR());
+        if (cg.col < min_col) min_col = cg.col;
+        if (cg.col > max_col) max_col = cg.col;
+        if (cg.lig < min_lig) min_lig = cg.lig;
+        if (cg.lig > max_lig) max_lig = cg.lig;
+    }
+
+    // --- MODIFICATION ICI : MARGE PLUS GRANDE ---
+    // Mettez 3, 4 ou 5 selon la taille que vous voulez voir autour
+    int marge = 1; 
+
+    min_col -= marge; 
+    max_col += marge;
+    min_lig -= marge; 
+    max_lig += marge;
+
+    // 2. CONFIGURATION GÉOMÉTRIQUE
+    int step_x = LARGEUR_TOIT + HAUTEUR_PENTE;
+    int step_y = 2 * HAUTEUR_PENTE;
+    int odd_offset = HAUTEUR_PENTE;
+
+    int nb_cols_grille = max_col - min_col + 1;
+    int nb_ligs_grille = max_lig - min_lig + 1;
+
+    int width_px = (nb_cols_grille + 1) * step_x + LARGEUR_TOIT + 2;
+    int height_px = (nb_ligs_grille + 1) * step_y + HAUTEUR_PENTE + 2;
+
+    vector<string> buffer(height_px, string(width_px, ' '));
+
+    // 3. DESSIN
+    for (int lig = min_lig; lig <= max_lig; ++lig) {
+        for (int col = min_col; col <= max_col; ++col) {
+            
+            CoordHex posReelle = offsetToAxial(col, lig);
+        
+            string label = getEtiquetteHexagone(posReelle);
+
+            int draw_col = col - min_col;
+            int draw_lig = lig - min_lig;
+
+            int start_x = draw_col * step_x + 1;
+            int start_y = draw_lig * step_y;
+            if (col % 2 != 0) start_y += odd_offset;
+
+            // TOIT
+            for (int i = 0; i < LARGEUR_TOIT; ++i) 
+                buffer[start_y][start_x + HAUTEUR_PENTE + i] = '_';
+
+            // PENTES
+            for (int k = 0; k < HAUTEUR_PENTE; ++k) {
+                int y_top = start_y + 1 + k;
+                buffer[y_top][start_x + HAUTEUR_PENTE - 1 - k] = '/';
+                buffer[y_top][start_x + HAUTEUR_PENTE + LARGEUR_TOIT + k] = '\\';
+
+                int y_bot = start_y + HAUTEUR_PENTE + 1 + k;
+                buffer[y_bot][start_x + k] = '\\';
+                buffer[y_bot][start_x + (2 * HAUTEUR_PENTE + LARGEUR_TOIT) - 1 - k] = '/';
+
+                if (k == HAUTEUR_PENTE - 1) { 
+                    for (int i = 0; i < LARGEUR_TOIT; ++i) 
+                        buffer[y_bot][start_x + HAUTEUR_PENTE + i] = '_';
+                }
+            }
+
+            // TEXTE
+            int center_y = start_y + HAUTEUR_PENTE;
+            int center_x = start_x + HAUTEUR_PENTE + (LARGEUR_TOIT / 2);
+            int txt_start = center_x - (label.length() / 2);
+
+            if (txt_start >= 0 && txt_start + label.length() < (size_t)width_px) {
+                for (size_t i = 0; i < label.length(); ++i) {
+                    buffer[center_y][txt_start + i] = label[i];
+                }
+            }
+        }
+    }
+
+    // 4. AFFICHAGE
+    os << "\n";
+    for (const auto& line : buffer) {
+        size_t end = line.find_last_not_of(" ");
+        if (end != string::npos) {
+            os << line.substr(0, end + 1) << "\n";
+        }
+    }
+}
+
 }

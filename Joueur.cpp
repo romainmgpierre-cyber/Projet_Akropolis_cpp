@@ -45,7 +45,7 @@ namespace Akropolis {
     void Joueur::afficher(ostream& f) const {
         f << "Joueur : " << nom << " (" << nbPierres << " pierres)" << endl;
         f << "Cité :" << endl;
-        cite->afficher(f);
+        cite->afficherGraphique(f);
     }
 
     ostream& operator<<(ostream& f, const Joueur& joueur) {

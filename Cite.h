@@ -6,7 +6,10 @@
 #include <vector>
 #include <map>   
 #include <set>    
+#include <sstream> 
+#include <algorithm>
 #include "TuileCite_TuileDep.h"
+
 #include "CoordHex.h" 
 
 
@@ -33,6 +36,34 @@ namespace Akropolis{
         // Teste si les 3 hexagones d'un coup sont valides
         bool estUnCoupValide(const CoordHex& h0, const CoordHex& h1, const CoordHex& h2, 
                              bool& recouvrement, unsigned int& hauteur) const;
+
+        // --- AJOUTS POUR LE DESSIN ---
+    
+        static const int LARGEUR_TOIT = 5;
+        static const int HAUTEUR_PENTE = 2;
+        
+        // Structure interne pour convertir les coordonnées axiales (q,r) en grille (col, lig)
+        struct CoordGrille {
+            int col;
+            int lig;
+        };
+
+        // Helper pour convertir q,r -> col,lig
+        CoordGrille axialToOffset(int q, int r) const {
+            int col = q;
+            int lig = r + (q - (q & 1)) / 2;
+            return {col, lig};
+        }
+        
+        // Helper pour convertir col,lig -> q,r (pour savoir quoi afficher dans une case vide)
+        CoordHex offsetToAxial(int col, int lig) const {
+            int q = col;
+            int r = lig - (q - (q & 1)) / 2;
+            return CoordHex(q, r);
+        }
+
+        // Fonction pour formater le texte à l'intérieur de l'hexagone
+        string getEtiquetteHexagone(const CoordHex& pos) const;
     
 
     public:
@@ -71,12 +102,14 @@ namespace Akropolis{
         // Appliquer le coup choisi
         int placerTuile(TuileCite* tuile, const CoupPossible& coup); //Modifié
 
-        void afficher(ostream& f) const; // Modifié
+        
 
         size_t getNbTuilesPosees() const { return tuiles_posees.size(); }
         const map<CoordHex, std::pair<HexagoneConstruction*, unsigned int> >& getPlateau() const {
             return plateau;
         }
+
+        void afficherGraphique(ostream& os) const;
 
 
     };

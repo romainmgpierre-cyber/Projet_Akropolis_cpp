@@ -284,7 +284,14 @@ void Partie::gererTourJoueur(Joueur* joueur) {
         }
 
         // --- LOGIQUE JOUEUR HUMAIN (MODIFIÉE POUR UNDO) ---
-
+        if (!joueur->isIA()) {
+            cout << "\n--- VOTRE CITE ACTUELLE ---" << endl;
+            // Désactive l'auto-wrap pour éviter que le terminal casse le dessin
+            cout << "\033[?7l"; 
+            joueur->getCite()->afficherGraphique(cout);
+            cout << "\033[?7h"; // Réactive l'auto-wrap
+            cout << "---------------------------" << endl;
+        }
         // Affichage du score
         TableauScore calculateurScore;
         calculateurScore.afficherDetailsScore(*joueur, cout);
@@ -353,8 +360,7 @@ void Partie::gererTourJoueur(Joueur* joueur) {
             for(size_t i = 0; i < rotationsVec.size(); ++i) {
                 cout <<"["<< (i+1) << "] Rotation " << rotationsVec[i] << endl;
             }
-            cout << "Votre Cite :" << endl;
-            joueur->getCite()->afficher(cout);
+            
 
             cout << "\n(Tapez 'r' pour retourner au choix des tuiles)" << endl;
 
