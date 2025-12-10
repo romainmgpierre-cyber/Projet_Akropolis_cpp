@@ -178,30 +178,132 @@ namespace Akropolis {
         os << endl;
     }
 
-    void afficherTuileCiteASCII(const ChoixTuile* choixTuile, size_t index, ostream& os) {
-        const auto& dispos = choixTuile->getTuilesDisponibles();
-        TuileCite* t = dispos[index];
-
-        os<<"La tuile choisie en rotation 0 : \n";
-        os<<"            ________ \n";
-        os<<"           /        \\  \n";
-        os<<"          /          \\ \n";
-        os<<"  ,------(";
-        afficherHexagoneVisuel(t->getHexagone(0), os);
-        os<<")\n";
-        os<<" /        \\         / \n";
-        os<<"/";
-        afficherHexagoneVisuel(t->getHexagone(2), os);
-        os<<"\\______/ \n";
-        os<<"\\          /        \\ \n";
-        os<<" \\        /          \\ \n";
-        os<<"  \\______(";
-        afficherHexagoneVisuel(t->getHexagone(1), os);
-        os<<") \n";
-        os<<"          \\         / \n";
-        os<<"           \\_______/ \n";
-        os << endl;
+// --- Helper local pour l'affichage ---
+string getEtiquettePourTuile(HexagoneConstruction* hex) {
+    if (dynamic_cast<Carriere*>(hex)) return "CAR";
+    else if (Quartier* q = dynamic_cast<Quartier*>(hex)) {
+        string nom = q->getType().getNom().substr(0, 3);
+        for (auto & c: nom) c = toupper(c);
+        return nom;
+    } 
+    else if (Place* p = dynamic_cast<Place*>(hex)) {
+        string nom = p->getType().getNom().substr(0, 3);
+        for (auto & c: nom) c = toupper(c);
+        return "P " + nom + " " + to_string(p->getNbEtoile()) + "*";
     }
+    return "???";
+}
+
+void afficherTuileCiteASCII(const ChoixTuile* choixTuile, size_t index, ostream& os) {
+    const auto& dispos = choixTuile->getTuilesDisponibles();
+    if (index >= dispos.size()) return;
+    
+    TuileCite* t = dispos[index];
+
+    // --- 1. CONFIGURATION GÉOMÉTRIQUE ---
+    const int N = 5; 
+    const int H = 2; 
+    
+    int step_x = N + H;
+    int step_y = 2 * H;
+    int odd_offset = H;
+
+    // --- 2. CONFIGURATION DU BUFFER ---
+    // Largeur : 2 colonnes d'hexagones + place pour la flèche à droite
+    int width_px = 2 * step_x + N + 2 * H + 15; 
+    int height_px = 2 * step_y + H + odd_offset + 2;
+
+    vector<string> buffer(height_px, string(width_px, ' '));
+
+    // Structure pour placer les hexagones
+    struct Pos { int col; int lig; int id; };
+
+    // --- 3. DISPOSITION MODIFIÉE (REF EN HAUT) ---
+    // Forme visuelle inchangée (1 gauche, 2 droite), mais l'ID 0 change de place.
+    
+    vector<Pos> positions = {
+        // Hex 0 (REF) : En Haut à Droite (Col 1, Lig 0)
+        {1, 0, 0}, 
+        
+        // Hex 1 : En Bas à Gauche (Col 0, Lig 1)
+        {0, 1, 1}, 
+        
+        // Hex 2 : En Bas à Droite (Col 1, Lig 1)
+        {1, 1, 2}  
+    };
+
+    // --- 4. BOUCLE DE DESSIN ---
+    for (const auto& p : positions) {
+        
+        string label = getEtiquettePourTuile(t->getHexagone(p.id));
+
+        // Calcul position pixel
+        int start_x = p.col * step_x + 1;
+        int start_y = p.lig * step_y;
+        
+        // Décalage pour colonne impaire (Col 1)
+        if (p.col % 2 != 0) start_y += odd_offset;
+
+        // DESSIN TOIT
+        for (int i = 0; i < N; ++i) 
+            buffer[start_y][start_x + H + i] = '_';
+
+        // DESSIN PENTES
+        for (int k = 0; k < H; ++k) {
+            // Haut
+            int y_top = start_y + 1 + k;
+            buffer[y_top][start_x + H - 1 - k] = '/';
+            buffer[y_top][start_x + H + N + k] = '\\';
+
+            // Bas
+            int y_bot = start_y + H + 1 + k;
+            buffer[y_bot][start_x + k] = '\\';
+            buffer[y_bot][start_x + (2 * H + N) - 1 - k] = '/';
+
+            // Sol
+            if (k == H - 1) { 
+                for (int i = 0; i < N; ++i) 
+                    buffer[y_bot][start_x + H + i] = '_';
+            }
+        }
+
+        // DESSIN TEXTE
+        int center_y = start_y + H;
+        int center_x = start_x + H + (N / 2);
+        int txt_start = center_x - (label.length() / 2);
+
+        if (txt_start >= 0) {
+            for (size_t i = 0; i < label.length(); ++i) {
+                if (center_y < height_px && txt_start + i < (size_t)width_px)
+                    buffer[center_y][txt_start + i] = label[i];
+            }
+        }
+
+        // --- FLÈCHE DE RÉFÉRENCE (CORRIGÉE) ---
+        // Affiche la flèche à DROITE de l'Hexagone 0 (celui du haut)
+        if (p.id == 0) {
+            string arrow = "<-- Ref";
+            // Position : Fin de l'hexagone + petite marge
+            int arrow_x = start_x + (2*H + N) + 2; 
+
+            for(size_t i=0; i<arrow.length(); ++i) {
+                if(center_y < height_px && arrow_x + i < (size_t)width_px)
+                    buffer[center_y][arrow_x + i] = arrow[i];
+            }
+        }
+    }
+
+    // --- 5. AFFICHAGE FINAL ---
+    os << "Tuile selectionnee (Rotation 0) :" << endl;
+    for (const auto& line : buffer) {
+        size_t end = line.find_last_not_of(" ");
+        if (end != string::npos) {
+            os << line.substr(0, end + 1) << "\n";
+        }
+    }
+    os << endl;
+}
+
     
     // Boucle Principale
 
