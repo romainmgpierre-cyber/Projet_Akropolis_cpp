@@ -138,8 +138,8 @@ void HexGridWidget::paintEvent(QPaintEvent *event) {
         // Positions relatives d'une tuile standard: (0, 0), (1, 0), (0, 1)
         const std::array<Akropolis::CoordHex, 3> localPositions = {
             Akropolis::CoordHex(0, 0),
-            Akropolis::CoordHex(1, 0),
-            Akropolis::CoordHex(0, 1)
+            Akropolis::CoordHex(-1, 0),
+            Akropolis::CoordHex(0, -1)
         }; 
         
         const auto& hexContentArray = tuileFantome->getHexagones();
@@ -301,6 +301,11 @@ void HexGridWidget::setTuileFantome(TuileCite* tuile, CoordHex position) {
 
 void HexGridWidget::rotateFantome() {
     rotFantome = (rotFantome + 1) % 6; // effectue la rotation 
+    update();
+}
+
+void HexGridWidget::setFantomeRotation(int rotation) {
+    this->rotFantome = (rotation % 6 + 6) % 6; // Assure que la rotation est 0-5
     update();
 }
 

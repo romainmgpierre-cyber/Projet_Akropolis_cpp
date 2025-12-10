@@ -19,7 +19,8 @@ public:
     void clearTuileFantome();
     void setZoomLevel(double zoom);
     void animateHexPlacement(Akropolis::CoordHex coord);
-    void rotateFantome(); 
+    void rotateFantome();
+    void setFantomeRotation(int rotation); 
     int getFantomeRotation() const { return rotFantome; }
 
 protected:

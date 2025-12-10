@@ -167,7 +167,7 @@ namespace Akropolis {
         TuileCite* t = dispos[index];
         size_t coutPierre = choixTuile->calculerCout(index);
 
-        os << "[" << index << "]. Tuile #" << t->getId()
+        os << "[" << index + 1 << "] Tuile #" << t->getId()
         << " (Cout: " << coutPierre << "p) : ";
         
         afficherHexagoneVisuel(t->getHexagone(0), os);
@@ -417,7 +417,7 @@ void Partie::gererTourJoueur(Joueur* joueur) {
             size_t coutPierrePourAnnulation = 0; // On garde le coût pour rembourser si besoin
 
             while(true) {
-                cout << "Choix (0-" << dispos.size()-1 << ", ou 'q' pour quitter) : ";
+                cout << "Choix (1-" << dispos.size() << ", ou 'q' pour quitter) : ";
                 string input;
                 cin >> input;
 
