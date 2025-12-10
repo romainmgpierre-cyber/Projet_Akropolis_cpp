@@ -316,9 +316,22 @@ void MainWindow::onTuileChoisie(int index) {
 }
 
 void MainWindow::onRotationClicked() {
-    if (!tuileSelectionnee) return;
-    gridWidget->rotateFantome();
-    rotationActuelle = gridWidget->getFantomeRotation();
+    // Vérification de base pour s'assurer qu'une tuile est bien en prévisualisation
+    if (!tuileSelectionnee || !btnRotation->isEnabled()) return;
+
+    int currentRot = gridWidget->getFantomeRotation();
+    
+    // 1. Incrémenter la rotation de 60 degrés (de 0 à 5)
+    int nextRot = (currentRot + 1) % 6;
+    
+    // 2. Appliquer la nouvelle rotation au widget (le dessin change immédiatement)
+    gridWidget->setFantomeRotation(nextRot); 
+    rotationActuelle = nextRot; 
+    
+    // 3. Maintenir le bouton Valider activé et mettre à jour le statut
+    btnValidation->setEnabled(true); 
+    statutLabel->setText(QString("Rotation %1. Cliquez sur Valider pour placer.")
+                         .arg(nextRot * 60));
 }
 
 void MainWindow::onValidationButtonClicked() {
@@ -374,35 +387,42 @@ void MainWindow::onHexClicked(CoordHex coord) {
 
     Joueur* j = partie->getJoueurActuel();
     Cite* cite = j->getCite();
-    try {
-
-        Cite::CoupPossible coup;
-        coup.ancre = coord;
-        coup.rotation = 0;
-        auto coups = cite->genererCoupsValides(*tuileSelectionnee);
-        bool valide = false;
-        for(auto& c : coups) {
-            if(c.ancre == coord) { // On vérifie juste la position, la rotation est gérée manuellement
-                // On applique le coup validé par le moteur
-                cite->placerTuile(tuileSelectionnee, c);
-                valide = true;
-                break;
-            }
+    
+    // 1. Vérifier si cette coordonnée est l'ancre d'au moins UN coup légal (nécessaire pour activer la prévisualisation)
+    bool ancreLegale = false;
+    auto coupsValides = cite->genererCoupsValides(*tuileSelectionnee);
+    
+    for (const auto& coup : coupsValides) {
+        if (coup.ancre == coord) {
+            ancreLegale = true;
+            break;
         }
+    }
 
-        if(valide) {
-            tuileSelectionnee = nullptr;
-            gridWidget->clearTuileFantome();
-            partie->passerTour();
-            passerAuJoueurSuivant();
-        } else {
-            // Feedback silencieux ou sonore (coup invalide)
-            QMessageBox::information(this, "Info", "Placement invalide ici.");
-        }
-    } catch (const std::exception& e) {
-        QMessageBox::warning(this, "Erreur", e.what());
+    if (ancreLegale) {
+        // Ancre valide : on active la prévisualisation.
+        ancreSelectionnee = coord;
+        
+        // La rotation est initialisée à 0 sans vérification de légalité
+        int initialRotation = 0; 
+        
+        // Initialisation de la prévisualisation
+        gridWidget->setTuileFantome(tuileSelectionnee, ancreSelectionnee);
+        gridWidget->setFantomeRotation(initialRotation);
+        rotationActuelle = initialRotation;
+            
+        btnRotation->setEnabled(true);
+        btnValidation->setEnabled(true);
+        statutLabel->setText("Rotationnez ou Validez le placement.");
+    } else {
+        // Clic sur une case illégale
+        gridWidget->clearTuileFantome(); 
+        btnRotation->setEnabled(false);
+        btnValidation->setEnabled(false);
+        statutLabel->setText("Emplacement invalide. Cliquez sur une case légale.");
     }
 }
+
 void MainWindow::passerAuJoueurSuivant() {
     // Vérifier fin de partie
     verifierFinPartie();
