@@ -8,24 +8,125 @@
 #include <sstream>
 #include <set>
 #include <vector> 
-#include <random> // AJOUTÉ : Pour std::shuffle et default_random_engine
-#include <chrono> // AJOUTÉ : Pour la graine (seed) basée sur le temps
+#include <random> 
+#include <chrono> 
 
 using namespace std;
 namespace Akropolis {
 
-    // --- DÉCLARATIONS EXTERNES POUR LA FABRIQUE ---
+    // --- DÉCLARATIONS EXTERNES ---
     extern std::vector<TuileCite*> creerToutesTuiles(int nbJoueurs);
     extern std::vector<TuileDepart*> creer4TuileDepart();
-    // ----------------------------------------------
+    extern void AfficherResultats(Partie& partie); 
 
-    // Constructeur & Destructeur
+    // =========================================================
+    //  FONCTIONS D'AIDE A L'AFFICHAGE (LOCALES)
+    // =========================================================
+
+    string getEtiquettePourTuile(HexagoneConstruction* hex) {
+        if (dynamic_cast<Carriere*>(hex)) return "CAR";
+        else if (Quartier* q = dynamic_cast<Quartier*>(hex)) {
+            string nom = q->getType().getNom().substr(0, 3);
+            for (auto & c: nom) c = toupper(c);
+            return nom;
+        } 
+        else if (Place* p = dynamic_cast<Place*>(hex)) {
+            string nom = p->getType().getNom().substr(0, 3);
+            for (auto & c: nom) c = toupper(c);
+            return "P " + nom + " " + to_string(p->getNbEtoile()) + "*";
+        }
+        return "???";
+    }
+
+    void afficherTuileCiteASCII(TuileCite* t, ostream& os) {
+        // --- CONFIGURATION GÉOMÉTRIQUE ---
+        const int N = 5; 
+        const int H = 2; 
+        
+        int step_x = N + H;
+        int step_y = 2 * H;
+        int odd_offset = H;
+
+        int width_px = 2 * step_x + N + 2 * H + 15; 
+        int height_px = 2 * step_y + H + odd_offset + 2;
+
+        vector<string> buffer(height_px, string(width_px, ' '));
+
+        struct Pos { int col; int lig; int id; };
+
+        // --- LAYOUT : REF EN HAUT A DROITE ---
+        vector<Pos> positions = {
+            {1, 0, 0}, // Hex 0 (REF) - Haut Droite
+            {0, 1, 1}, // Hex 1 - Bas Gauche
+            {1, 1, 2}  // Hex 2 - Bas Droite
+        };
+
+        for (const auto& p : positions) {
+            string label = getEtiquettePourTuile(t->getHexagone(p.id));
+            int start_x = p.col * step_x + 1;
+            int start_y = p.lig * step_y;
+            
+            if (p.col % 2 != 0) start_y += odd_offset;
+
+            // Toit
+            for (int i = 0; i < N; ++i) buffer[start_y][start_x + H + i] = '_';
+
+            // Pentes
+            for (int k = 0; k < H; ++k) {
+                int y_top = start_y + 1 + k;
+                buffer[y_top][start_x + H - 1 - k] = '/';
+                buffer[y_top][start_x + H + N + k] = '\\';
+                int y_bot = start_y + H + 1 + k;
+                buffer[y_bot][start_x + k] = '\\';
+                buffer[y_bot][start_x + (2 * H + N) - 1 - k] = '/';
+                if (k == H - 1) for (int i = 0; i < N; ++i) buffer[y_bot][start_x + H + i] = '_';
+            }
+
+            // Texte
+            int center_y = start_y + H;
+            int center_x = start_x + H + (N / 2);
+            int txt_start = center_x - (label.length() / 2);
+            if (txt_start >= 0) {
+                for (size_t i = 0; i < label.length(); ++i) {
+                    if (center_y < height_px && txt_start + i < (size_t)width_px)
+                        buffer[center_y][txt_start + i] = label[i];
+                }
+            }
+
+            // Flèche
+            if (p.id == 0) {
+                string arrow = "<-- Ref";
+                int arrow_x = start_x + (2*H + N) + 2; 
+                for(size_t i=0; i<arrow.length(); ++i) {
+                    if(center_y < height_px && arrow_x + i < (size_t)width_px)
+                        buffer[center_y][arrow_x + i] = arrow[i];
+                }
+            }
+        }
+
+        for (const auto& line : buffer) {
+            size_t end = line.find_last_not_of(" ");
+            if (end != string::npos) os << line.substr(0, end + 1) << "\n";
+        }
+        os << endl;
+    }
+
+    void afficherTuileCiteASCII(const ChoixTuile* choixTuile, size_t index, ostream& os) {
+        const auto& dispos = choixTuile->getTuilesDisponibles();
+        if (index >= dispos.size()) return;
+        os << "Tuile selectionnee (Rotation 0) :" << endl;
+        afficherTuileCiteASCII(dispos[index], os);
+    }
+
+    // =========================================================
+    //  IMPLÉMENTATION DE LA CLASSE PARTIE
+    // =========================================================
 
     Partie::Partie(size_t id, ModeJeu mode) 
         : id(id), mode(mode), etat(EtatPartie::NON_DEMARREE), 
           joueurActuelIndex(0), nbTuilesParTour(3) 
     {
-        pioche = new Pioche(1, 60);
+        pioche = new Pioche(1); 
         choixTuile = new ChoixTuile(1); 
     }
 
@@ -36,14 +137,11 @@ namespace Akropolis {
         for (TuileDepart* td : tuilesDepart) delete td;
     }
 
-
-    // Gestion Joueurs
-
     void Partie::ajouterJoueur(const string& nom, int numeroJoueur, bool estIA) {
         if (etat != EtatPartie::NON_DEMARREE) {
             throw GameException("Impossible d'ajouter : la partie a deja commence.");
         }
-        Joueur* nouveauJoueur = new Joueur(nom, numeroJoueur, estIA); //Initialise le nb de pierres du joueur en fonction de son tour 
+        Joueur* nouveauJoueur = new Joueur(nom, numeroJoueur, estIA);
         joueurs.push_back(nouveauJoueur);
     }
 
@@ -58,254 +156,66 @@ namespace Akropolis {
         throw GameException("Joueur non trouve.");
     }
 
-
-    // Initialisation
-
+    // --- INITIALISATION (Modification start marché) ---
     void Partie::initialiserTuiles() {
-        
-        // On utilise l'horloge système pour générer une graine unique
         unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
         std::default_random_engine rng(seed);
 
-        // Création des tuiles via la fabrique
+        // 1. Création de toutes les tuiles
         std::vector<TuileCite*> toutesLesTuiles = creerToutesTuiles(joueurs.size());
-        
-        // Mélange aléatoire avec std::shuffle
         std::shuffle(toutesLesTuiles.begin(), toutesLesTuiles.end(), rng);
         
-        // Remplissage de la Pioche
         delete pioche; 
-        pioche = new Pioche(1, toutesLesTuiles.size());
+        pioche = new Pioche(1);
         
-        for (TuileCite* t : toutesLesTuiles) {
-            pioche->ajouterTuile(t);
-        }
-        toutesLesTuiles.clear(); // La pioche possède maintenant les pointeurs
+        // 2. Organisation en piles
+        pioche->organiserPiles(toutesLesTuiles, joueurs.size());
 
-        // Gestion des Tuiles de Départ
+        // 3. Ajustement du marché de départ
+        // Règle : Pour N joueurs, on commence avec N+1 tuiles au centre.
+        size_t tailleCible = joueurs.size() + 1; 
+        
+        // Le calcul des piles laisse toujours un peu plus que nécessaire, on supprime le surplus
+        while (toutesLesTuiles.size() > tailleCible) {
+            delete toutesLesTuiles.back(); // Nettoyage mémoire
+            toutesLesTuiles.pop_back();    // Suppression du vecteur
+        }
+
+        // 4. Remplissage du marché
+        for (TuileCite* t : toutesLesTuiles) {
+            choixTuile->ajouterTuile(t);
+        }
+        toutesLesTuiles.clear(); 
+
+        // Gestion Tuiles Départ
         for (TuileDepart* td : tuilesDepart) delete td;
         tuilesDepart.clear();
         
         std::vector<TuileDepart*> departsDisponibles = creer4TuileDepart();
-        
-        // Mélange aléatoire des départs
         std::shuffle(departsDisponibles.begin(), departsDisponibles.end(), rng);
         
-        if (departsDisponibles.size() < joueurs.size()) {
-             throw GameException("Nombre de tuiles de depart insuffisant pour le nombre de joueurs.");
-        }
-        
+        if (departsDisponibles.size() < joueurs.size()) throw GameException("Tuiles depart manquantes");
+
         for (size_t i = 0; i < joueurs.size(); ++i) {
-            
-            
-            // Configuration IA
             if (joueurs[i]->isIA()) {
-                
-                joueurs[i]->ajouterPierres(1); // L'IA commence avec 2 pierres, elle en a deja 1 par defaut
-                
-                // On ne donne pas la tuile de départ à l'IA car son score est compté virtuellement.
-                // On la supprime simplement pour éviter les fuites de mémoire.
+                joueurs[i]->ajouterPierres(1);
                 delete departsDisponibles[i];
-                 
-            } else { // L'IA n'utilise pas initialiserCite() car elle ne construit pas.
+            } else {
                 tuilesDepart.push_back(departsDisponibles[i]);
                 joueurs[i]->getCite()->initialiserCite(departsDisponibles[i]);
             }
         }
-        
-        // Nettoyage des tuiles de départ inutilisées
-        for (size_t i = joueurs.size(); i < departsDisponibles.size(); ++i) {
-            delete departsDisponibles[i];
-        }
-
-        
+        for (size_t i = joueurs.size(); i < departsDisponibles.size(); ++i) delete departsDisponibles[i];
     }
 
     void Partie::lancerPartie() {
         if (joueurs.empty()) throw GameException("Pas assez de joueurs.");
         initialiserTuiles();
-        remplirChoixTuile();
         etat = EtatPartie::EN_COURS;
         joueurActuelIndex = 0;
         cout << "--- La Partie Commence ! ---" << endl;
         boucleDeJeu();
     }
-
-
-    void afficherHexagoneVisuel(HexagoneConstruction* hex, ostream& os) {
-        if (Place* p = dynamic_cast<Place*>(hex)) {
-            string nomType = p->getType().getNom().substr(0, 3);
-            string upperNom = "";
-            for(char c : nomType) upperNom += toupper(c);
-
-            os << "[P " << upperNom << " ";
-            for(size_t i = 0; i < p->getNbEtoile(); ++i) {
-                os << "*";
-            }
-            if ( p->getNbEtoile() == 1) {
-                os << "  ";
-            }else if (p->getNbEtoile() == 2) {
-                os << " ";
-            }
-            os << "]";
-
-        } else if (dynamic_cast<Carriere*>(hex)) {
-            os << "[   CAR   ]";
-
-        } else if (Quartier* q = dynamic_cast<Quartier*>(hex)) {
-            string nomType = q->getType().getNom().substr(0, 3);
-            string upperNom = "";
-            for(char c : nomType) upperNom += toupper(c);
-
-            os << "[   " << upperNom << "   ]";
-        }
-    }
-
-
-    void afficherTuileDansLaRiviere(const ChoixTuile* choixTuile, size_t index, ostream& os) {
-        const auto& dispos = choixTuile->getTuilesDisponibles();
-        TuileCite* t = dispos[index];
-        size_t coutPierre = choixTuile->calculerCout(index);
-
-        os << "[" << index + 1 << "] Tuile #" << t->getId()
-        << " (Cout: " << coutPierre << "p) : ";
-        
-        afficherHexagoneVisuel(t->getHexagone(0), os);
-        os << "-";
-        afficherHexagoneVisuel(t->getHexagone(1), os);
-        os << "-";
-        afficherHexagoneVisuel(t->getHexagone(2), os);
-        os << endl;
-    }
-
-// --- Helper local pour l'affichage ---
-string getEtiquettePourTuile(HexagoneConstruction* hex) {
-    if (dynamic_cast<Carriere*>(hex)) return "CAR";
-    else if (Quartier* q = dynamic_cast<Quartier*>(hex)) {
-        string nom = q->getType().getNom().substr(0, 3);
-        for (auto & c: nom) c = toupper(c);
-        return nom;
-    } 
-    else if (Place* p = dynamic_cast<Place*>(hex)) {
-        string nom = p->getType().getNom().substr(0, 3);
-        for (auto & c: nom) c = toupper(c);
-        return "P " + nom + " " + to_string(p->getNbEtoile()) + "*";
-    }
-    return "???";
-}
-
-void afficherTuileCiteASCII(const ChoixTuile* choixTuile, size_t index, ostream& os) {
-    const auto& dispos = choixTuile->getTuilesDisponibles();
-    if (index >= dispos.size()) return;
-    
-    TuileCite* t = dispos[index];
-
-    // --- 1. CONFIGURATION GÉOMÉTRIQUE ---
-    const int N = 5; 
-    const int H = 2; 
-    
-    int step_x = N + H;
-    int step_y = 2 * H;
-    int odd_offset = H;
-
-    // --- 2. CONFIGURATION DU BUFFER ---
-    // Largeur : 2 colonnes d'hexagones + place pour la flèche à droite
-    int width_px = 2 * step_x + N + 2 * H + 15; 
-    int height_px = 2 * step_y + H + odd_offset + 2;
-
-    vector<string> buffer(height_px, string(width_px, ' '));
-
-    // Structure pour placer les hexagones
-    struct Pos { int col; int lig; int id; };
-
-    // --- 3. DISPOSITION MODIFIÉE (REF EN HAUT) ---
-    // Forme visuelle inchangée (1 gauche, 2 droite), mais l'ID 0 change de place.
-    
-    vector<Pos> positions = {
-        // Hex 0 (REF) : En Haut à Droite (Col 1, Lig 0)
-        {1, 0, 0}, 
-        
-        // Hex 1 : En Bas à Gauche (Col 0, Lig 1)
-        {0, 1, 1}, 
-        
-        // Hex 2 : En Bas à Droite (Col 1, Lig 1)
-        {1, 1, 2}  
-    };
-
-    // --- 4. BOUCLE DE DESSIN ---
-    for (const auto& p : positions) {
-        
-        string label = getEtiquettePourTuile(t->getHexagone(p.id));
-
-        // Calcul position pixel
-        int start_x = p.col * step_x + 1;
-        int start_y = p.lig * step_y;
-        
-        // Décalage pour colonne impaire (Col 1)
-        if (p.col % 2 != 0) start_y += odd_offset;
-
-        // DESSIN TOIT
-        for (int i = 0; i < N; ++i) 
-            buffer[start_y][start_x + H + i] = '_';
-
-        // DESSIN PENTES
-        for (int k = 0; k < H; ++k) {
-            // Haut
-            int y_top = start_y + 1 + k;
-            buffer[y_top][start_x + H - 1 - k] = '/';
-            buffer[y_top][start_x + H + N + k] = '\\';
-
-            // Bas
-            int y_bot = start_y + H + 1 + k;
-            buffer[y_bot][start_x + k] = '\\';
-            buffer[y_bot][start_x + (2 * H + N) - 1 - k] = '/';
-
-            // Sol
-            if (k == H - 1) { 
-                for (int i = 0; i < N; ++i) 
-                    buffer[y_bot][start_x + H + i] = '_';
-            }
-        }
-
-        // DESSIN TEXTE
-        int center_y = start_y + H;
-        int center_x = start_x + H + (N / 2);
-        int txt_start = center_x - (label.length() / 2);
-
-        if (txt_start >= 0) {
-            for (size_t i = 0; i < label.length(); ++i) {
-                if (center_y < height_px && txt_start + i < (size_t)width_px)
-                    buffer[center_y][txt_start + i] = label[i];
-            }
-        }
-
-        // --- FLÈCHE DE RÉFÉRENCE (CORRIGÉE) ---
-        // Affiche la flèche à DROITE de l'Hexagone 0 (celui du haut)
-        if (p.id == 0) {
-            string arrow = "<-- Ref";
-            // Position : Fin de l'hexagone + petite marge
-            int arrow_x = start_x + (2*H + N) + 2; 
-
-            for(size_t i=0; i<arrow.length(); ++i) {
-                if(center_y < height_px && arrow_x + i < (size_t)width_px)
-                    buffer[center_y][arrow_x + i] = arrow[i];
-            }
-        }
-    }
-
-    // --- 5. AFFICHAGE FINAL ---
-    os << "Tuile selectionnee (Rotation 0) :" << endl;
-    for (const auto& line : buffer) {
-        size_t end = line.find_last_not_of(" ");
-        if (end != string::npos) {
-            os << line.substr(0, end + 1) << "\n";
-        }
-    }
-    os << endl;
-}
-
-    
-    // Boucle Principale
 
     void Partie::boucleDeJeu() {
         while (etat == EtatPartie::EN_COURS) {
@@ -314,32 +224,30 @@ void afficherTuileCiteASCII(const ChoixTuile* choixTuile, size_t index, ostream&
             
             joueurActuelIndex = (joueurActuelIndex + 1) % joueurs.size();
 
-            if (pioche->estVide() && choixTuile->getNombreTuiles() == 0) {
+            if (pioche->estVide() && choixTuile->getNombreTuiles() <= 1) {
                 etat = EtatPartie::TERMINEE;
             }
         }
-        cout << "\n--- FIN DE LA PARTIE ---" << endl;
+        AfficherResultats(*this);
     }
 
     void Partie::remplirChoixTuile() {
-    // La boucle continue tant que le marché n'est pas rempli à son maximum 
-    while (choixTuile->getNombreTuiles() < ChoixTuile::getMaxTuiles()) {
-        if (pioche->estVide()) {
-            // Le jeu continue si la pioche est vide, mais le marché ne sera pas complet.
-            cout << "Attention : Pioche épuisée. Le marché de tuiles n'est pas complet." << endl;
-            break; 
+        if (choixTuile->getNombreTuiles() == 1) {
+            if (!pioche->estVide()) {
+                cout << "\n>>> LE MARCHE SE REAPPROVISIONNE ! (Ajout d'une pile) <<<" << endl;
+                vector<TuileCite*> nouvellePile = pioche->prendreUnePile();
+                choixTuile->ajouterPile(nouvellePile);
+            } else {
+                cout << "\n>>> Plus de piles ! Dernier tour. <<<" << endl;
+            }
         }
-        // Pioche la tuile du dessus de la Pioche
-        TuileCite* nouvelleTuile = pioche->piocher();
-        // L'ajoute au ChoixTuile (elle sera la tuile de coût 0, 1, 2 ou 3 selon l'ordre)
-        choixTuile->ajouterTuile(nouvelleTuile);
     }
-}
 
+    // =========================================================
+    //  GESTION DU TOUR COMPLÈTE
+    // =========================================================
 
-    // Tour du Joueur
-
-void Partie::gererTourJoueur(Joueur* joueur) {
+    void Partie::gererTourJoueur(Joueur* joueur) {
         cout << "\n========================================" << endl;
         cout << "   TOUR DE : " << joueur->getNom();
         if (joueur->isIA()) cout << " (Illustre Architecte)";
@@ -353,12 +261,8 @@ void Partie::gererTourJoueur(Joueur* joueur) {
            return;
         }
         
-        // --- LOGIQUE IA (Inchangée) ---
+        // --- LOGIQUE IA ---
         if (joueur->isIA()) {
-            // ... (Gardez votre code IA existant ici, je ne le répète pas pour alléger la réponse)
-            // ... 
-            // Si vous avez besoin que je remette le code IA complet, dites-le moi.
-            // Pour l'instant, je me concentre sur la partie Humain.
              const auto& dispos = choixTuile->getTuilesDisponibles();
             int indexChoisi = -1;
             int coutMin = 999;
@@ -374,8 +278,8 @@ void Partie::gererTourJoueur(Joueur* joueur) {
             }
             if (indexChoisi == -1) indexChoisi = 0; 
 
-            cout << "-> L'Illustre Architecte choisit la tuile n°" << indexChoisi 
-                 << " (Cout: " << choixTuile->calculerCout(indexChoisi) << " pierres)." << endl;
+            cout << "-> L'IA choisit la tuile n°" << indexChoisi 
+                 << " (Cout: " << choixTuile->calculerCout(indexChoisi) << ")." << endl;
 
             TuileCite* tuile = choixTuile->choisirTuile(joueur, indexChoisi);
             joueur->recupererTuileIA(tuile);
@@ -385,99 +289,90 @@ void Partie::gererTourJoueur(Joueur* joueur) {
             return; 
         }
 
-        // --- LOGIQUE JOUEUR HUMAIN (MODIFIÉE POUR UNDO) ---
-        if (!joueur->isIA()) {
-            cout << "\n--- VOTRE CITE ACTUELLE ---" << endl;
-            // Désactive l'auto-wrap pour éviter que le terminal casse le dessin
-            cout << "\033[?7l"; 
-            joueur->getCite()->afficherGraphique(cout);
-            cout << "\033[?7h"; // Réactive l'auto-wrap
-            cout << "---------------------------" << endl;
-        }
-        // Affichage du score
+        // --- LOGIQUE HUMAIN ---
+
+        // 1. Affichage Cité
+        cout << "\n--- VOTRE CITE ACTUELLE ---" << endl;
+        cout << "\033[?7l"; 
+        joueur->getCite()->afficherGraphique(cout);
+        cout << "\033[?7h"; 
+        cout << "---------------------------" << endl;
+
         TableauScore calculateurScore;
         calculateurScore.afficherDetailsScore(*joueur, cout);
-        cout << "========================================\n" << endl;
-
-        bool tourValide = false; // Tant que ce n'est pas true, le joueur recommence son choix
+        
+        bool tourValide = false; 
 
         while (!tourValide) {
             
-            // 1. Affichage de la rivière
-            cout << "\n--- Tuiles Disponibles ---" << endl;
+            // 2. Affichage Rivière
+            cout << "\n--- MARCHE DES TUILES (" << pioche->getNbPilesRestantes() << " piles en reserve) ---" << endl;
             const auto& dispos = choixTuile->getTuilesDisponibles();
             for (size_t i = 0; i < dispos.size(); ++i) {
-                afficherTuileDansLaRiviere(choixTuile, i, cout);
+                 size_t coutP = choixTuile->calculerCout(i);
+                 cout << "[" << i << "] Cout: " << coutP << "p | ";
+                 for(int k=0; k<3; ++k) cout << getEtiquettePourTuile(dispos[i]->getHexagone(k)) << " ";
+                 cout << endl;
             }
-            cout << " Vous avez actuellement " << joueur->getNbPierres() << " pierres." << endl;
-            cout << "--------------------------" << endl;
+            cout << "-------------------------" << endl;
 
-            // 2. Choix de la tuile
+            // 3. Achat
             size_t index = 0;
-            size_t coutPierrePourAnnulation = 0; // On garde le coût pour rembourser si besoin
+            size_t coutPierrePourAnnulation = 0;
 
             while(true) {
-                cout << "Choix (1-" << dispos.size() << ", ou 'q' pour quitter) : ";
+                cout << "Quelle tuile acheter ? (0-" << dispos.size()-1 << ", 'q' quitter) : ";
                 string input;
                 cin >> input;
 
-                if (input == "q" || input == "Q") throw PartieAnnulee("Le joueur a quitte la partie.");
+                if (input == "q" || input == "Q") throw PartieAnnulee("Partie annulee.");
 
                 stringstream ss(input);
                 if ((ss >> index) && index < dispos.size()) {
                     size_t coutP = choixTuile->calculerCout(index);
                     if (joueur->peutPayerPierres(coutP)) {
-                        afficherTuileCiteASCII(choixTuile, index, cout);
-                        coutPierrePourAnnulation = coutP; // On sauvegarde le coût
+                        coutPierrePourAnnulation = coutP; 
                         break;
                     } else {
-                        cout << "Pas assez de pierres ! (Cout: " << coutP 
-                             << ", Vous avez: " << joueur->getNbPierres() << ")" << endl;
+                        cout << "Pas assez de pierres !" << endl;
                     }
                 } else {
                     cout << "Entree invalide." << endl;
                 }
             }
 
-            // 3. Achat temporaire (Retrait pierres + Tuile)
-            // La fonction choisirTuile retire les pierres du joueur.
             TuileCite* tuile = choixTuile->choisirTuile(joueur, index);
 
+            cout << endl;
+            afficherTuileCiteASCII(tuile, cout);
 
-            // 4. Phase de Placement (avec option Retour)
+            // 4. Placement
             auto tousCoups = joueur->getCite()->genererCoupsValides(*tuile);
 
             if (tousCoups.empty()) {
-                cout << "Aucun placement possible ! La tuile est defaussee." << endl;
+                cout << "Aucun placement possible ! Tuile defaussee." << endl;
                 delete tuile;
-                return; // Cas rare, on ne peut pas annuler ici car la tuile est perdue
+                return; 
             }
 
-            // --- Choix Rotation ---
             set<int> rotationsUniques;
             for (const auto& coup : tousCoups) rotationsUniques.insert(coup.rotation);
             vector<int> rotationsVec(rotationsUniques.begin(), rotationsUniques.end());
 
-            cout << "\n--- Orientations disponibles ---" << endl;
+            cout << "--- Rotations possibles ---" << endl;
             for(size_t i = 0; i < rotationsVec.size(); ++i) {
                 cout <<"["<< (i+1) << "] Rotation " << rotationsVec[i] << endl;
             }
-            
-
-            cout << "\n(Tapez 'r' pour retourner au choix des tuiles)" << endl;
 
             int rotationChoisie = -1;
             size_t indexRotation = 0;
             bool retourArriere = false;
 
             while(true) {
-                cout << "Choix d'Orientation (1-" << rotationsVec.size() << ", 'r' retour, 'q' quitter) : ";
+                cout << "Choisir orientation (1-" << rotationsVec.size() << ", 'r' retour) : ";
                 string input;
                 cin >> input;
                 
-                if (input == "q" || input == "Q") throw PartieAnnulee("Le joueur a quitte.");
-                
-                // GESTION DU RETOUR
                 if (input == "r" || input == "R") {
                     retourArriere = true;
                     break;
@@ -491,38 +386,42 @@ void Partie::gererTourJoueur(Joueur* joueur) {
                 cout << "Invalide." << endl;
             }
 
-            // Si retour demandé à l'étape rotation
             if (retourArriere) {
-                cout << ">>> Annulation du choix de tuile..." << endl;
-                joueur->ajouterPierres(coutPierrePourAnnulation); // Remboursement
-                choixTuile->remettreTuile(tuile, index); // Remise en place
-                continue; // Retour au début du while(!tourValide)
+                cout << ">>> Annulation..." << endl;
+                joueur->ajouterPierres(coutPierrePourAnnulation); 
+                choixTuile->remettreTuile(tuile, index); 
+                continue; 
             }
 
+            // --- PRÉVISUALISATION ROTATION ---
+            {
+                cout << "\n--- Apercu Rotation " << rotationChoisie << " ---" << endl;
+                TuileCite* apercu = tuile->clone();
+                for(int i=0; i < (rotationChoisie % 3); ++i) apercu->rotationHoraire();
+                afficherTuileCiteASCII(apercu, cout);
+                delete apercu;
+            }
 
-            // --- Choix Position ---
+            // Choix Position
             vector<Cite::CoupPossible> coupsFiltres;
             for (const auto& coup : tousCoups) {
                 if (coup.rotation == rotationChoisie) coupsFiltres.push_back(coup);
             }
 
-            cout << "\nEmplacements possibles pour la Rotation " << rotationChoisie << " :" << endl;
+            cout << "\nEmplacements possibles :" << endl;
             for (size_t i = 0; i < coupsFiltres.size(); ++i) {
-                cout <<"["<<(i+1)<<"] Position (q=" << coupsFiltres[i].ancre.getQ()
+                cout <<"["<<(i+1)<<"] (q=" << coupsFiltres[i].ancre.getQ()
                      << ", r=" << coupsFiltres[i].ancre.getR() << ") "
-                     << (coupsFiltres[i].recouvrement ? "[HAUTEUR]" : "[SOL]")
+                     << (coupsFiltres[i].recouvrement ? "[ETAGE]" : "[SOL]")
                      << endl;
             }
 
             size_t choixCoup = 0;
             while (true) {
-                cout << "Votre placement (1-" << coupsFiltres.size() << ", 'r' retour, 'q' quitter) : ";
+                cout << "Votre placement (1-" << coupsFiltres.size() << ", 'r' retour) : ";
                 string input;
                 cin >> input;
                 
-                if (input == "q" || input == "Q") throw PartieAnnulee("Le joueur a quitte.");
-                
-                // GESTION DU RETOUR
                 if (input == "r" || input == "R") {
                     retourArriere = true;
                     break;
@@ -535,24 +434,23 @@ void Partie::gererTourJoueur(Joueur* joueur) {
                 cout << "Invalide." << endl;
             }
 
-            // Si retour demandé à l'étape placement
             if (retourArriere) {
-                cout << ">>> Annulation du choix de tuile..." << endl;
-                joueur->ajouterPierres(coutPierrePourAnnulation); // Remboursement
-                choixTuile->remettreTuile(tuile, index); // Remise en place
-                continue; // Retour au début du while(!tourValide)
+                cout << ">>> Annulation..." << endl;
+                joueur->ajouterPierres(coutPierrePourAnnulation); 
+                choixTuile->remettreTuile(tuile, index); 
+                continue; 
             }
 
-            // 5. Validation finale
             int pierresGagnees = joueur->getCite()->placerTuile(tuile, coupsFiltres[choixCoup-1]);
             if (pierresGagnees > 0) {
                 joueur->ajouterPierres(pierresGagnees);
-                cout << "Tuile placee en hauteur ! " << pierresGagnees << " pierres gagnees !" << endl;
+                cout << "--> " << pierresGagnees << " pierres gagnees !" << endl;
             } else {
-                cout << "Tuile placee avec succes." << endl;
+                cout << "--> Tuile placee." << endl;
             }
             
-            tourValide = true; // Sortie de la boucle
+            tourValide = true; 
         }
     }
+
 }

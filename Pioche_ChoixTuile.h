@@ -1,6 +1,7 @@
 #ifndef PIOCHE_CHOIXTUILE_H
 #define PIOCHE_CHOIXTUILE_H
 #include <vector>
+#include <list> // Utilisation de list pour gérer les piles
 #include "TuileCite_TuileDep.h"
 #include "Joueur.h"
 #include "GameExcep_Enums.h" 
@@ -10,22 +11,24 @@ namespace Akropolis{
     
     class Pioche{
         size_t id;
-        vector<TuileCite*> tuiles;
+        // On remplace le vecteur simple par une liste de vecteurs (les piles)
+        // Chaque élément de la liste est une "Pile" (vector<TuileCite*>)
+        list<vector<TuileCite*>> piles; 
         
     public:
-        Pioche(size_t id, size_t taillepioche) : id(id) {
-            tuiles.reserve(taillepioche);
-        }
+        Pioche(size_t id) : id(id) {} // Le constructeur ne fait plus de reserve simple
 
         ~Pioche();
 
-        size_t getNbtuilesPioche() const { return tuiles.size(); }
-        bool estVide() const { return tuiles.empty(); }
+        // Retourne le nombre de PILES restantes
+        size_t getNbPilesRestantes() const { return piles.size(); }
+        bool estVide() const { return piles.empty(); }
         
-        // --- CORRECTION : Ajout de cette méthode pour l'initialisation ---
-        void ajouterTuile(TuileCite* t) { tuiles.push_back(t); }
+        // Nouvelle méthode pour créer les piles au début
+        void organiserPiles(vector<TuileCite*>& toutesLesTuiles, int nbJoueurs);
 
-        TuileCite* piocher();
+        // Récupère une pile entière pour remplir le marché
+        vector<TuileCite*> prendreUnePile();
         
         Pioche& operator=(const Pioche&) = delete;
         Pioche(const Pioche&) = delete;
@@ -33,32 +36,34 @@ namespace Akropolis{
 
     class ChoixTuile {
     private:
-        static const size_t MAX_TUILES = 4; // Ou autre valeur selon règles
         size_t id;
         vector<TuileCite*> tuilesDisponibles;
     
     public:
-        ChoixTuile(size_t id) : id(id) {
-            tuilesDisponibles.reserve(MAX_TUILES);
-        }
+        ChoixTuile(size_t id) : id(id) {}
         
         ~ChoixTuile();
         void remettreTuile(TuileCite* tuile, size_t index);
         
         size_t calculerCout(size_t index) const {
-            // Exemple : coût = index (0 pour la 1ère, 1 pour la 2ème...)
             return index; 
         }
 
-        // Gere le retrait de tuile et le retrait de pierre quand un joueur prend une tuile
-        TuileCite* choisirTuile(Joueur* joueur,size_t index);
-        bool ajouterTuile(TuileCite* tuile);  
+        TuileCite* choisirTuile(Joueur* joueur, size_t index);
+        
+        // Nouvelle méthode pour ajouter tout le contenu d'une pile d'un coup
+        void ajouterPile(const vector<TuileCite*>& nouvellesTuiles);
+        
+        // Méthode simple pour l'initialisation (ajout unitaire)
+        void ajouterTuile(TuileCite* t) { tuilesDisponibles.push_back(t); }
 
         const vector<TuileCite*>& getTuilesDisponibles() const {
             return tuilesDisponibles;
         }
-        static size_t getMaxTuiles() {return MAX_TUILES;}
+        
+        // Plus de MAX_TUILES statique, car la taille varie (4, 5 ou 6)
         size_t getNombreTuiles() const { return tuilesDisponibles.size(); }
+        static size_t getMaxTuiles(int nbJoueurs) { return nbJoueurs + 2; } // Règle astuce page 3
     };
 }
 
