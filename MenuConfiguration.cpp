@@ -42,9 +42,9 @@ void MenuConfiguration::configurerSolo(Configuration& config) {
     // Choix de la difficulté de l'IA
     int difficulteChoisie = 0;
     cout << "\n--- Niveaux de difficulte ---" << endl;
-    cout << "1. Hippodamos (Facile) : Quartiers comptent niveau 1." << endl;
-    cout << "2. Metagenes (Moyen) : Quartiers niveau 1 + Bonus Carrieres." << endl;
-    cout << "3. Callicrates (Difficile): Quartiers comptent niveau 2." << endl;
+    cout << "[1] Hippodamos (Facile) : Quartiers comptent niveau 1." << endl;
+    cout << "[2] Metagenes (Moyen) : Quartiers niveau 1 + Bonus Carrieres." << endl;
+    cout << "[3] Callicrates (Difficile): Quartiers comptent niveau 2." << endl;
 
     if (!readIntOrQuit(difficulteChoisie, 1, 3, "Choisissez le niveau de l'IA")) {
         // Annulation par l'utilisateur: l'exception sera propagée.

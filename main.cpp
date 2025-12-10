@@ -43,7 +43,7 @@ void LancerPartie(const Akropolis::Configuration& config) {
     // Lancement de la boucle de jeu
     partie.lancerPartie();
 
-    // Affichage des resultats (idealement delegue a une autre fonction)
+    // Affichage des resultats
     AfficherResultats(partie);
 }
 
