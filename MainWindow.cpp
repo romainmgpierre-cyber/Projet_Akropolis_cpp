@@ -92,7 +92,7 @@ void RiviereWidget::dessinerTuile(QPainter& painter, TuileCite* tuile, int xCent
     const double L_SHAPE_MIDPOINT_X = -HEX_SPACING / 2.0;
 
     
-    const double MARGIN_OFFSET_RIGHT = HEX_SPACING / 2.0; // Décaler d'un demi-espacement
+    const double MARGIN_OFFSET_RIGHT = HEX_SPACING *1.5; // Décaler d'un demi-espacement
 
     // Décalage final pour centrer la forme et ajouter la marge droite
     const double drawingOffsetX = -L_SHAPE_MIDPOINT_X + MARGIN_OFFSET_RIGHT;

@@ -2,231 +2,386 @@
 
 using namespace std;
 namespace Akropolis{
-    
-    Cite::~Cite() {
-        
-        for (TuileCite* tuile : tuiles_posees) {
-            delete tuile;
+
+Cite::~Cite() {
+
+    for (TuileCite* tuile : tuiles_posees) {
+        delete tuile;
+    }
+    // La TuileDepart est gérée par la Partie
+}
+
+void Cite::initialiserCite(TuileDepart* tuileDepart) {
+    // Centre (0,0) est la Place [hex 0]
+    CoordHex centre(0, 0);
+    plateau[centre] = { tuileDepart->getHexagone(0), 1 };
+    mettreAJourFrontiere(centre);
+
+    // Les 3 carrières autour
+    CoordHex c1 = centre.voisin(0); // (1, 0)
+    CoordHex c2 = centre.voisin(2); // (-1, 1)
+    CoordHex c3 = centre.voisin(4); // (0, -1)
+
+    plateau[c1] = { tuileDepart->getHexagone(1), 1 };
+    mettreAJourFrontiere(c1);
+    plateau[c2] = { tuileDepart->getHexagone(2), 1 };
+    mettreAJourFrontiere(c2);
+    plateau[c3] = { tuileDepart->getHexagone(3), 1 };
+    mettreAJourFrontiere(c3);
+}
+
+void Cite::mettreAJourFrontiere(const CoordHex& pos) {
+    // La case n'est plus "frontière", elle est occupée
+    frontiere.erase(pos);
+
+    // Regarde les 6 voisins
+    for (int i = 0; i < 6; ++i) {
+        CoordHex voisin = pos.voisin(i);
+        // Si le voisin est vide (pas dans plateau)
+        if (plateau.find(voisin) == plateau.end()) {
+            // il devient une case frontière
+            frontiere.insert(voisin);
         }
-        // La TuileDepart est gérée par la Partie
     }
+}
 
-    void Cite::initialiserCite(TuileDepart* tuileDepart) {
-        // Centre (0,0) est la Place [hex 0]
-        CoordHex centre(0, 0);
-        plateau[centre] = { tuileDepart->getHexagone(0), 1 };
-        mettreAJourFrontiere(centre);
+vector<Cite::CoupPossible> Cite::genererCoupsValides(const TuileCite& tuile) const {
+    vector<CoupPossible> coups;
+    TuileCite* tuileTest = tuile.clone();
 
-        // Les 3 carrières autour
-        CoordHex c1 = centre.voisin(0); // (1, 0)
-        CoordHex c2 = centre.voisin(2); // (-1, 1)
-        CoordHex c3 = centre.voisin(4); // (0, -1)
-        
-        plateau[c1] = { tuileDepart->getHexagone(1), 1 };
-        mettreAJourFrontiere(c1);
-        plateau[c2] = { tuileDepart->getHexagone(2), 1 };
-        mettreAJourFrontiere(c2);
-        plateau[c3] = { tuileDepart->getHexagone(3), 1 };
-        mettreAJourFrontiere(c3);
-    }
+    // IMPORTANT : Ces positions doivent correspondre à celles dans HexGridWidget
+    // HexGridWidget utilise : (0,0), (-1,0), (0,-1)
+    // Donc les positions relatives sont : rel1 = (-1, 0), rel2 = (0, -1)
 
-    void Cite::mettreAJourFrontiere(const CoordHex& pos) {
-        // La case n'est plus "frontière", elle est occupée
-        frontiere.erase(pos);
-        
-        // Regarde les 6 voisins
-        for (int i = 0; i < 6; ++i) {
-            CoordHex voisin = pos.voisin(i);
-            // Si le voisin est vide (pas dans plateau)
-            if (plateau.find(voisin) == plateau.end()) {
-                // il devient une case frontière
-                frontiere.insert(voisin);
-            }
+    // Boucle sur les 2 formes géométriques
+    for (int forme = 0; forme < 2; forme++) {
+        // Forme 0 : Configuration de base (L vers bas-gauche)
+        // Forme 1 : Configuration miroir (L vers haut-droite)
+        CoordHex rel1, rel2;
+
+        if (forme == 0) {
+            rel1 = CoordHex(-1, 0);   // Hex 1 : gauche
+            rel2 = CoordHex(0, -1);   // Hex 2 : bas
+        } else {
+            rel1 = CoordHex(1, 0);    // Hex 1 : droite
+            rel2 = CoordHex(0, 1);    // Hex 2 : haut
         }
-    }
 
-    vector<Cite::CoupPossible> Cite::genererCoupsValides(const TuileCite& tuile) const {
-        vector<CoupPossible> coups;
-        TuileCite* tuileTest = tuile.clone(); // Pour tester les permutations
+        // Boucle sur les 3 permutations de contenu
+        for (int perm = 0; perm < 3; perm++) {
+            int rotation_id = (forme * 3) + perm;
 
-        // --- NOUVELLE LOGIQUE "AU SOL" ---
-        // // 1. Créer la "frontière élargie" pour les placements au sol.
-        // Elle contient 'frontiere' + tous les voisins vides de 'frontiere'.
-        set<CoordHex> frontiereElargie = frontiere;
-        for (const CoordHex& pos : frontiere) {
-            for (int i = 0; i < 6; ++i) {
-                CoordHex voisin = pos.voisin(i);
-                // Si le voisin est vide (pas dans plateau), on l'ajoute aux candidats 'Ancre'
-                if (plateau.find(voisin) == plateau.end()) {
-                    frontiereElargie.insert(voisin);
+            // ========================================
+            // PLACEMENT AU SOL (Hauteur 1)
+            // ========================================
+
+            // On teste TOUTES les cases de la frontière comme ancre potentielle
+            for (const CoordHex& ancre : frontiere) {
+                CoordHex pos1 = ancre + rel1;
+                CoordHex pos2 = ancre + rel2;
+
+                // RÈGLE 1 : Les 3 cases doivent être VIDES
+                bool ancreVide = (plateau.find(ancre) == plateau.end());
+                bool pos1Vide = (plateau.find(pos1) == plateau.end());
+                bool pos2Vide = (plateau.find(pos2) == plateau.end());
+
+                if (!ancreVide || !pos1Vide || !pos2Vide) {
+                    continue; // Au moins une case occupée → placement impossible
                 }
-            }
-        }
-        // --- FIN NOUVELLE LOGIQUE ---
 
+                // RÈGLE 2 : AU MOINS UN des 3 hexagones doit toucher la cité existante
+                // On vérifie les 6 voisins de chaque hexagone de la tuile
+                bool toucheCite = false;
 
-        // Boucle 1 : Les 2 formes géométriques (V et ^)
-        for (int forme = 0; forme < 2; forme++) {
+                std::array<CoordHex, 3> positionsTuile = {ancre, pos1, pos2};
 
-            CoordHex rel1 = (forme == 0) ? CoordHex(0, 1) : CoordHex(0, -1);
-            CoordHex rel2 = (forme == 0) ? CoordHex(-1, 1) : CoordHex(1, -1);
-
-            // Boucle 2 : Les 3 permutations de contenu
-            for (int perm = 0; perm < 3; perm++) {
-
-                int rotation_id = (forme * 3) + perm; // ID unique 0-5
-
-                // --- RECHERCHE "AU SOL" (MODIFIÉE) ---
-                // On itère sur la 'frontiereElargie' au lieu de 'frontiere'
-                for (const CoordHex& ancre : frontiereElargie) {
-                    CoordHex pos1 = ancre + rel1;
-                    CoordHex pos2 = ancre + rel2;
-
-                    // Condition A: Les 3 cases (ancre, pos1, pos2) doivent être VIDES
-                    if (plateau.find(ancre) == plateau.end() && // ancre doit être vide
-                        plateau.find(pos1) == plateau.end() &&
-                        plateau.find(pos2) == plateau.end()) {
-
-                        // Condition B: AU MOINS UN des 3 doit toucher la frontière d'origine
-                        if (frontiere.count(ancre) > 0 || frontiere.count(pos1) > 0 || frontiere.count(pos2) > 0) {
-                            // C'est un coup "au sol" valide (hauteur 1)
-                            coups.push_back({ancre, rotation_id, false, 1});
+                for (const CoordHex& pos : positionsTuile) {
+                    for (int dir = 0; dir < 6; dir++) {
+                        CoordHex voisin = pos.voisin(dir);
+                        // Si ce voisin est occupé (dans le plateau), alors la tuile touche la cité
+                        if (plateau.find(voisin) != plateau.end()) {
+                            toucheCite = true;
+                            break;
                         }
                     }
-                } // --- FIN RECHERCHE "AU SOL" ---
+                    if (toucheCite) break;
+                }
 
+                if (toucheCite) {
+                    coups.push_back({ancre, rotation_id, false, 1});
+                }
+            }
 
-                // --- RECHERCHE "EN HAUTEUR" (Inchangée) ---
-                // Itérer sur toutes les cases DÉJÀ OCCUPÉES
-                for (const auto& paire : plateau) {
-                    const CoordHex& ancre = paire.first;
-                    const auto& data = paire.second;
+            // ========================================
+            // PLACEMENT EN HAUTEUR (Recouvrement)
+            // ========================================
 
-                    CoordHex pos1 = ancre + rel1;
-                    CoordHex pos2 = ancre + rel2;
+            for (const auto& paire : plateau) {
+                const CoordHex& ancre = paire.first;
+                CoordHex pos1 = ancre + rel1;
+                CoordHex pos2 = ancre + rel2;
 
-                    auto it1 = plateau.find(pos1);
-                    auto it2 = plateau.find(pos2);
+                auto it1 = plateau.find(pos1);
+                auto it2 = plateau.find(pos2);
 
-                    // Si les 3 cases (ancre, pos1, pos2) sont TOUTES OCCUPÉES
-                    if (it1 != plateau.end() && it2 != plateau.end()) {
+                // RÈGLE 1 : Les 3 cases doivent être OCCUPÉES (soutien complet)
+                if (it1 == plateau.end() || it2 == plateau.end()) {
+                    continue; // Pas de soutien complet
+                }
 
-                        unsigned int h_ancre = data.second;
-                        unsigned int h1 = it1->second.second;
-                        unsigned int h2 = it2->second.second;
-                        unsigned int nouvelleHauteur = max({h_ancre, h1, h2}) + 1;
+                // Récupération des hexagones du support (niveau inférieur)
+                HexagoneConstruction* support0 = paire.second.first;
+                HexagoneConstruction* support1 = it1->second.first;
+                HexagoneConstruction* support2 = it2->second.first;
 
-                        // TODO: Ajouter la validation (ex: pas de Carrière sur Carrière)
-                        // if (estUnCoupValide(ancre, pos1, pos2, ...))
-                        coups.push_back({ancre, rotation_id, true, nouvelleHauteur});
+                // Récupération des hexagones de la nouvelle tuile
+                HexagoneConstruction* nouveau0 = tuileTest->getHexagone(0);
+                HexagoneConstruction* nouveau1 = tuileTest->getHexagone(1);
+                HexagoneConstruction* nouveau2 = tuileTest->getHexagone(2);
+
+                // RÈGLE 2 : RÈGLE CRITIQUE DE LA CARRIÈRE
+                // Une Carrière ne peut PAS recouvrir une Carrière
+                bool violationCarriere = false;
+
+                if (dynamic_cast<Carriere*>(nouveau0) && dynamic_cast<Carriere*>(support0))
+                    violationCarriere = true;
+                if (dynamic_cast<Carriere*>(nouveau1) && dynamic_cast<Carriere*>(support1))
+                    violationCarriere = true;
+                if (dynamic_cast<Carriere*>(nouveau2) && dynamic_cast<Carriere*>(support2))
+                    violationCarriere = true;
+
+                // RÈGLE 3 : SOUTIEN PAR AU MOINS DEUX ENTITÉS DIFFÉRENTES (TuileCite ou HexagoneDepart)
+                // La tuile posée doit être "à cheval" sur au moins deux tuiles différentes (ou hexagones de départ)
+                std::set<const void*> ids_support_uniques;
+                std::array<HexagoneConstruction*, 3> supports_hex = {support0, support1, support2};
+
+                for (HexagoneConstruction* support_hex : supports_hex) {
+                    bool trouve_tuile_cite = false;
+                    for (TuileCite* tuile : tuiles_posees) {
+                        for (int i = 0; i < 3; ++i) {
+                            if (tuile->getHexagone(i) == support_hex) {
+                                ids_support_uniques.insert(tuile); // Utilise TuileCite* comme ID
+                                trouve_tuile_cite = true;
+                                break;
+                            }
+                        }
+                        if (trouve_tuile_cite) break;
                     }
-                } // --- FIN RECHERCHE "EN HAUTEUR" ---
 
-                tuileTest->rotationHoraire(); // Permute les hexagones pour le test suivant
+                    if (!trouve_tuile_cite) {
+                        // Hexagone de la TuileDepart. On utilise le pointeur de l'HexagoneConstruction* comme ID unique.
+                        ids_support_uniques.insert(support_hex);
+                    }
+                }
+                bool violationSoutien = (ids_support_uniques.size() < 2);
+
+                // Si toutes les règles sont respectées
+                if (!violationCarriere && !violationSoutien) {
+                    unsigned int h0 = paire.second.second;
+                    unsigned int h1 = it1->second.second;
+                    unsigned int h2 = it2->second.second;
+                    unsigned int nouvelleHauteur = max({h0, h1, h2}) + 1;
+
+                    coups.push_back({ancre, rotation_id, true, nouvelleHauteur});
+                }
+            }
+
+            tuileTest->rotationHoraire(); // Permutation pour le test suivant
+        }
+    }
+    delete tuileTest;
+    return coups;
+}
+
+std::string Cite::validerPlacement(const TuileCite& tuile, const CoordHex& ancre, int rotation_id) const {
+    // Déterminer les positions relatives selon la rotation
+    int forme = rotation_id / 3;
+    CoordHex rel1, rel2;
+
+    if (forme == 0) {
+        rel1 = CoordHex(-1, 0);
+        rel2 = CoordHex(0, -1);
+    } else {
+        rel1 = CoordHex(1, 0);
+        rel2 = CoordHex(0, 1);
+    }
+
+    CoordHex pos1 = ancre + rel1;
+    CoordHex pos2 = ancre + rel2;
+
+    // Vérifier si c'est un placement au sol ou en hauteur
+    bool ancreOccupee = (plateau.find(ancre) != plateau.end());
+    bool pos1Occupee = (plateau.find(pos1) != plateau.end());
+    bool pos2Occupee = (plateau.find(pos2) != plateau.end());
+
+    int nbCasesOccupees = (ancreOccupee ? 1 : 0) + (pos1Occupee ? 1 : 0) + (pos2Occupee ? 1 : 0);
+
+    if (nbCasesOccupees == 0) {
+        // PLACEMENT AU SOL
+
+        // Vérifier adjacence à la cité
+        bool toucheCite = false;
+        std::array<CoordHex, 3> positions = {ancre, pos1, pos2};
+
+        for (const CoordHex& pos : positions) {
+            for (int dir = 0; dir < 6; dir++) {
+                if (plateau.find(pos.voisin(dir)) != plateau.end()) {
+                    toucheCite = true;
+                    break;
+                }
+            }
+            if (toucheCite) break;
+        }
+
+        if (!toucheCite) {
+            return "❌ PLACEMENT AU SOL INVALIDE : La tuile doit être adjacente à la cité existante.";
+        }
+
+        return "✅ Placement au sol valide";
+
+    } else if (nbCasesOccupees == 3) {
+        // PLACEMENT EN HAUTEUR
+
+        // Vérifier règle de la carrière
+        TuileCite* tuileTest = tuile.clone();
+        for (int i = 0; i < (rotation_id % 3); i++) {
+            tuileTest->rotationHoraire();
+        }
+
+        auto paire0 = plateau.find(ancre);
+        auto paire1 = plateau.find(pos1);
+        auto paire2 = plateau.find(pos2);
+
+        HexagoneConstruction* support0 = paire0->second.first;
+        HexagoneConstruction* support1 = paire1->second.first;
+        HexagoneConstruction* support2 = paire2->second.first;
+
+        HexagoneConstruction* nouveau0 = tuileTest->getHexagone(0);
+        HexagoneConstruction* nouveau1 = tuileTest->getHexagone(1);
+        HexagoneConstruction* nouveau2 = tuileTest->getHexagone(2);
+
+        // RÈGLE 1 : Interdiction Carrière sur Carrière
+        if (dynamic_cast<Carriere*>(nouveau0) && dynamic_cast<Carriere*>(support0)) {
+            delete tuileTest;
+            return "❌ PLACEMENT EN HAUTEUR INVALIDE : Carrière sur Carrière interdit (position 0).";
+        }
+        if (dynamic_cast<Carriere*>(nouveau1) && dynamic_cast<Carriere*>(support1)) {
+            delete tuileTest;
+            return "❌ PLACEMENT EN HAUTEUR INVALIDE : Carrière sur Carrière interdit (position 1).";
+        }
+        if (dynamic_cast<Carriere*>(nouveau2) && dynamic_cast<Carriere*>(support2)) {
+            delete tuileTest;
+            return "❌ PLACEMENT EN HAUTEUR INVALIDE : Carrière sur Carrière interdit (position 2).";
+        }
+
+        // RÈGLE 2.5 : SOUTIEN PAR AU MOINS DEUX ENTITÉS DIFFÉRENTES
+        // La tuile posée doit être "à cheval" sur au moins deux tuiles différentes (ou hexagones de départ)
+        std::set<const void*> ids_support_uniques;
+        std::array<HexagoneConstruction*, 3> supports_hex = {support0, support1, support2};
+
+        for (HexagoneConstruction* support_hex : supports_hex) {
+            bool trouve_tuile_cite = false;
+            for (TuileCite* tuile : tuiles_posees) {
+                for (int i = 0; i < 3; ++i) {
+                    if (tuile->getHexagone(i) == support_hex) {
+                        ids_support_uniques.insert(tuile);
+                        trouve_tuile_cite = true;
+                        break;
+                    }
+                }
+                if (trouve_tuile_cite) break;
+            }
+
+            if (!trouve_tuile_cite) {
+                // Hexagone de la TuileDepart. On utilise le pointeur de l'HexagoneConstruction* comme ID unique.
+                ids_support_uniques.insert(support_hex);
             }
         }
 
-        delete tuileTest; // Libérer le clone
+        if (ids_support_uniques.size() < 2) {
+            delete tuileTest;
+            return "❌ PLACEMENT EN HAUTEUR INVALIDE : La tuile doit être supportée par au moins deux entités différentes (tuiles posées ou hexagones de départ).";
+        }
 
-        // TODO: Dé-dupliquer les coups (plusieurs rotations peuvent donner le même coup)
-        return coups;
+        delete tuileTest;
+        return "✅ Placement en hauteur valide";
+
+    } else {
+        return "❌ PLACEMENT INVALIDE : Soutien incomplet (" + std::to_string(nbCasesOccupees) + "/3 cases occupées).";
+    }
+}
+
+int Cite::placerTuile(TuileCite* tuile, const CoupPossible& coup) {
+    // 1. Appliquer les rotations/permutations à la *vraie* tuile
+    // (coup.rotation / 3) donne la forme (0 ou 1)
+    // (coup.rotation % 3) donne le nb de permutations
+    for (int i = 0; i < (coup.rotation % 3); ++i) {
+        tuile->rotationHoraire();
     }
 
-    int Cite::placerTuile(TuileCite* tuile, const CoupPossible& coup) {
-        // 1. Appliquer les rotations/permutations à la *vraie* tuile
-        // (coup.rotation / 3) donne la forme (0 ou 1)
-        // (coup.rotation % 3) donne le nb de permutations
-        for (int i = 0; i < (coup.rotation % 3); ++i) {
-            tuile->rotationHoraire();
-        }
-        
-        // Définir les 3 positions
-        int forme = coup.rotation / 3;
-        CoordHex rel1 = (forme == 0) ? CoordHex(0, 1) : CoordHex(0, -1);
-        CoordHex rel2 = (forme == 0) ? CoordHex(-1, 1) : CoordHex(1, -1); 
+    // Définir les 3 positions
+    int forme = coup.rotation / 3;
+    // FIX: Utiliser les mêmes coordonnées relatives que genererCoupsValides (Forme L)
+    CoordHex rel1, rel2;
 
-        CoordHex pos0 = coup.ancre;
-        CoordHex pos1 = pos0 + rel1;
-        CoordHex pos2 = pos0 + rel2;
-        
-        // Mettre à jour la tuile et l'inventaire
-        tuile->setHauteur(coup.hauteur);
-        tuiles_posees.push_back(tuile); // La Cité prend possession
+    if (forme == 0) {
+        rel1 = CoordHex(-1, 0);   // Hex 1 : gauche
+        rel2 = CoordHex(0, -1);   // Hex 2 : bas
+    } else {
+        rel1 = CoordHex(1, 0);    // Hex 1 : droite
+        rel2 = CoordHex(0, 1);    // Hex 2 : haut
+    }
 
-        // --- LOGIQUE DE GAIN DE PIERRES PAR RECOUVREMENT ---
-        int pierresGagnees = 0;
+    CoordHex pos0 = coup.ancre;
+    CoordHex pos1 = pos0 + rel1;
+    CoordHex pos2 = pos0 + rel2;
 
-        // Vérifie si la tuile est posée en hauteur (recouvrement)
-        if (coup.recouvrement) {
-            // On vérifie les 3 cases couvertes
-            array<CoordHex, 3> casesCouvertes = {pos0, pos1, pos2};
-            
-            for (const auto& caseCouvee : casesCouvertes) {
-                // Regarde quel hexagone était présent à la coordonnée avant le placement
-                auto it = plateau.find(caseCouvee);
-                if (it != plateau.end()) {
-                    HexagoneConstruction* hexCouvert = it->second.first;
-                    
-                    // Si l'hexagone couvert était une Carrière
-                    if (dynamic_cast<Carriere*>(hexCouvert)) {
-                        pierresGagnees++;
-                    }
+    // Mettre à jour la tuile et l'inventaire
+    tuile->setHauteur(coup.hauteur);
+    tuiles_posees.push_back(tuile); // La Cité prend possession
+
+    // --- LOGIQUE DE GAIN DE PIERRES PAR RECOUVREMENT ---
+    int pierresGagnees = 0;
+
+    // Vérifie si la tuile est posée en hauteur (recouvrement)
+    if (coup.recouvrement) {
+        // On vérifie les 3 cases couvertes
+        array<CoordHex, 3> casesCouvertes = {pos0, pos1, pos2};
+
+        for (const auto& caseCouvee : casesCouvertes) {
+            // Regarde quel hexagone était présent à la coordonnée avant le placement
+            auto it = plateau.find(caseCouvee);
+            if (it != plateau.end()) {
+                HexagoneConstruction* hexCouvert = it->second.first;
+
+                // Si l'hexagone couvert était une Carrière
+                if (dynamic_cast<Carriere*>(hexCouvert)) {
+                    pierresGagnees++;
                 }
             }
         }
-        
-        // Mettre à jour le plateau (la carte)
-        plateau[pos0] = { tuile->getHexagone(0), coup.hauteur };
-        plateau[pos1] = { tuile->getHexagone(1), coup.hauteur };
-        plateau[pos2] = { tuile->getHexagone(2), coup.hauteur };
-
-        // 5. Mettre à jour la frontière
-        mettreAJourFrontiere(pos0);
-        mettreAJourFrontiere(pos1);
-        mettreAJourFrontiere(pos2);
-
-        // On retourne le nombre de pierres gagnées
-        return pierresGagnees;
     }
 
+    // Mettre à jour le plateau (la carte)
+    plateau[pos0] = { tuile->getHexagone(0), coup.hauteur };
+    plateau[pos1] = { tuile->getHexagone(1), coup.hauteur };
+    plateau[pos2] = { tuile->getHexagone(2), coup.hauteur };
 
+    // 5. Mettre à jour la frontière
+    mettreAJourFrontiere(pos0);
+    mettreAJourFrontiere(pos1);
+    mettreAJourFrontiere(pos2);
 
-    // void Cite::afficher(ostream& f) const {
-    //     if (plateau.empty()) {
-    //         f << "  (Cité vide)" << endl;
-    //         return;
-    //     }
+    // On retourne le nombre de pierres gagnées
+    return pierresGagnees;
+}
 
-        
-    //     for (const auto& paire : plateau) {
-    //         const CoordHex& coord = paire.first; 
-    //         const auto& data = paire.second;     
-
-    //         HexagoneConstruction* hex = data.first;
-    //         unsigned int hauteur = data.second;
-
-    //         f << "  (q=" << coord.getQ() << ", r=" << coord.getR()<< ") [H:" << hauteur << "] ";
-
-            
-    //         if (Place* p = dynamic_cast<Place*>(hex)) {
-    //             f << "Place " << p->getNbEtoile() << "*";
-    //         } else if (dynamic_cast<Carriere*>(hex)) {
-    //             f << "Carrière";
-    //         } else if (Quartier* q = dynamic_cast<Quartier*>(hex)) {
-                
-    //             f << "Quartier " << q->getType().getCouleur(); 
-    //         } else {
-    //             f << "Inconnu";
-    //         }
-    //         f << endl;
-    //     }
-    // }
-    void Cite::ajouterTuileIA(TuileCite* tuile) {
+void Cite::ajouterTuileIA(TuileCite* tuile) {
     // L'IA considère les tuiles comme acquises mais ne les place pas sur le plateau
-        tuiles_posees.push_back(tuile);
-    
-    }
-    
+    tuiles_posees.push_back(tuile);
+
+}
+
 
 
 // Ajout dans Cite.cpp à la fin ou à la place de l'ancien afficher
@@ -234,7 +389,7 @@ namespace Akropolis{
 // Helper pour générer le texte (MAR, CAR, P TEM 2*, etc.)
 string Cite::getEtiquetteHexagone(const CoordHex& pos) const {
     auto it = plateau.find(pos);
-    
+
     // CAS 1 : CASE VIDE -> Coordonnées
     if (it == plateau.end()) {
         std::ostringstream ss;
@@ -248,14 +403,14 @@ string Cite::getEtiquetteHexagone(const CoordHex& pos) const {
 
     if (dynamic_cast<Carriere*>(hex)) {
         return "CAR";
-    } 
+    }
     else if (Quartier* q = dynamic_cast<Quartier*>(hex)) {
         // On prend les 3 premières lettres du nom en majuscule (ex: MARche -> MAR)
         string nom = q->getType().getNom();
         string shortNom = nom.substr(0, 3);
         for (auto & c: shortNom) c = toupper(c);
         return shortNom;
-    } 
+    }
     else if (Place* p = dynamic_cast<Place*>(hex)) {
         // Format : P TEM 2*
         string nom = p->getType().getNom();
@@ -294,11 +449,11 @@ void Cite::afficherGraphique(ostream& os) const {
 
     // --- MODIFICATION ICI : MARGE PLUS GRANDE ---
     // Mettez 3, 4 ou 5 selon la taille que vous voulez voir autour
-    int marge = 1; 
+    int marge = 1;
 
-    min_col -= marge; 
+    min_col -= marge;
     max_col += marge;
-    min_lig -= marge; 
+    min_lig -= marge;
     max_lig += marge;
 
     // 2. CONFIGURATION GÉOMÉTRIQUE
@@ -317,9 +472,9 @@ void Cite::afficherGraphique(ostream& os) const {
     // 3. DESSIN
     for (int lig = min_lig; lig <= max_lig; ++lig) {
         for (int col = min_col; col <= max_col; ++col) {
-            
+
             CoordHex posReelle = offsetToAxial(col, lig);
-        
+
             string label = getEtiquetteHexagone(posReelle);
 
             int draw_col = col - min_col;
@@ -330,7 +485,7 @@ void Cite::afficherGraphique(ostream& os) const {
             if (col % 2 != 0) start_y += odd_offset;
 
             // TOIT
-            for (int i = 0; i < LARGEUR_TOIT; ++i) 
+            for (int i = 0; i < LARGEUR_TOIT; ++i)
                 buffer[start_y][start_x + HAUTEUR_PENTE + i] = '_';
 
             // PENTES
@@ -343,8 +498,8 @@ void Cite::afficherGraphique(ostream& os) const {
                 buffer[y_bot][start_x + k] = '\\';
                 buffer[y_bot][start_x + (2 * HAUTEUR_PENTE + LARGEUR_TOIT) - 1 - k] = '/';
 
-                if (k == HAUTEUR_PENTE - 1) { 
-                    for (int i = 0; i < LARGEUR_TOIT; ++i) 
+                if (k == HAUTEUR_PENTE - 1) {
+                    for (int i = 0; i < LARGEUR_TOIT; ++i)
                         buffer[y_bot][start_x + HAUTEUR_PENTE + i] = '_';
                 }
             }
