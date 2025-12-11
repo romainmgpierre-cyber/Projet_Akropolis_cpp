@@ -128,6 +128,11 @@ namespace Akropolis {
     {
         pioche = new Pioche(1); 
         choixTuile = new ChoixTuile(1); 
+        variantes.push_back(Variante("Architectes", "Habitations : Si la valeur du groupe >= 10, points doubles."));
+        variantes.push_back(Variante("Commercants", "Marches : Si adjacent a une Place Marche, points doubles."));
+        variantes.push_back(Variante("Sentinelles", "Casernes : Si 3 ou 4 cases vides adjacentes, points doubles."));
+        variantes.push_back(Variante("Pretres", "Temples : Si en hauteur (niveau 2+), points doubles."));
+        variantes.push_back(Variante("Jardiniers", "Jardins : Si adjacent a un Lac (vide entoure), points doubles."));
     }
 
     Partie::~Partie() {
@@ -210,6 +215,7 @@ namespace Akropolis {
 
     void Partie::lancerPartie() {
         if (joueurs.empty()) throw GameException("Pas assez de joueurs.");
+        configurerVariantes();
         initialiserTuiles();
         etat = EtatPartie::EN_COURS;
         joueurActuelIndex = 0;
@@ -239,6 +245,57 @@ namespace Akropolis {
                 choixTuile->ajouterPile(nouvellePile);
             } else {
                 cout << "\n>>> Plus de piles ! Dernier tour. <<<" << endl;
+            }
+        }
+    }
+
+    void Partie::configurerVariantes() {
+        bool choixTermine = false;
+        
+        while (!choixTermine) {
+            cout << "\n========================================" << endl;
+            cout << "       CONFIGURATION DES VARIANTES      " << endl;
+            cout << "========================================" << endl;
+            cout << "Cochez les variantes que vous voulez activer pour cette partie :" << endl;
+            cout << "(Les scores s'adapteront automatiquement)\n" << endl;
+
+            // Afficher la liste avec l'état actuel [X] ou [ ]
+            for (size_t i = 0; i < variantes.size(); ++i) {
+                cout << (i + 1) << ". [" << (variantes[i].estActive() ? "X" : " ") << "] " 
+                     << variantes[i].getNom() << " : " << variantes[i].getDescription() << endl;
+            }
+
+            cout << "\n----------------------------------------" << endl;
+            cout << "Tapez le numero pour activer/desactiver." << endl;
+            cout << "Tapez '0' ou 'ok' pour VALIDER et LANCER LA PARTIE." << endl;
+            cout << "Votre choix : ";
+
+            string input;
+            cin >> input;
+
+            // Validation de fin
+            if (input == "0" || input == "ok" || input == "OK") {
+                choixTermine = true;
+                cout << "Configuration validee !\n" << endl;
+            } 
+            else {
+                // Tentative de lecture d'un nombre
+                stringstream ss(input);
+                int choix = 0;
+                if (ss >> choix) {
+                    if (choix >= 1 && choix <= (int)variantes.size()) {
+                        // Bascule (Toggle) l'état de la variante
+                        if (variantes[choix - 1].estActive()) {
+                            variantes[choix - 1].desactiver();
+                        } else {
+                            variantes[choix - 1].activer();
+                        }
+                    } else {
+                        cout << "Numero invalide." << endl;
+                    }
+                } else {
+                    cout << "Entree invalide." << endl;
+                }
             }
         }
     }
@@ -451,6 +508,15 @@ namespace Akropolis {
             
             tourValide = true; 
         }
+    }
+    vector<Variante> Partie::getVariantesActives() const {
+        vector<Variante> actives;
+        for (const auto& v : variantes) {
+            if (v.estActive()) {
+                actives.push_back(v);
+            }
+        }
+        return actives;
     }
 
 }

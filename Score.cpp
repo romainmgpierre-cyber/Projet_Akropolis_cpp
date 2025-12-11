@@ -11,6 +11,13 @@ namespace Akropolis{
         return joueur.getCite()->getPlateau();
     }
 
+    bool estVarianteActive(const vector<Variante>& variantes, const string& nomCible) {
+        for (const auto& v : variantes) {
+            if (v.getNom() == nomCible && v.estActive()) return true;
+        }
+        return false;
+    }
+
     // --- Algorithme pour trouver le score des Bleus (Plus grand groupe) ---
     int calculerScoreBleu(const std::map<CoordHex, std::pair<HexagoneConstruction*, unsigned int>>& plateau) {
         std::set<CoordHex> visites;
@@ -91,54 +98,116 @@ namespace Akropolis{
 
         const auto& plateau = getPlateauDuJoueur(joueur);
 
-        // 1. Compter les Etoiles (Places)
+        // 1. Compter les Etoiles (Places) - Inchangé
         for (const auto& paire : plateau) {
             if (Place* p = dynamic_cast<Place*>(paire.second.first)) {
                 details[p->getType().getCouleur()].nbEtoiles += p->getNbEtoile();
             }
         }
 
-        // 2. Calculer la valeur des quartiers valides (Sauf Bleu qui est spécial)
+        // --- DÉTECTION DES VARIANTES ACTIVES ---
+        // (Les noms doivent correspondre exactement à ceux que tu donneras dans Partie)
+        bool vHabitation = estVarianteActive(variantesActives, "Architectes");
+        bool vMarche     = estVarianteActive(variantesActives, "Commercants");
+        bool vCaserne    = estVarianteActive(variantesActives, "Sentinelles");
+        bool vTemple     = estVarianteActive(variantesActives, "Pretres");
+        bool vJardin     = estVarianteActive(variantesActives, "Jardiniers");
+
+        // 2. Calculer la valeur des quartiers valides
         for (const auto& paire : plateau) {
             const CoordHex& pos = paire.first;
             unsigned int hauteur = paire.second.second;
+            HexagoneConstruction* hex = paire.second.first;
 
-            if (Quartier* q = dynamic_cast<Quartier*>(paire.second.first)) {
+            if (Quartier* q = dynamic_cast<Quartier*>(hex)) {
                 Couleur coul = q->getType().getCouleur();
                 
                 bool valide = false;
+                int multiplicateur = 1; // Par défaut x1
 
-                if (coul == Couleur::jaune) { // Marché
+                if (coul == Couleur::jaune) { // MARCHE
                     bool adjacentMarche = false;
+                    bool adjacentPlaceMarche = false; 
+
                     for(int i=0; i<6; ++i) {
                         auto it = plateau.find(pos.voisin(i));
                         if(it != plateau.end()){
+                            // Condition de base : adjacent à un autre quartier marché
                             if(Quartier* qV = dynamic_cast<Quartier*>(it->second.first))
                                 if(qV->getType().getCouleur() == Couleur::jaune) adjacentMarche = true;
+                            
+                            // VARIANTE COMMERCANTS : Adjacent à une Place Marché
+                            if (vMarche) {
+                                if(Place* pV = dynamic_cast<Place*>(it->second.first))
+                                    if(pV->getType().getCouleur() == Couleur::jaune) adjacentPlaceMarche = true;
+                            }
                         }
                     }
-                    if(!adjacentMarche) valide = true;
+                    if(!adjacentMarche) {
+                        valide = true;
+                        if (vMarche && adjacentPlaceMarche) multiplicateur = 2;
+                    }
 
-                } else if (coul == Couleur::rouge) { // Caserne
-                    if (estEnPeripherie(pos, plateau)) valide = true;
+                } else if (coul == Couleur::rouge) { // CASERNE
+                    if (estEnPeripherie(pos, plateau)) {
+                        valide = true;
+                        
+                        // VARIANTE SENTINELLES : 3 ou 4 espaces vides adjacents
+                        if (vCaserne) {
+                            int nbVides = 0;
+                            for(int i=0; i<6; ++i) {
+                                if (plateau.find(pos.voisin(i)) == plateau.end()) nbVides++;
+                            }
+                            if (nbVides == 3 || nbVides == 4) multiplicateur = 2;
+                        }
+                    }
 
-                } else if (coul == Couleur::violet) { // Temple
-                    if (estEntoure(pos, plateau)) valide = true;
+                } else if (coul == Couleur::violet) { // TEMPLE
+                    if (estEntoure(pos, plateau)) {
+                        valide = true;
+                        
+                        // VARIANTE PRETRES : Niveau supérieur (hauteur >= 2)
+                        if (vTemple && hauteur >= 2) multiplicateur = 2;
+                    }
 
-                } else if (coul == Couleur::vert) { // Jardin
-                    valide = true; // Toujours valide
+                } else if (coul == Couleur::vert) { // JARDIN
+                    valide = true; // Toujours valide de base
+                    
+                    // VARIANTE JARDINIERS : Adjacent à un Lac
+                    // Un Lac est une case vide entourée de 6 hexagones
+                    if (vJardin) {
+                        bool adjacentLac = false;
+                        for(int i=0; i<6; ++i) {
+                            CoordHex voisin = pos.voisin(i);
+                            // Si le voisin est vide...
+                            if (plateau.find(voisin) == plateau.end()) {
+                                // ...et qu'il est entouré (fonction existante estEntoure)
+                                if (estEntoure(voisin, plateau)) {
+                                    adjacentLac = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (adjacentLac) multiplicateur = 2;
+                    }
                 }
                 
-                // Note : Bleu est traité à part car c'est un groupe entier, pas tuile par tuile.
-
+                // Calcul final pour ce quartier
                 if (valide && coul != Couleur::bleu) {
-                    details[coul].valeurTuiles += hauteur;
+                    details[coul].valeurTuiles += (hauteur * multiplicateur);
                 }
             }
         }
 
         // 3. Cas spécial Bleu (Habitation)
-        details[Couleur::bleu].valeurTuiles = calculerScoreBleu(plateau);
+        int scoreBleu = calculerScoreBleu(plateau);
+        
+        // VARIANTE ARCHITECTES : Si le score du groupe >= 10, on double
+        if (vHabitation && scoreBleu >= 10) {
+            scoreBleu *= 2;
+        }
+        
+        details[Couleur::bleu].valeurTuiles = scoreBleu;
 
         return details;
     }
@@ -264,6 +333,7 @@ int TableauScore::calculerScoreIA(const Joueur& joueurIA, NiveauDifficulte diff)
         cout << "*****************************************" << endl;
 
         TableauScore calculateurFinal;
+        calculateurFinal.setVariantesActives(partie.getVariantesActives());
         const vector<Joueur*>& tousLesJoueurs = partie.getJoueurs();
 
         if (partie.getMode() == ModeJeu::SOLO) {

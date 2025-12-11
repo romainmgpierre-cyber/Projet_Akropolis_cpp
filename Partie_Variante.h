@@ -51,6 +51,7 @@ namespace Akropolis{
         
         void lancerPartie(); // Initialise tout
         void boucleDeJeu();  // Fait tourner les tours
+        void configurerVariantes(); // Nouvelle méthode pour le menu de sélection
         void gererTourJoueur(Joueur* joueur); // Logique d'un tour
         void remplirChoixTuile();
 
