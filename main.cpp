@@ -75,7 +75,7 @@ int main() {
                 LancerPartie(config);
             } else if (choixMenu == 2) {
                 // on charge le menu des sauvegardes
-                //Sauvegarde::MenuSauvegardes();
+                Sauvegarde::MenuSauvegardes();
                 //Sauvegarde::EnregistrerPartie();
             } else if (choixMenu == 3) {
                 cout << "\n A bientot !" << endl;
