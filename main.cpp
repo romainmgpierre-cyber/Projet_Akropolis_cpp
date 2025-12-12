@@ -76,6 +76,7 @@ int main() {
             } else if (choixMenu == 2) {
                 // on charge le menu des sauvegardes
                 //Sauvegarde::MenuSauvegardes();
+                //Sauvegarde::EnregistrerPartie();
             } else if (choixMenu == 3) {
                 cout << "\n A bientot !" << endl;
                 break;
