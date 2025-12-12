@@ -111,8 +111,6 @@ namespace Akropolis{
         }
 
         void afficherGraphique(ostream& os) const;
-        string validerPlacement(const TuileCite& tuile, const CoordHex& ancre, int rotation_id) const;
-
     };
 
 }
