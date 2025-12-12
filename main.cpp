@@ -19,6 +19,7 @@
 #include <ctime>
 #include "MenuConfiguration.h"
 #include "FonctionsAide.h"
+#include "Sauvegarde.h"
 
 using namespace std;
 using namespace Akropolis;
@@ -63,19 +64,18 @@ int main() {
             cout << "[2] Charger une partie enregistrée (pas encore implémenté)" << endl;
             cout << "[3] Quitter le jeu" << endl;
 
-            // Cas ou on quite le jeu
+            // Cas où on quite le jeu
             if (!readIntOrQuit(choixMenu, 1, 3, "Votre choix")) {
                 choixMenu = 3;
             }
-
             if (choixMenu == 1) {
                 // configuration de la partie
                 Configuration config = menuConfig.demarrerConfiguration();
                 // Lancement de la partie
                 LancerPartie(config);
-
             } else if (choixMenu == 2) {
-                cout << "Fonctionalité de sauvegarde/chargement pas implémenté (encore) ." << endl;
+                // on charge le menu des sauvegardes
+                //Sauvegarde::MenuSauvegardes();
             } else if (choixMenu == 3) {
                 cout << "\n A bientot !" << endl;
                 break;
@@ -96,14 +96,13 @@ int main() {
 
     return 0;
 }
+/*
+ #include "MainWindow.h"
+#include <QApplication>
 
-// #include "MainWindow.h"
-// #include <QApplication>
-
-// int main(int argc, char *argv[])
-// {
-//     QApplication a(argc, argv);
-//     MainWindow w;
-//     w.show();
-//     return a.exec();
-// }
+int main(int argc, char *argv[])
+{
+     QApplication a(argc, argv);
+     MainWindow w;
+     w.show();//     return a.exec();
+}*/

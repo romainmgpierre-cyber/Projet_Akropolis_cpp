@@ -14,39 +14,41 @@ set(CMAKE_AUTORCC ON)
 find_package(Qt6 REQUIRED COMPONENTS Widgets)
 
 add_executable(akropolis
-    main.cpp
-    MainWindow.h MainWindow.cpp
-    HexGridWidget.h HexGridWidget.cpp
-    main.cpp
-    Cite.cpp
-    CoordHex.cpp
-    GameExcep_Enums.cpp
-    HexCons_Carr_Quart_Place.cpp
-    Joueur.cpp
-    Partie_Variante.cpp
-    Pioche_ChoixTuile.cpp
-    Score.cpp
-    TuileCite_TuileDep.cpp
-    Type.cpp
-    fabrique_tuiles.cpp
-    HexGridWidget.cpp
-    HexGridWidget.h
-    MainWindow.cpp
-    MainWindow.h    Cite.cpp Cite.h
-    CoordHex.cpp CoordHex.h
-    fabrique_tuiles.cpp
-    GameExcep_Enums.cpp GameExcep_Enums.h
-    HexCons_Carr_Quart_Place.cpp HexCons_Carr_Quart_Place.h
-    Joueur.cpp Joueur.h
-    Partie_Variante.cpp Partie_Variante.h
-    Pioche_ChoixTuile.cpp Pioche_ChoixTuile.h
-    Score.cpp Score.h
-    TuileCite_TuileDep.cpp TuileCite_TuileDep.h
-    Type.cpp Type.h
+        main.cpp
+        MainWindow.h MainWindow.cpp
+        HexGridWidget.h HexGridWidget.cpp
+        main.cpp
+        Cite.cpp
+        CoordHex.cpp
+        GameExcep_Enums.cpp
+        HexCons_Carr_Quart_Place.cpp
+        Joueur.cpp
+        Partie_Variante.cpp
+        Pioche_ChoixTuile.cpp
+        Score.cpp
+        TuileCite_TuileDep.cpp
+        Type.cpp
+        fabrique_tuiles.cpp
+        HexGridWidget.cpp
+        HexGridWidget.h
+        MainWindow.cpp
+        MainWindow.h    Cite.cpp Cite.h
+        CoordHex.cpp CoordHex.h
+        fabrique_tuiles.cpp
+        GameExcep_Enums.cpp GameExcep_Enums.h
+        HexCons_Carr_Quart_Place.cpp HexCons_Carr_Quart_Place.h
+        Joueur.cpp Joueur.h
+        Partie_Variante.cpp Partie_Variante.h
+        Pioche_ChoixTuile.cpp Pioche_ChoixTuile.h
+        Score.cpp Score.h
+        TuileCite_TuileDep.cpp TuileCite_TuileDep.h
+        Type.cpp Type.h
         MenuConfiguration.h
         MenuConfiguration.cpp
         FonctionsAide.h
         FonctionsAide.cpp
+        Sauvegarde.h
+        Sauvegarde.cpp
 )
 
 # 2. LIEZ LA BIBLIOTHÈQUE QT A VOTRE EXÉCUTABLE
