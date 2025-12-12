@@ -75,13 +75,37 @@ QColor RiviereWidget::typeToColor(Couleur c) const {
     }
 }
 
-void RiviereWidget::dessinerTuile(QPainter& painter, TuileCite* tuile, int xOffset, int yOffset, bool hovered) {
-    QPoint offsets[3] = {QPoint(0,0), QPoint(30, -18), QPoint(60, 0)};
+const double HEX_SIZE_RIV = 15.0;
+const double HEX_SPACING = HEX_SIZE_RIV * 1.732;
+const double TUILE_WIDTH_ESTIMEE = HEX_SPACING * 3.5;
 
-    for(int i=0; i<3; i++) {
+void RiviereWidget::dessinerTuile(QPainter& painter, TuileCite* tuile, int xCenterOffset, int yCenter, bool hovered) {
+
+   
+    QPointF offsets[3] = {
+        QPointF(0, 0),                        // Hexagone 0 (Ancre/Pivot)
+        QPointF(-HEX_SPACING, 0),             // Hexagone 1 (Gauche)
+        QPointF(-HEX_SPACING / 2.0, HEX_SIZE_RIV * 1.5) // Hexagone 2 (Bas-Gauche)
+    };
+
+    // Le point le plus à gauche du dessin est -HEX_SPACING.
+    const double L_SHAPE_MIDPOINT_X = -HEX_SPACING / 2.0;
+
+    
+    const double MARGIN_OFFSET_RIGHT = HEX_SPACING *1.5; // Décaler d'un demi-espacement
+
+    // Décalage final pour centrer la forme et ajouter la marge droite
+    const double drawingOffsetX = -L_SHAPE_MIDPOINT_X + MARGIN_OFFSET_RIGHT;
+
+    double drawingOffsetY = -HEX_SIZE_RIV * 0.75; // Ajustement vertical
+
+
+    // --- Dessin de chaque hexagone de la tuile ---
+    for(int i = 0; i < 3; i++) {
         HexagoneConstruction* hex = tuile->getHexagone(i);
         QColor col = Qt::white;
 
+        // Détermination de la couleur (code omis pour la clarté)
         if (auto* q = dynamic_cast<Quartier*>(hex))
             col = typeToColor(q->getType().getCouleur());
         else if (auto* p = dynamic_cast<Place*>(hex))
@@ -89,26 +113,43 @@ void RiviereWidget::dessinerTuile(QPainter& painter, TuileCite* tuile, int xOffs
         else if (dynamic_cast<Carriere*>(hex))
             col = typeToColor(Couleur::gris);
 
-        int x = xOffset + offsets[i].x();
-        int y = yOffset + offsets[i].y();
+        // Calcul du centre absolu
+        QPointF center = QPointF(xCenterOffset + offsets[i].x() + drawingOffsetX,
+                                 yCenter + offsets[i].y() + drawingOffsetY);
 
-        // Ombre
-        if (hovered) {
-            painter.setPen(Qt::NoPen);
-            painter.setBrush(QColor(0, 0, 0, 60));
-            painter.drawEllipse(x+2, y+2, 26, 26);
+        // --- Dessin de la forme (Hexagone) ---
+        QPolygonF poly;
+        for (int j = 0; j < 6; ++j) {
+            double angle_deg = 60 * j - 30;
+            double angle_rad = M_PI / 180 * angle_deg;
+            poly << center + QPointF(HEX_SIZE_RIV * cos(angle_rad), HEX_SIZE_RIV * sin(angle_rad));
         }
 
-        // Hexagone avec dégradé
-        QRadialGradient grad(x+13, y+13, 15);
+        // Ombre / Effet 3D (code omis)
+        painter.setPen(Qt::NoPen);
+        painter.setBrush(QColor(0, 0, 0, 40));
+        painter.drawPolygon(poly.translated(1, 1));
+
+        // Hexagone avec dégradé (code omis)
+        QRadialGradient grad(center, HEX_SIZE_RIV);
         grad.setColorAt(0, col.lighter(120));
         grad.setColorAt(1, col);
 
         painter.setBrush(grad);
         painter.setPen(QPen(col.darker(130), hovered ? 3 : 2));
-        painter.drawEllipse(x, y, 26, 26);    }
-}
+        painter.drawPolygon(poly);
 
+        // Affichage des étoiles (code omis)
+        if (auto* p = dynamic_cast<Place*>(hex)) {
+            painter.setPen(Qt::NoPen);
+            painter.setBrush(QColor(255, 215, 0));
+            painter.drawEllipse(center, 5, 5);
+            painter.setPen(Qt::black);
+            painter.drawText(QRectF(center.x() - 10, center.y() - 10, 20, 20),
+                             Qt::AlignCenter, QString::number(p->getNbEtoile()));
+        }
+    }
+}
 void RiviereWidget::paintEvent(QPaintEvent *event) {
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
@@ -122,19 +163,32 @@ void RiviereWidget::paintEvent(QPaintEvent *event) {
     titleFont.setBold(true);
     painter.setFont(titleFont);
     painter.drawText(10, 25, "Marché (Rivière)");
-    if (!choixActuel) return;
 
-    auto tuiles = choixActuel->getTuilesDisponibles();
-    if (tuiles.empty()) {
+    if (!choixActuel || choixActuel->getTuilesDisponibles().empty()) {
         painter.drawText(rect(), Qt::AlignCenter, "Aucune tuile disponible");
         return;
     };
 
-    int largeurCase = width() / tuiles.size();
+    auto tuiles = choixActuel->getTuilesDisponibles();
+    int nbTuiles = tuiles.size();
 
-    for(size_t i=0; i < tuiles.size(); ++i) {
-        int x = i * largeurCase/2 - 30;
-        int y = height() / 2;
+    // Largeur totale disponible moins les marges
+    int totalWidth = width() - 20;
+
+    // Largeur allouée par tuile, incluant l'espace entre elles
+    double largeurParTuile = totalWidth / (double)nbTuiles;
+
+    // Position de départ (pour centrer la rivière)
+    double currentX = 10;
+
+    for(size_t i = 0; i < nbTuiles; ++i) {
+
+        // Calculer le centre de la zone de la tuile
+        double xCenter = currentX + (largeurParTuile / 2.0);
+        double yCenter = height() / 2.0;
+
+        // Décalage pour aligner le centre de la tuile dessinée sur le centre de la zone allouée
+        double drawingX = xCenter - (TUILE_WIDTH_ESTIMEE / 2.0);
 
         bool hovered = (static_cast<int>(i) == hoveredIndex);
 
@@ -142,23 +196,33 @@ void RiviereWidget::paintEvent(QPaintEvent *event) {
         if (hovered) {
             painter.setPen(QPen(QColor(33, 150, 243), 3));
             painter.setBrush(QColor(33, 150, 243, 30));
-            painter.drawRoundedRect(x-10, y-40, 80, 120, 8, 8);
+            // Le cadre couvre toute la zone allouée
+            painter.drawRoundedRect(currentX, 40, largeurParTuile, height() - 50, 8, 8);
         }
 
-        dessinerTuile(painter, tuiles[i], x, y);
+        // Dessin de la tuile
+        dessinerTuile(painter, tuiles[i], (int)drawingX, (int)yCenter, hovered);
 
         // Afficher le coût
         int cout = choixActuel->calculerCout(i);
+
+        // Position du coût: centré horizontalement dans la zone (près du bas)
+        double costX = xCenter - 20;
+        double costY = height() - 40;
+
         painter.setPen(Qt::NoPen);
         painter.setBrush(cout > 0 ? QColor(244, 67, 54) : QColor(76, 175, 80));
-        painter.drawRoundedRect(x+20, y+50, 40, 24, 12, 12);
+        painter.drawRoundedRect(costX, costY, 40, 24, 12, 12);
 
         painter.setPen(Qt::white);
         QFont font = painter.font();
         font.setBold(true);
         painter.setFont(font);
-        painter.drawText(QRect(x+20, y+50, 40, 24), Qt::AlignCenter,
-                         QString("%1").arg(cout));    }
+        painter.drawText(QRectF(costX, costY, 40, 24), Qt::AlignCenter,
+                         QString("%1").arg(cout));
+
+        currentX += largeurParTuile;
+    }
 }
 
 
@@ -316,9 +380,22 @@ void MainWindow::onTuileChoisie(int index) {
 }
 
 void MainWindow::onRotationClicked() {
-    if (!tuileSelectionnee) return;
-    gridWidget->rotateFantome();
-    rotationActuelle = gridWidget->getFantomeRotation();
+    // Vérification de base pour s'assurer qu'une tuile est bien en prévisualisation
+    if (!tuileSelectionnee || !btnRotation->isEnabled()) return;
+
+    int currentRot = gridWidget->getFantomeRotation();
+    
+    // 1. Incrémenter la rotation de 60 degrés (de 0 à 5)
+    int nextRot = (currentRot + 1) % 6;
+    
+    // 2. Appliquer la nouvelle rotation au widget (le dessin change immédiatement)
+    gridWidget->setFantomeRotation(nextRot); 
+    rotationActuelle = nextRot; 
+    
+    // 3. Maintenir le bouton Valider activé et mettre à jour le statut
+    btnValidation->setEnabled(true); 
+    statutLabel->setText(QString("Rotation %1. Cliquez sur Valider pour placer.")
+                         .arg(nextRot * 60));
 }
 
 void MainWindow::onValidationButtonClicked() {
@@ -374,35 +451,42 @@ void MainWindow::onHexClicked(CoordHex coord) {
 
     Joueur* j = partie->getJoueurActuel();
     Cite* cite = j->getCite();
-    try {
-
-        Cite::CoupPossible coup;
-        coup.ancre = coord;
-        coup.rotation = 0;
-        auto coups = cite->genererCoupsValides(*tuileSelectionnee);
-        bool valide = false;
-        for(auto& c : coups) {
-            if(c.ancre == coord) { // On vérifie juste la position, la rotation est gérée manuellement
-                // On applique le coup validé par le moteur
-                cite->placerTuile(tuileSelectionnee, c);
-                valide = true;
-                break;
-            }
+    
+    // 1. Vérifier si cette coordonnée est l'ancre d'au moins UN coup légal (nécessaire pour activer la prévisualisation)
+    bool ancreLegale = false;
+    auto coupsValides = cite->genererCoupsValides(*tuileSelectionnee);
+    
+    for (const auto& coup : coupsValides) {
+        if (coup.ancre == coord) {
+            ancreLegale = true;
+            break;
         }
+    }
 
-        if(valide) {
-            tuileSelectionnee = nullptr;
-            gridWidget->clearTuileFantome();
-            partie->passerTour();
-            passerAuJoueurSuivant();
-        } else {
-            // Feedback silencieux ou sonore (coup invalide)
-            QMessageBox::information(this, "Info", "Placement invalide ici.");
-        }
-    } catch (const std::exception& e) {
-        QMessageBox::warning(this, "Erreur", e.what());
+    if (ancreLegale) {
+        // Ancre valide : on active la prévisualisation.
+        ancreSelectionnee = coord;
+        
+        // La rotation est initialisée à 0 sans vérification de légalité
+        int initialRotation = 0; 
+        
+        // Initialisation de la prévisualisation
+        gridWidget->setTuileFantome(tuileSelectionnee, ancreSelectionnee);
+        gridWidget->setFantomeRotation(initialRotation);
+        rotationActuelle = initialRotation;
+            
+        btnRotation->setEnabled(true);
+        btnValidation->setEnabled(true);
+        statutLabel->setText("Rotationnez ou Validez le placement.");
+    } else {
+        // Clic sur une case illégale
+        gridWidget->clearTuileFantome(); 
+        btnRotation->setEnabled(false);
+        btnValidation->setEnabled(false);
+        statutLabel->setText("Emplacement invalide. Cliquez sur une case légale.");
     }
 }
+
 void MainWindow::passerAuJoueurSuivant() {
     // Vérifier fin de partie
     verifierFinPartie();

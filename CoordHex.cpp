@@ -13,10 +13,10 @@ namespace Akropolis{
         switch (normalizedRot) {
             case 0: return *this;             
             case 1: return CoordHex(-r, q + r); // 60 degrés
-            case 2: return CoordHex(-q - r, -q); // 120 degrés
+            case 2: return CoordHex(-q - r, q); // 120 degrés
             case 3: return CoordHex(-q, -r);    // 180 degrés
             case 4: return CoordHex(r, -q - r); // 240 degrés
-            case 5: return CoordHex(q + r, -r); // 300 degrés
+            case 5: return CoordHex(q + r, -q); // 300 degrés
             default: return *this; 
         }
 

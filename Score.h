@@ -52,8 +52,12 @@ namespace Akropolis {
     private:
         Joueur* joueur;
         vector<pair<Joueur*, int>> scores;
+        vector<Variante> variantesActives;
 
     public:
+        void setVariantesActives(const vector<Variante>& vars) {
+            variantesActives = vars;
+        }
         void ajouterJoueur(Joueur* j);
         void calculerScores(); // Met à jour le vecteur scores
         void afficherScores(ostream& f = cout) const; // Affiche juste le résumé
