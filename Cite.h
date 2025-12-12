@@ -111,8 +111,6 @@ namespace Akropolis{
         }
 
         void afficherGraphique(ostream& os) const;
-
-
     };
 
 }
