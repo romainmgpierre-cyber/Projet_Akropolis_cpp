@@ -99,6 +99,7 @@ namespace Akropolis{
         // trouver tous les coups légaux
         vector<CoupPossible> genererCoupsValides(const TuileCite& tuile) const;
 
+        std::string validerPlacement(const TuileCite& tuile, const CoordHex& ancre, int rotation_id) const;
         // Appliquer le coup choisi
         int placerTuile(TuileCite* tuile, const CoupPossible& coup); //Modifié
 
