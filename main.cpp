@@ -23,7 +23,7 @@
 
 using namespace std;
 using namespace Akropolis;
-
+/*
 
 // Fonction de lancement d'une nouvelle partie
 void LancerPartie(const Akropolis::Configuration& config) {
@@ -97,13 +97,16 @@ int main() {
 
     return 0;
 }
-/*
- #include "MainWindow.h"
+
+*/
+#include "MainWindow.h"
 #include <QApplication>
 
 int main(int argc, char *argv[])
 {
+
      QApplication a(argc, argv);
      MainWindow w;
-     w.show();//     return a.exec();
-}*/
+     w.show();
+    return a.exec();
+}
