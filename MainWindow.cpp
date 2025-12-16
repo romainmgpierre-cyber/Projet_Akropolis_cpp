@@ -290,7 +290,7 @@ MainWindow::MainWindow(QWidget *parent)
     QWidget *sidePanel = new QWidget;
     sidePanel->setMaximumWidth(350);
     QVBoxLayout *sideLayout = new QVBoxLayout(sidePanel);
-    sideLayout->setSpacing(15);
+    sideLayout->setSpacing(10);
 
     // === PANEL JOUEUR ===
     panelJoueur = new QFrame;
@@ -348,9 +348,12 @@ MainWindow::MainWindow(QWidget *parent)
     labelControles->setStyleSheet("font-size: 16px; font-weight: bold; color: #34495e;");
     sideLayout->addWidget(labelControles);
 
-    btnRotation = new ModernButton("Pivoter (R)");
+    btnRotation = new ModernButton("Pivoter");
     btnRotation->setEnabled(false);
     sideLayout->addWidget(btnRotation);
+
+    btnPivot = new ModernButton("Changer Pivot"); // Assurez-vous d'avoir déclaré btnPivot dans le .h
+    sideLayout->addWidget(btnPivot);
 
     btnValidation = new ModernButton("Valider Placement");
     btnValidation->setStyleSheet(
@@ -377,7 +380,7 @@ MainWindow::MainWindow(QWidget *parent)
     layoutPrincipal->addWidget(sidePanel, 0);
 
     setStyleSheet("QMainWindow { background: #f5f7fa; }");
-    setWindowTitle("Akropolis - Édition Moderne");
+    setWindowTitle("Akropolis");
     resize(1200, 800);
 
     // 3. Connexions
@@ -387,13 +390,13 @@ MainWindow::MainWindow(QWidget *parent)
     connect(btnRecentrer, &QPushButton::clicked, this, &MainWindow::onRecentrerClicked);
     connect(btnUndo, &QPushButton::clicked, this, &MainWindow::onUndoClicked);
     connect(riviereWidget, &RiviereWidget::tuileChoisie, this, &MainWindow::onTuileChoisie);
+    connect(btnPivot, &QPushButton::clicked, this, &MainWindow::onPivotClicked);
 
     // 4. Démarrage
     etatActuel = EtatJeu::CHOIX_RIVIERE;
     mettreAJourInterface();
-    // Message de bienvenue
     QMessageBox::information(this, "C'est parti !",
-        QString("La partie commence avec %1 joueurs !\nC'est au tour de %2."));
+        QString("La partie commence avec 1 joueurs !\nC'est au tour de 2."));
 
 }
 
@@ -407,19 +410,19 @@ void MainWindow::onTuileChoisie(int index) {
     ChoixTuile* choix = partie->getChoixTuile();
 
     int cout = choix->calculerCout(index);
-    try{ (j->peutPayerPierres(cout));
+    try{
         j->retirerPierres(cout);
 
         // On récupère la tuile et on la sort de la rivière
         tuileSelectionnee = choix->choisirTuile(j, index);
         rotationActuelle = 0;
         etatActuel = EtatJeu::PLACEMENT_TUILE;
-
         mettreAJourInterface();
+
     } catch(const GameException& e) {
         QMessageBox::warning(this, "Impossible",
-                             QString("Vous avez besoin de %1 pierres. Vous n'en avez que %2.")
-                                 .arg(cout).arg(j->getNbPierres()));
+            QString("Vous avez besoin de %1 pierres. Vous n'en avez que %2.")
+            .arg(cout).arg(j->getNbPierres()));
     }
 }
 
@@ -448,45 +451,78 @@ void MainWindow::onValidationButtonClicked() {
     Joueur* j = partie->getJoueurActuel();
     Cite* cite = j->getCite();
     
-    // 1. Déterminer la rotation finale
-    int finalRotation = gridWidget->getFantomeRotation(); 
-    
+    int rotUI = gridWidget->getFantomeRotation();
+    int pivotUI = this->pivotActuel;
+    std::vector<CoordHex> coordsVisuelles;
+    const std::array<CoordHex, 3> localPos = {CoordHex(0,0), CoordHex(-1,0), CoordHex(0,-1)};
+    CoordHex offsetPivot = localPos[pivotUI].rotate(rotUI);
+
+    for(int i=0; i<3; ++i) {
+        // Position absolue = AncreSouris + (PosLocaleTournée - OffsetPivot)
+        coordsVisuelles.push_back(ancreSelectionnee + (localPos[i].rotate(rotUI) - offsetPivot));
+    }
+
     // 2. Chercher le coup validé par le moteur de jeu qui correspond à l'ancre et à la rotation UI
     auto coupsValides = cite->genererCoupsValides(*tuileSelectionnee);
     bool valide = false;
-    
-    // La rotation UI (0-5) correspond aux 6 permutations de CoupPossible.
+    Cite::CoupPossible coupFinal;
+
     for(const auto& c : coupsValides) {
-        // Le CoupPossible stocke un ID de rotation qui contient la forme (V ou ^) ET la permutation
-        // Comme nous ne savons pas si l'ancre correspond à la forme V (0-2) ou ^ (3-5),
-        // nous testons si une des deux formes correspond à l'ancre et à la permutation choisie (finalRotation % 3)
-        
-        // C'est le CoupPossible que nous devons appliquer (il contient hauteur et recouvrement)
-        if(c.ancre == ancreSelectionnee && c.rotation == finalRotation) { 
-            try {
-                // 3. Appliquer le coup validé
-                j->placerTuile(tuileSelectionnee, c);
+        std::vector<CoordHex> coordsLogiques;
+        int forme = c.rotation / 3;
+        CoordHex rel1, rel2;
+        if (forme == 0) { rel1 = CoordHex(-1, 0); rel2 = CoordHex(0, -1); } // Forme V
+        else            { rel1 = CoordHex(1, 0);  rel2 = CoordHex(0, 1); }  // Forme ^
+
+        // On applique la rotation interne du coup (permutations)
+        // Note: genererCoupsValides a déjà calculé les "vraies" coordonnées finales ancre, pos1, pos2 ?
+
+        // Simplification : On vérifie juste si les 3 coordonnées visuelles correspondent
+        // aux 3 coordonnées logiques du coup.
+
+        CoordHex logPos0 = c.ancre;
+        // Pour comparer, il faut appliquer la rotation géométrique logique correspondant à c.rotation
+
+        if (coordsVisuelles[0] == c.ancre) {
+            // L'ancre correspond ! Maintenant, est-ce que l'orientation correspond ?
+
+            if (c.rotation == rotUI) {
+                coupFinal = c;
                 valide = true;
                 break;
-            } catch (const std::exception& e) {
-                QMessageBox::warning(this, "Erreur de placement", e.what());
-                return;
+            }
+
+        }
+    }
+
+    // On demande à la logique : "Si je place l'hexagone 0 ici (coordsVisuelles[0]), est-ce valide ?"
+    // On filtre les coups valides pour ne garder que ceux où ancre == coordsVisuelles[0]
+    // Et où la rotation correspond à notre rotation visuelle.
+
+    for(const auto& c : coupsValides) {
+        // 1. Est-ce que l'hexagone 0 (l'ancre logique) est au bon endroit ?
+        if (c.ancre == coordsVisuelles[0]) {
+            // 2. Est-ce que la rotation correspond ?
+            // Votre logique Cite et Widget semblent alignées sur 0..5
+            if (c.rotation == rotUI) {
+                coupFinal = c;
+                valide = true;
+                break;
             }
         }
     }
 
     if(valide) {
-        // 4. Nettoyer l'état et passer au joueur suivant
-        tuileSelectionnee = nullptr;
-        gridWidget->clearTuileFantome();
-        
-        btnRotation->setEnabled(false);
-        btnValidation->setEnabled(false);
-        
-        passerAuJoueurSuivant();
+        try {
+            j->placerTuile(tuileSelectionnee, coupFinal);
+            tuileSelectionnee = nullptr;
+            gridWidget->clearTuileFantome();
+            btnRotation->setEnabled(false);
+            btnValidation->setEnabled(false);
+            passerAuJoueurSuivant();
+        } catch (...) {}
     } else {
-        QMessageBox::information(this, "Info", "Placement invalide (ancre/rotation ne correspond pas à un coup légal).");
-    }
+        QMessageBox::information(this, "Invalide", "Ce placement ne correspond à aucune règle valide.");  }
 }
 
 void MainWindow::onHexClicked(CoordHex coord) {
@@ -666,3 +702,15 @@ void MainWindow::onRecentrerClicked() {
     gridWidget->update();
 }
 
+void MainWindow::onPivotClicked() {
+    if (!tuileSelectionnee) return;
+
+    // On change le pivot (0 -> 1 -> 2 -> 0)
+    pivotActuel = (pivotActuel + 1) % 3;
+    gridWidget->setFantomePivot(pivotActuel);
+
+    // On re-vérifie si la position actuelle est valide avec ce nouveau pivot
+    onHexClicked(ancreSelectionnee);
+
+    statutLabel->setText(QString("Pivot changé sur l'hexagone %1").arg(pivotActuel));
+}

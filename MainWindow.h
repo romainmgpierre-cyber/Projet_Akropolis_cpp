@@ -90,6 +90,7 @@ private slots:
     void onRecentrerClicked();
     void onTuileChoisie(int index);
     void onValidationButtonClicked();
+    void onPivotClicked();
 
 private:
     void mettreAJourInterface();
@@ -106,10 +107,12 @@ private:
     ModernButton *btnUndo;
     ModernButton *btnRecentrer;
     ModernButton *btnValidation;
+    ModernButton *btnPivot;
 
     Akropolis::Partie* partie;
     Akropolis::TuileCite* tuileSelectionnee = nullptr;
     int rotationActuelle = 0;
+    int pivotActuel = 0;
     EtatJeu etatActuel;
     RiviereWidget *riviereWidget;
     Akropolis::CoordHex ancreSelectionnee;

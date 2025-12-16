@@ -107,7 +107,10 @@ CoordHex HexGridWidget::pixelToHex(QPointF point) const {
     double r = (2.0/3.0 * p.y()) / effectiveSize;
     return CoordHex(qRound(q), qRound(r));
 }
-
+void HexGridWidget::setFantomePivot(int index) {
+    this->pivotIndex = index % 3;
+    update();
+}
 void HexGridWidget::paintEvent(QPaintEvent *event) {
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
@@ -133,17 +136,17 @@ void HexGridWidget::paintEvent(QPaintEvent *event) {
     }
     if (tuileFantome) {
         painter.save();
-        painter.setOpacity(0.7); // Semi-transparent pour la prévisualisation
+        painter.setOpacity(0.7);
 
         // Positions relatives d'une tuile standard: (0, 0), (1, 0), (0, 1)
         const std::array<Akropolis::CoordHex, 3> localPositions = {
             Akropolis::CoordHex(0, 0),
             Akropolis::CoordHex(-1, 0),
             Akropolis::CoordHex(0, -1)
-        }; 
-        
+        };
+
+        Akropolis::CoordHex pivotOffset = localPositions[pivotIndex].rotate(rotFantome);
         const auto& hexContentArray = tuileFantome->getHexagones();
-        
         for (size_t i = 0; i < 3; ++i) {
             
             Akropolis::CoordHex localCoord = localPositions[i];
@@ -151,7 +154,7 @@ void HexGridWidget::paintEvent(QPaintEvent *event) {
             Akropolis::CoordHex rotatedCoord = localCoord.rotate(rotFantome);
             
             // 2. Appliquer la translation (avec posFantome)
-            Akropolis::CoordHex finalCoord = posFantome + rotatedCoord;
+            Akropolis::CoordHex finalCoord = posFantome + (rotatedCoord- pivotOffset);
             
             // 3. Dessiner l'hexagone fantôme (hauteur 1, non survolé)
             Akropolis::HexagoneConstruction* hexContent = hexContentArray[i];

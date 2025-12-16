@@ -19,9 +19,11 @@ public:
     void clearTuileFantome();
     void setZoomLevel(double zoom);
     void animateHexPlacement(Akropolis::CoordHex coord);
+    void setFantomePivot(int index);
     void rotateFantome();
     void setFantomeRotation(int rotation); 
     int getFantomeRotation() const { return rotFantome; }
+    int getFantomePivot() const { return pivotIndex; }
 
 protected:
     void paintEvent(QPaintEvent *event) override;
@@ -40,6 +42,7 @@ private:
     Akropolis::CoordHex posFantome;
     Akropolis::CoordHex hoveredHex;
     int rotFantome = 0;
+    int pivotIndex = 0;
 
     double hexSize = 40.0;
     double zoomFactor = 1.0;
