@@ -5,6 +5,8 @@
 #include <QMessageBox>
 #include <QPropertyAnimation>
 #include <QGraphicsOpacityEffect>
+#include <QInputDialog>
+#include <QString>
 
 using namespace Akropolis;
 RiviereWidget::RiviereWidget(QWidget *parent) : QWidget(parent) {
@@ -100,7 +102,7 @@ void RiviereWidget::dessinerTuile(QPainter& painter, TuileCite* tuile, int xCent
     double drawingOffsetY = -HEX_SIZE_RIV * 0.75; // Ajustement vertical
 
 
-    // --- Dessin de chaque hexagone de la tuile ---
+    //  Dessin de chaque hexagone de la tuile
     for(int i = 0; i < 3; i++) {
         HexagoneConstruction* hex = tuile->getHexagone(i);
         QColor col = Qt::white;
@@ -230,9 +232,18 @@ void RiviereWidget::paintEvent(QPaintEvent *event) {
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
-    // 1. Initialisation du Jeu
+    // 1. Initialisation du Jeu : Choix du nombre de joueurs
+    bool ok;
+    int nbJoueurs = QInputDialog::getInt(this, "Nouvelle Partie",
+                                         "Nombre de joueurs (2-4) :",
+                                         2, 2, 4, 1, &ok);
+    if (!ok) nbJoueurs = 2; // Par défaut si l'utilisateur annule
     partie = new Partie(1, ModeJeu::SOLO);
-    partie->ajouterJoueur("Joueur 1", 1);
+    // Création dynamique des joueurs
+    for (int i = 0; i < nbJoueurs; ++i) {
+        std::string nom = "Joueur " + std::to_string(i + 1);
+        partie->ajouterJoueur(nom, i + 1);
+    }
     partie->initialiserTuiles();
 
     // 2. Initialisation
@@ -266,9 +277,8 @@ MainWindow::MainWindow(QWidget *parent)
     QVBoxLayout *panelLayout = new QVBoxLayout(panelJoueur);
 
 
-    infoLabel = new QLabel("Joueur 1");
-    infoLabel->setStyleSheet("font-size: 18px; font-weight: bold; color: #2c3e50;"
-);
+    infoLabel = new QLabel("Info Joueur");
+    infoLabel->setStyleSheet("font-size: 18px; font-weight: bold; color: #2c3e50;");
     panelLayout->addWidget(infoLabel);
 
     statutLabel = new QLabel("Choisissez une tuile");
@@ -276,7 +286,8 @@ MainWindow::MainWindow(QWidget *parent)
     panelLayout->addWidget(statutLabel);
 
     progressBar = new QProgressBar;
-    progressBar->setRange(0, 100);
+    int nbPilesTotal = partie->getPioche()->getNbPilesRestantes();
+    progressBar->setRange(0, nbPilesTotal);
     progressBar->setValue(0);
     progressBar->setStyleSheet(
         "QProgressBar {"
@@ -291,6 +302,7 @@ MainWindow::MainWindow(QWidget *parent)
         "  border-radius: 6px;"
         "}"
         );
+    progressBar->setFormat("Progression de la partie");
     panelLayout->addWidget(progressBar);
 
     sideLayout->addWidget(panelJoueur);
@@ -351,6 +363,12 @@ MainWindow::MainWindow(QWidget *parent)
     // 4. Démarrage
     etatActuel = EtatJeu::CHOIX_RIVIERE;
     mettreAJourInterface();
+    // Message de bienvenue
+    QMessageBox::information(this, "C'est parti !",
+        QString("La partie commence avec %1 joueurs !\nC'est au tour de %2.")
+        .arg(nbJoueurs)
+        .arg(QString::fromStdString(partie->getJoueurActuel()->getNom())));
+
 }
 
 MainWindow::~MainWindow() {
@@ -439,7 +457,6 @@ void MainWindow::onValidationButtonClicked() {
         btnRotation->setEnabled(false);
         btnValidation->setEnabled(false);
         
-        partie->passerTour();
         passerAuJoueurSuivant();
     } else {
         QMessageBox::information(this, "Info", "Placement invalide (ancre/rotation ne correspond pas à un coup légal).");
@@ -498,17 +515,26 @@ void MainWindow::passerAuJoueurSuivant() {
 
     // Passer au joueur suivant
     partie->passerTour();
-    etatActuel = EtatJeu::CHOIX_RIVIERE;
+    Joueur* nouveauJoueur = partie->getJoueurActuel();
 
+    etatActuel = EtatJeu::CHOIX_RIVIERE;
+    tuileSelectionnee = nullptr;
     // Animation de transition
     animerTransition();
 
     mettreAJourInterface();
+
+    QMessageBox::information(this, "Tour Suivant",
+        QString("C'est au tour de : %1\nPréparez-vous !")
+        .arg(QString::fromStdString(nouveauJoueur->getNom())));
 }
 
 void MainWindow::verifierFinPartie() {
-    // Vérifier si la pioche est vide (à adapter selon votre logique)
-    if (partie->getChoixTuile()->getTuilesDisponibles().empty()) {
+    // Règle : Pioche vide ET max 1 tuile sur la rivière
+    bool piocheVide = partie->getPioche()->estVide();
+    int tuilesRestantes = partie->getChoixTuile()->getNombreTuiles();
+
+    if (piocheVide && tuilesRestantes <= 1) {
         etatActuel = EtatJeu::FIN_PARTIE;
     }
 }
@@ -551,12 +577,21 @@ void MainWindow::mettreAJourInterface() {
                          : "Placez la tuile sur la grille";
     statutLabel->setText(statut);
 
-    /* Progress bar (exemple: nombre de tours)
-    int progression = (partie->getJoueurActuel() * 100) / 12; // Supposons 12 tours max
-    progressBar->setValue(progression);*/
-
-    // Mise à jour de la grille
+    // Changement de la cité affichée dans le widget
     gridWidget->setCite(j->getCite());
+    gridWidget->update();
+
+    if (partie && partie->getPioche()) {
+        int pilesRestantes = partie->getPioche()->getNbPilesRestantes();
+        int totalInitial = progressBar->maximum(); // On récupère le max qu'on a set au début
+
+        // La valeur correspond à ce qu'on a déjà joué
+        int pilesConsommees = totalInitial - pilesRestantes;
+
+        progressBar->setValue(pilesConsommees);
+    }
+
+
 
     // Mise à jour de la rivière
     partie->remplirChoixTuile();
