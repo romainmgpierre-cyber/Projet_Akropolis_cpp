@@ -7,6 +7,7 @@
 #include <QGraphicsOpacityEffect>
 #include <QInputDialog>
 #include <QString>
+#include <QTimer>
 
 using namespace Akropolis;
 RiviereWidget::RiviereWidget(QWidget *parent) : QWidget(parent) {
@@ -232,17 +233,44 @@ void RiviereWidget::paintEvent(QPaintEvent *event) {
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
-    // 1. Initialisation du Jeu : Choix du nombre de joueurs
+    // 1. Initialisation du Jeu :
+    // Choix du Mode (Solo ou Multi)
+    QStringList modes;
+    modes << "Solo (vs IA)" << "Multijoueur (Local)";
     bool ok;
-    int nbJoueurs = QInputDialog::getInt(this, "Nouvelle Partie",
-                                         "Nombre de joueurs (2-4) :",
-                                         2, 2, 4, 1, &ok);
-    if (!ok) nbJoueurs = 2; // Par défaut si l'utilisateur annule
-    partie = new Partie(1, ModeJeu::SOLO);
+    QString modeChoisi = QInputDialog::getItem(this, "Bienvenue sur Akropolis",
+        "Choisissez le mode de jeu :",
+        modes, 0, false, &ok);
+    if (!ok) modeChoisi = "Solo (vs IA)";
+    if (modeChoisi == "Solo (vs IA)") {
+        // --- CONFIGURATION SOLO ---
+        partie = new Partie(1, ModeJeu::SOLO);
+
+        // Ajout du joueur humain
+        partie->ajouterJoueur("Joueur Humain", 1);
+
+        // Ajout de l'IA (Illustre Constructeur) - paramètre estIA = true
+        partie->ajouterJoueur("Illustre Constructeur", 2, true);
+
+        // Choix difficulté (pour le score de l'IA)
+        QStringList diffs; diffs << "Facile" << "Moyen" << "Difficile";
+        QString diff = QInputDialog::getItem(this, "Difficulté", "Niveau de l'IA :", diffs, 1, false);
+
+        if (diff == "Difficile") partie->setDifficulte(NiveauDifficulte::DIFFICILE);
+        else if (diff == "Moyen") partie->setDifficulte(NiveauDifficulte::MOYEN);
+        else partie->setDifficulte(NiveauDifficulte::FACILE);}
+    //Choix du nombre de joueurs
+    else{
+        partie = new Partie(1, ModeJeu::SOLO);
+        int nbJoueurs = QInputDialog::getInt(this, "Multijoueurs",
+            "Nombre de joueurs (2-4) :",
+            2, 2, 4, 1, &ok);
+        if (!ok) nbJoueurs = 2; // Par défaut si l'utilisateur annule
+
     // Création dynamique des joueurs
-    for (int i = 0; i < nbJoueurs; ++i) {
-        std::string nom = "Joueur " + std::to_string(i + 1);
-        partie->ajouterJoueur(nom, i + 1);
+        for (int i = 0; i < nbJoueurs; ++i) {
+            std::string nom = "Joueur " + std::to_string(i + 1);
+            partie->ajouterJoueur(nom, i + 1);}
     }
     partie->initialiserTuiles();
 
@@ -365,9 +393,7 @@ MainWindow::MainWindow(QWidget *parent)
     mettreAJourInterface();
     // Message de bienvenue
     QMessageBox::information(this, "C'est parti !",
-        QString("La partie commence avec %1 joueurs !\nC'est au tour de %2.")
-        .arg(nbJoueurs)
-        .arg(QString::fromStdString(partie->getJoueurActuel()->getNom())));
+        QString("La partie commence avec %1 joueurs !\nC'est au tour de %2."));
 
 }
 
@@ -519,14 +545,19 @@ void MainWindow::passerAuJoueurSuivant() {
 
     etatActuel = EtatJeu::CHOIX_RIVIERE;
     tuileSelectionnee = nullptr;
-    // Animation de transition
     animerTransition();
 
     mettreAJourInterface();
 
-    QMessageBox::information(this, "Tour Suivant",
-        QString("C'est au tour de : %1\nPréparez-vous !")
-        .arg(QString::fromStdString(nouveauJoueur->getNom())));
+    if (nouveauJoueur->isIA()) {
+
+
+    } else {
+        // C'est à l'humain : on réactive tout
+        riviereWidget->setEnabled(true);
+        QMessageBox::information(this, "À vous !",
+                                 QString("C'est à %1 de jouer.").arg(QString::fromStdString(nouveauJoueur->getNom())));
+    }
 }
 
 void MainWindow::verifierFinPartie() {
