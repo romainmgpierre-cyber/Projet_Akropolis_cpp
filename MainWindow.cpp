@@ -231,8 +231,14 @@ void RiviereWidget::paintEvent(QPaintEvent *event) {
 
 
 MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent)
-{
+    : QMainWindow(parent){
+    setStyleSheet("QMainWindow { background: #f5f7fa; }");
+    setWindowTitle("Akropolis");
+    resize(1200, 800);
+    QTimer::singleShot(0, this, &MainWindow::demarrerPartie);
+
+}
+void MainWindow::demarrerPartie(){
     // 1. Initialisation du Jeu :
     // Choix du Mode (Solo ou Multi)
     QStringList modes;
@@ -398,9 +404,6 @@ MainWindow::MainWindow(QWidget *parent)
     sideLayout->addStretch();
     layoutPrincipal->addWidget(sidePanel, 0);
 
-    setStyleSheet("QMainWindow { background: #f5f7fa; }");
-    setWindowTitle("Akropolis");
-    resize(1200, 800);
 
     // 3. Connexions
     connect(gridWidget, &HexGridWidget::hexClicked, this, &MainWindow::onHexClicked);

@@ -92,7 +92,7 @@ int main(int argc, char *argv[]) {
 
     while (true) {
         cout << "Veuillez choisir le mode de jeu (Console : 1; Qt : 2) : ";
-        if (cin >> modeDeJeu) {
+        if (cin >>modeDeJeu) {
             if (modeDeJeu == 1) {
                 return LancerConsole();
             }

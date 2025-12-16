@@ -84,6 +84,7 @@ public:
     ~MainWindow();
 
 private slots:
+    void demarrerPartie();
     void onHexClicked(Akropolis::CoordHex coord);
     void onRotationClicked();
     void onUndoClicked();
