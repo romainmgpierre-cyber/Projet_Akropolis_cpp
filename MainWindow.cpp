@@ -550,7 +550,30 @@ void MainWindow::passerAuJoueurSuivant() {
     mettreAJourInterface();
 
     if (nouveauJoueur->isIA()) {
+        riviereWidget->setEnabled(false);
+        statutLabel->setText("L'Illustre Constructeur réfléchit...");
 
+        QTimer::singleShot(1000, this, [this, nouveauJoueur]() {
+            ChoixTuile* choix = partie->getChoixTuile();
+            const auto& dispos = choix->getTuilesDisponibles();
+
+            int indexChoisi = -1;
+            int coutMin = 999;
+            for (size_t i = 0; i < dispos.size(); ++i) {
+                int cout = choix->calculerCout(i);
+                if (dispos[i]->contientPlace() && nouveauJoueur->peutPayerPierres(cout)) {
+                    if (cout < coutMin) { coutMin = cout; indexChoisi = i; }
+                }
+            }
+            if (indexChoisi == -1) indexChoisi = 0;
+
+            TuileCite* tuile = choix->choisirTuile(nouveauJoueur, indexChoisi);
+            nouveauJoueur->recupererTuileIA(tuile);
+
+            QMessageBox::information(this, "Tour de l'IA",
+                                     QString("L'Illustre Constructeur a pris la tuile n°%1.").arg(indexChoisi + 1));
+            passerAuJoueurSuivant();
+        });
 
     } else {
         // C'est à l'humain : on réactive tout
