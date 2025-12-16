@@ -248,6 +248,13 @@ MainWindow::MainWindow(QWidget *parent)
 
         // Ajout du joueur humain
         partie->ajouterJoueur("Joueur Humain", 1);
+        QString nomJoueur = QInputDialog::getText(this, "Nom du Joueur",
+                                                  "Entrez votre nom :",
+                                                  QLineEdit::Normal, "Joueur", &ok);
+
+        // Si l'utilisateur annule ou laisse vide, on met un défaut
+        if (!ok || nomJoueur.isEmpty()) nomJoueur = "Joueur Humain";
+        partie->ajouterJoueur(nomJoueur.toStdString(), 1);
 
         // Ajout de l'IA (Illustre Constructeur) - paramètre estIA = true
         partie->ajouterJoueur("Illustre Constructeur", 2, true);
@@ -266,6 +273,18 @@ MainWindow::MainWindow(QWidget *parent)
             "Nombre de joueurs (2-4) :",
             2, 2, 4, 1, &ok);
         if (!ok) nbJoueurs = 2; // Par défaut si l'utilisateur annule
+
+    for (int i = 0; i < nbJoueurs; ++i) {
+            QString defaut = QString("Joueur %1").arg(i + 1);
+            QString label = QString("Nom du Joueur %1 :").arg(i + 1);
+
+            QString nom = QInputDialog::getText(this, "Configuration des joueurs",
+                                                label, QLineEdit::Normal, defaut, &ok);
+
+            if (!ok || nom.isEmpty()) nom = defaut;
+
+            partie->ajouterJoueur(nom.toStdString(), i + 1);
+        }
 
     // Création dynamique des joueurs
         for (int i = 0; i < nbJoueurs; ++i) {
@@ -396,7 +415,7 @@ MainWindow::MainWindow(QWidget *parent)
     etatActuel = EtatJeu::CHOIX_RIVIERE;
     mettreAJourInterface();
     QMessageBox::information(this, "C'est parti !",
-        QString("La partie commence avec 1 joueurs !\nC'est au tour de 2."));
+        QString("La partie commence !"));
 
 }
 
@@ -413,11 +432,14 @@ void MainWindow::onTuileChoisie(int index) {
     try{
         j->retirerPierres(cout);
 
-        // On récupère la tuile et on la sort de la rivière
+        // On récupère la tuile
         tuileSelectionnee = choix->choisirTuile(j, index);
-        rotationActuelle = 0;
-        etatActuel = EtatJeu::PLACEMENT_TUILE;
-        mettreAJourInterface();
+        
+        indexSourceTuile = index;  // 1. On mémorise l'index pour pouvoir annuler plus tard
+        etatActuel = EtatJeu::PLACEMENT_TUILE; // 2. On change l'état
+        
+        // La mise à jour de l'interface se fera juste après et activera le bouton
+        mettreAJourInterface(); 
 
     } catch(const GameException& e) {
         QMessageBox::warning(this, "Impossible",
@@ -656,6 +678,8 @@ void MainWindow::animerTransition() {
 
 void MainWindow::mettreAJourInterface() {
     Joueur* j = partie->getJoueurActuel();
+    
+    // Mise à jour des textes
     infoLabel->setText(QString("Tour de : %1\nPierres: %2\nScore: %3\nÉtat: %4")
                            .arg(QString::fromStdString(j->getNom()))
                            .arg(j->getNbPierres())
@@ -664,22 +688,41 @@ void MainWindow::mettreAJourInterface() {
 
     QString statut = (etatActuel == EtatJeu::CHOIX_RIVIERE)
                          ? "Choisissez une tuile dans le marché"
-                         : "Placez la tuile sur la grille";
+                         : "Placez la tuile sur la grille (ou Annulez)";
     statutLabel->setText(statut);
 
-    // Changement de la cité affichée dans le widget
+    // Mise à jour graphique
     gridWidget->setCite(j->getCite());
     gridWidget->update();
 
     if (partie && partie->getPioche()) {
         int pilesRestantes = partie->getPioche()->getNbPilesRestantes();
-        int totalInitial = progressBar->maximum(); // On récupère le max qu'on a set au début
-
-        // La valeur correspond à ce qu'on a déjà joué
+        int totalInitial = progressBar->maximum();
         int pilesConsommees = totalInitial - pilesRestantes;
-
         progressBar->setValue(pilesConsommees);
     }
+
+    // Mise à jour de la rivière
+    partie->remplirChoixTuile();
+    riviereWidget->setChoixTuile(partie->getChoixTuile());
+
+    // --- GESTION CORRECTE DES BOUTONS ---
+    
+    // Rotation : Seulement si on est en train de placer une tuile
+    btnRotation->setEnabled(etatActuel == EtatJeu::PLACEMENT_TUILE);
+    
+    // Annuler : Seulement si on a une tuile en main ET qu'on est en mode placement
+    bool peutAnnuler = (etatActuel == EtatJeu::PLACEMENT_TUILE && tuileSelectionnee != nullptr);
+    btnUndo->setEnabled(peutAnnuler);
+
+    // Rivière : Seulement si on doit choisir
+    riviereWidget->setEnabled(etatActuel == EtatJeu::CHOIX_RIVIERE);
+    
+    // Validation : Gérée par le clic sur la grille, on ne la force pas ici à true
+    if (etatActuel != EtatJeu::PLACEMENT_TUILE) {
+        btnValidation->setEnabled(false);
+    }
+}
 
 
 
@@ -694,7 +737,37 @@ void MainWindow::mettreAJourInterface() {
 }
 
 void MainWindow::onUndoClicked() {
-    // À implémenter : annuler le dernier coup
+    // Sécurité
+    if (!tuileSelectionnee || etatActuel != EtatJeu::PLACEMENT_TUILE) return;
+
+    Joueur* j = partie->getJoueurActuel();
+    ChoixTuile* choix = partie->getChoixTuile();
+
+    // 1. Rembourser le joueur (si on a bien l'index)
+    if (indexSourceTuile != -1) {
+        // Le coût est égal à l'index (0 pierre pour la 1ère tuile, etc.)
+        j->ajouterPierres(indexSourceTuile);
+    }
+
+    // 2. Remettre la tuile dans la rivière à sa place
+    if (choix && tuileSelectionnee) {
+        choix->remettreTuile(tuileSelectionnee, indexSourceTuile);
+    }
+
+    // 3. Nettoyer l'état interne
+    tuileSelectionnee = nullptr;     
+    indexSourceTuile = -1;           
+    
+    // 4. Nettoyer l'affichage (supprimer le fantôme vert/rouge)
+    gridWidget->clearTuileFantome(); 
+    
+    // 5. Revenir à l'état de choix
+    etatActuel = EtatJeu::CHOIX_RIVIERE;
+    
+    // 6. Tout mettre à jour
+    mettreAJourInterface();
+    
+    statutLabel->setText("Sélection annulée. Pierres remboursées.");
 }
 
 void MainWindow::onRecentrerClicked() {

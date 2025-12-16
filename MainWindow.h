@@ -112,6 +112,7 @@ private:
     Akropolis::Partie* partie;
     Akropolis::TuileCite* tuileSelectionnee = nullptr;
     int rotationActuelle = 0;
+    int indexSourceTuile = -1;
     int pivotActuel = 0;
     EtatJeu etatActuel;
     RiviereWidget *riviereWidget;
