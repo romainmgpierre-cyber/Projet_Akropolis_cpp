@@ -407,7 +407,7 @@ void MainWindow::onTuileChoisie(int index) {
     ChoixTuile* choix = partie->getChoixTuile();
 
     int cout = choix->calculerCout(index);
-    if (j->peutPayerPierres(cout)) {
+    try{ (j->peutPayerPierres(cout));
         j->retirerPierres(cout);
 
         // On récupère la tuile et on la sort de la rivière
@@ -416,7 +416,7 @@ void MainWindow::onTuileChoisie(int index) {
         etatActuel = EtatJeu::PLACEMENT_TUILE;
 
         mettreAJourInterface();
-    } else {
+    } catch(const GameException& e) {
         QMessageBox::warning(this, "Impossible",
                              QString("Vous avez besoin de %1 pierres. Vous n'en avez que %2.")
                                  .arg(cout).arg(j->getNbPierres()));
@@ -465,7 +465,7 @@ void MainWindow::onValidationButtonClicked() {
         if(c.ancre == ancreSelectionnee && c.rotation == finalRotation) { 
             try {
                 // 3. Appliquer le coup validé
-                cite->placerTuile(tuileSelectionnee, c);
+                j->placerTuile(tuileSelectionnee, c);
                 valide = true;
                 break;
             } catch (const std::exception& e) {
