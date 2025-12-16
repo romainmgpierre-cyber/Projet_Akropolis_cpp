@@ -1,5 +1,11 @@
 #include "Cite.h"
+#include "HexCons_Carr_Quart_Place.h" 
+#include <iostream>
+#include <algorithm>
+#include <set>
+#include <sstream>
 
+using namespace std;
 using namespace std;
 namespace Akropolis{
 
@@ -345,17 +351,17 @@ int Cite::placerTuile(TuileCite* tuile, const CoupPossible& coup) {
 
     // Vérifie si la tuile est posée en hauteur (recouvrement)
     if (coup.recouvrement) {
-        // On vérifie les 3 cases couvertes
+        cout << "Placement en recouvrement détecté." << endl;
+
         array<CoordHex, 3> casesCouvertes = {pos0, pos1, pos2};
 
         for (const auto& caseCouvee : casesCouvertes) {
-            // Regarde quel hexagone était présent à la coordonnée avant le placement
             auto it = plateau.find(caseCouvee);
             if (it != plateau.end()) {
                 HexagoneConstruction* hexCouvert = it->second.first;
 
-                // Si l'hexagone couvert était une Carrière
                 if (dynamic_cast<Carriere*>(hexCouvert)) {
+                    cout << " Une carrière a été recouverte ! (+1 pierre)" << endl;
                     pierresGagnees++;
                 }
             }
