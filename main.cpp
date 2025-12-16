@@ -100,7 +100,6 @@ int main(int argc, char *argv[]) {
                 return LancerQt(argc, argv);
             }
         }
-
         // Gestion erreur de saisie
         cout << "Choix invalide." << endl;
         cin.clear(); // Réinitialiser l'état d'erreur

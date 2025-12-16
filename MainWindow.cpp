@@ -371,7 +371,7 @@ MainWindow::MainWindow(QWidget *parent)
     btnRotation->setEnabled(false);
     sideLayout->addWidget(btnRotation);
 
-    btnPivot = new ModernButton("Changer Pivot"); // Assurez-vous d'avoir déclaré btnPivot dans le .h
+    btnPivot = new ModernButton("Changer Pivot");
     sideLayout->addWidget(btnPivot);
 
     btnValidation = new ModernButton("Valider Placement");
@@ -706,7 +706,6 @@ void MainWindow::mettreAJourInterface() {
     partie->remplirChoixTuile();
     riviereWidget->setChoixTuile(partie->getChoixTuile());
 
-    // --- GESTION CORRECTE DES BOUTONS ---
     
     // Rotation : Seulement si on est en train de placer une tuile
     btnRotation->setEnabled(etatActuel == EtatJeu::PLACEMENT_TUILE);
@@ -726,15 +725,6 @@ void MainWindow::mettreAJourInterface() {
 
 
 
-    // Mise à jour de la rivière
-    partie->remplirChoixTuile();
-    riviereWidget->setChoixTuile(partie->getChoixTuile());
-
-    // Activation des boutons
-    btnRotation->setEnabled(etatActuel == EtatJeu::PLACEMENT_TUILE);
-    btnUndo->setEnabled(false); // À implémenter
-    riviereWidget->setEnabled(etatActuel == EtatJeu::CHOIX_RIVIERE);
-}
 
 void MainWindow::onUndoClicked() {
     // Sécurité
