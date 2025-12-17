@@ -9,7 +9,7 @@ using namespace std;
 
 namespace Akropolis {
     
-    // pour éviter les dépendances circulaires si nécessaire
+    // pour éviter les dépendances circulaires
     class TableauScore; 
 
     class Joueur { 

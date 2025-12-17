@@ -15,12 +15,12 @@ namespace Akropolis {
     public:
         ModeJeu getMode() const {return mode;}
 
-        // Getters
+        
         NiveauDifficulte getDifficulte()const{return difficulte;}
         int getNbjoueurHumain()const {return nbJoueurHumain;}
         std::vector<std::string> getNomsJoueurs() const {return nomsJoueurs;}
         Configuration(ModeJeu m = ModeJeu::SOLO) : mode(m) {}
-        // setters
+        
         void setDifficulte(NiveauDifficulte d) { difficulte = d; }
         void setNbJoueurHumain(int nb) { nbJoueurHumain = nb; }
         void setNomsJoueurs(const std::vector<std::string>& noms) { nomsJoueurs = noms; }
@@ -28,7 +28,7 @@ namespace Akropolis {
 
     class MenuConfiguration {
     public:
-        // Methode principale qui orchestre la saisie et renvoie les parametres
+        
         Configuration demarrerConfiguration();
 
     private:

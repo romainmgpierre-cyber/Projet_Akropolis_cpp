@@ -1,14 +1,17 @@
 #include "Cite.h"
+#include "GameExcep_Enums.h"
+#include "FonctionsAide.h"
 #include <sstream>
 
-// DÉCLARATION DES FONCTIONS D'AIDE
+
 using namespace Akropolis;
 void clearInputBuffer() {
     cin.clear();
     cin.ignore(numeric_limits<streamsize>::max(), '\n');
 }
 
-// Fonction utilitaire : vérifie si l'entrée est 'q', 'quitter', 'stop'
+//vérifie si l'entrée est 'q', 'quitter', 'stop'
+
 bool checkQuit(const string& input) {
     string lower_input = input;
     transform(lower_input.begin(), lower_input.end(), lower_input.begin(), ::tolower);
@@ -18,7 +21,7 @@ bool checkQuit(const string& input) {
     return true;
 }
 
-// Fonction pour lire un ENTIER avec vérification
+// pour lire un entier avec vérification
 bool readIntOrQuit(int& value, int min, int max, const string& prompt) {
     while (true) {
         cout << prompt << " ('q' pour quitter) : ";
@@ -39,7 +42,7 @@ bool readIntOrQuit(int& value, int min, int max, const string& prompt) {
     }
 }
 
-// Fonction pour lire une CHAÎNE avec vérification
+// Fonction pour lire une chaîneavec vérification
 bool readStringOrQuit(string& value, const string& prompt) {
     cout << prompt << " ('q' pour quitter) : ";
     if (!getline(cin, value)) {

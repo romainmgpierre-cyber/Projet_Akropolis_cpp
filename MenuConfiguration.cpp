@@ -8,14 +8,14 @@ Configuration MenuConfiguration::demarrerConfiguration() {
     // Choix du Mode de Jeu
     int modeChoisi = 0;
     if (!readIntOrQuit(modeChoisi, 1, 2, "\nChoisissez votre mode de jeu (1: Solo / 2: Multijoueur)")) {
-        // En cas d'annulation q, on lance l'exception pour arreter le flux
+        
         throw PartieAnnulee("Configuration annulee");
     }
 
     ModeJeu mode = (modeChoisi == 1) ? ModeJeu::SOLO : ModeJeu::MULTIJOUEUR;
     Configuration config(mode);
 
-    // Configuration specifique au mode
+    // gestion du mode solo
     if (mode == ModeJeu::SOLO) {
         configurerSolo(config);
     } else {
@@ -27,16 +27,16 @@ Configuration MenuConfiguration::demarrerConfiguration() {
 
 void MenuConfiguration::configurerSolo(Configuration& config) {
 
-    // Saisie du nom du joueur humain
+    
     string nomJoueur;
     if (readStringOrQuit(nomJoueur, "Entrez votre nom")) {
-        // Si l'utilisateur a entré quelque chose, sinon le nom par défaut sera utilisé
+        
         if (nomJoueur.empty()) nomJoueur = "Joueur";
 
-        // On prépare le vecteur des noms de joueurs humains
+        
         vector<string> noms = { nomJoueur };
         config.setNomsJoueurs(noms);
-        config.setNbJoueurHumain(1); // Un seul joueur humain
+        config.setNbJoueurHumain(1); 
     }
 
     // Choix de la difficulté de l'IA
@@ -47,7 +47,7 @@ void MenuConfiguration::configurerSolo(Configuration& config) {
     cout << "[3] Callicrates (Difficile): Quartiers comptent niveau 2." << endl;
 
     if (!readIntOrQuit(difficulteChoisie, 1, 3, "Choisissez le niveau de l'IA")) {
-        // Annulation par l'utilisateur: l'exception sera propagée.
+    
         throw PartieAnnulee("Configuration annulee par le joueur.");
     }
 
@@ -62,7 +62,7 @@ void MenuConfiguration::configurerSolo(Configuration& config) {
 
 void MenuConfiguration::configurerMulti(Configuration& config) {
 
-    // Saisie du nombre de joueurs
+    
     int nbJoueursHumains = 0;
     if (!readIntOrQuit(nbJoueursHumains, 2, 4, "Nombre de joueurs (2 a 4)")) {
         // Annulation par l'utilisateur: l'exception sera propagée.
@@ -70,14 +70,14 @@ void MenuConfiguration::configurerMulti(Configuration& config) {
     }
     config.setNbJoueurHumain(nbJoueursHumains);
 
-    //  Saisie des noms de chaque joueur
+   
     vector<string> noms;
     for (int i = 0; i < nbJoueursHumains; ++i) {
         string nom;
         string prompt = "Nom du Joueur " + to_string(i + 1);
 
         if (!readStringOrQuit(nom, prompt)) {
-            // Annulation pendant la saisie d'un nom
+            
             throw PartieAnnulee("Configuration annulee par le joueur.");
         }
 

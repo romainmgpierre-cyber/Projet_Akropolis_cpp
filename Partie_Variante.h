@@ -77,7 +77,7 @@ namespace Akropolis{
         }
     
     private :
-    //Helpers Privés
+    
     private:
         
         void afficherEtatJeu(Joueur* joueur) const;

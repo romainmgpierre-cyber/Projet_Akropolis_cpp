@@ -18,8 +18,8 @@
 #include "MenuConfiguration.h"
 #include "FonctionsAide.h"
 #include "Sauvegarde.h"
-#include "MainWindow.h" // Nécessaire pour LancerQt
-#include <QApplication> // Nécessaire pour LancerQt
+#include "MainWindow.h" 
+#include <QApplication> 
 
 using namespace std;
 using namespace Akropolis;
@@ -100,10 +100,10 @@ int main(int argc, char *argv[]) {
                 return LancerQt(argc, argv);
             }
         }
-        // Gestion erreur de saisie
+        
         cout << "Choix invalide." << endl;
-        cin.clear(); // Réinitialiser l'état d'erreur
-        cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Vider le buffer
+        cin.clear(); 
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
     }
 
     return 0;

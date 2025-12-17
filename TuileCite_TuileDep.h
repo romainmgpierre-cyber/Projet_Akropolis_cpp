@@ -52,11 +52,11 @@ namespace Akropolis {
         size_t id;
         std::array<HexagoneConstruction*, 4> hexagones; // 0 = centre (Place), 1-3 = Carrières
     public:
-        // Constructeur : le centre est toujours une Place, les autres sont des Carrières
+        
         TuileDepart(size_t id, Place* centre, Carriere* c1, Carriere* c2, Carriere* c3);
 
         ~TuileDepart() {
-            // On détruit les hexagones
+            
             for (auto h : hexagones) delete h;
         }
 

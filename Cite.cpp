@@ -118,10 +118,10 @@ vector<Cite::CoupPossible> Cite::genererCoupsValides(const TuileCite& tuile) con
                 }
             }
 
-            // ========================================
-            // PLACEMENT EN HAUTEUR (Recouvrement)
-            // ========================================
-
+            
+            
+            
+            // placement en hauteur
             for (const auto& paire : plateau) {
                 const CoordHex& ancre = paire.first;
                 CoordHex pos1 = ancre + rel1;
@@ -130,12 +130,12 @@ vector<Cite::CoupPossible> Cite::genererCoupsValides(const TuileCite& tuile) con
                 auto it1 = plateau.find(pos1);
                 auto it2 = plateau.find(pos2);
 
-                // RÈGLE 1 : Les 3 cases doivent être OCCUPÉES (soutien complet)
+                //Les 3 cases doivent être occupés
                 if (it1 == plateau.end() || it2 == plateau.end()) {
                     continue; // Pas de soutien complet
                 }
 
-                // Récupération des hexagones du support (niveau inférieur)
+                // Récupération des hexagones du support
                 HexagoneConstruction* support0 = paire.second.first;
                 HexagoneConstruction* support1 = it1->second.first;
                 HexagoneConstruction* support2 = it2->second.first;
@@ -145,8 +145,8 @@ vector<Cite::CoupPossible> Cite::genererCoupsValides(const TuileCite& tuile) con
                 HexagoneConstruction* nouveau1 = tuileTest->getHexagone(1);
                 HexagoneConstruction* nouveau2 = tuileTest->getHexagone(2);
 
-                // RÈGLE 2 : RÈGLE CRITIQUE DE LA CARRIÈRE
-                // Une Carrière ne peut PAS recouvrir une Carrière
+                
+                // Une Carrière ne peut pas recouvrir une Carrière
                 bool violationCarriere = false;
 
                 if (dynamic_cast<Carriere*>(nouveau0) && dynamic_cast<Carriere*>(support0))
@@ -156,7 +156,7 @@ vector<Cite::CoupPossible> Cite::genererCoupsValides(const TuileCite& tuile) con
                 if (dynamic_cast<Carriere*>(nouveau2) && dynamic_cast<Carriere*>(support2))
                     violationCarriere = true;
 
-                // RÈGLE 3 : SOUTIEN PAR AU MOINS DEUX ENTITÉS DIFFÉRENTES (TuileCite ou HexagoneDepart)
+                
                 // La tuile posée doit être "à cheval" sur au moins deux tuiles différentes (ou hexagones de départ)
                 std::set<const void*> ids_support_uniques;
                 std::array<HexagoneConstruction*, 3> supports_hex = {support0, support1, support2};
@@ -181,7 +181,7 @@ vector<Cite::CoupPossible> Cite::genererCoupsValides(const TuileCite& tuile) con
                 }
                 bool violationSoutien = (ids_support_uniques.size() < 2);
 
-                // Si toutes les règles sont respectées
+                
                 if (!violationCarriere && !violationSoutien) {
                     unsigned int h0 = paire.second.second;
                     unsigned int h1 = it1->second.second;
@@ -223,7 +223,7 @@ std::string Cite::validerPlacement(const TuileCite& tuile, const CoordHex& ancre
     int nbCasesOccupees = (ancreOccupee ? 1 : 0) + (pos1Occupee ? 1 : 0) + (pos2Occupee ? 1 : 0);
 
     if (nbCasesOccupees == 0) {
-        // PLACEMENT AU SOL
+        // placement au sol
 
         // Vérifier adjacence à la cité
         bool toucheCite = false;
@@ -240,13 +240,13 @@ std::string Cite::validerPlacement(const TuileCite& tuile, const CoordHex& ancre
         }
 
         if (!toucheCite) {
-            return "❌ PLACEMENT AU SOL INVALIDE : La tuile doit être adjacente à la cité existante.";
+            return "PLACEMENT AU SOL INVALIDE : La tuile doit être adjacente à la cité existante.";
         }
 
-        return "✅ Placement au sol valide";
+        return "Placement au sol valide";
 
     } else if (nbCasesOccupees == 3) {
-        // PLACEMENT EN HAUTEUR
+        // placement en hauteur
 
         // Vérifier règle de la carrière
         TuileCite* tuileTest = tuile.clone();
@@ -266,7 +266,7 @@ std::string Cite::validerPlacement(const TuileCite& tuile, const CoordHex& ancre
         HexagoneConstruction* nouveau1 = tuileTest->getHexagone(1);
         HexagoneConstruction* nouveau2 = tuileTest->getHexagone(2);
 
-        // RÈGLE 1 : Interdiction Carrière sur Carrière
+        // Interdiction Carrière sur Carrière
         if (dynamic_cast<Carriere*>(nouveau0) && dynamic_cast<Carriere*>(support0)) {
             delete tuileTest;
             return "❌ PLACEMENT EN HAUTEUR INVALIDE : Carrière sur Carrière interdit (position 0).";
@@ -280,7 +280,7 @@ std::string Cite::validerPlacement(const TuileCite& tuile, const CoordHex& ancre
             return "❌ PLACEMENT EN HAUTEUR INVALIDE : Carrière sur Carrière interdit (position 2).";
         }
 
-        // RÈGLE 2.5 : SOUTIEN PAR AU MOINS DEUX ENTITÉS DIFFÉRENTES
+        
         // La tuile posée doit être "à cheval" sur au moins deux tuiles différentes (ou hexagones de départ)
         std::set<const void*> ids_support_uniques;
         std::array<HexagoneConstruction*, 3> supports_hex = {support0, support1, support2};
@@ -306,19 +306,19 @@ std::string Cite::validerPlacement(const TuileCite& tuile, const CoordHex& ancre
 
         if (ids_support_uniques.size() < 2) {
             delete tuileTest;
-            return "❌ PLACEMENT EN HAUTEUR INVALIDE : La tuile doit être supportée par au moins deux entités différentes (tuiles posées ou hexagones de départ).";
+            return "PLACEMENT EN HAUTEUR INVALIDE : La tuile doit être supportée par au moins deux entités différentes (tuiles posées ou hexagones de départ).";
         }
 
         delete tuileTest;
-        return "✅ Placement en hauteur valide";
+        return "Placement en hauteur valide";
 
     } else {
-        return "❌ PLACEMENT INVALIDE : Soutien incomplet (" + std::to_string(nbCasesOccupees) + "/3 cases occupées).";
+        return "PLACEMENT INVALIDE : Soutien incomplet (" + std::to_string(nbCasesOccupees) + "/3 cases occupées).";
     }
 }
 
 int Cite::placerTuile(TuileCite* tuile, const CoupPossible& coup) {
-    // 1. Appliquer les rotations/permutations à la *vraie* tuile
+    // Appliquer les rotations/permutations à la vraie tuile
     // (coup.rotation / 3) donne la forme (0 ou 1)
     // (coup.rotation % 3) donne le nb de permutations
     for (int i = 0; i < (coup.rotation % 3); ++i) {
@@ -327,15 +327,15 @@ int Cite::placerTuile(TuileCite* tuile, const CoupPossible& coup) {
 
     // Définir les 3 positions
     int forme = coup.rotation / 3;
-    // FIX: Utiliser les mêmes coordonnées relatives que genererCoupsValides (Forme L)
+    
     CoordHex rel1, rel2;
 
     if (forme == 0) {
-        rel1 = CoordHex(-1, 0);   // Hex 1 : gauche
-        rel2 = CoordHex(0, -1);   // Hex 2 : bas
+        rel1 = CoordHex(-1, 0);   
+        rel2 = CoordHex(0, -1);   
     } else {
-        rel1 = CoordHex(1, 0);    // Hex 1 : droite
-        rel2 = CoordHex(0, 1);    // Hex 2 : haut
+        rel1 = CoordHex(1, 0);    
+        rel2 = CoordHex(0, 1);   
     }
 
     CoordHex pos0 = coup.ancre;
@@ -346,10 +346,10 @@ int Cite::placerTuile(TuileCite* tuile, const CoupPossible& coup) {
     tuile->setHauteur(coup.hauteur);
     tuiles_posees.push_back(tuile); // La Cité prend possession
 
-    // --- LOGIQUE DE GAIN DE PIERRES PAR RECOUVREMENT ---
+    // gain de pierres par recouvrement
     int pierresGagnees = 0;
 
-    // Vérifie si la tuile est posée en hauteur (recouvrement)
+    // Vérifie si la tuile est posée en hauteur
     if (coup.recouvrement) {
         cout << "Placement en recouvrement détecté." << endl;
 
@@ -368,17 +368,17 @@ int Cite::placerTuile(TuileCite* tuile, const CoupPossible& coup) {
         }
     }
 
-    // Mettre à jour le plateau (la carte)
+    // Mettre à jour le plateau
     plateau[pos0] = { tuile->getHexagone(0), coup.hauteur };
     plateau[pos1] = { tuile->getHexagone(1), coup.hauteur };
     plateau[pos2] = { tuile->getHexagone(2), coup.hauteur };
 
-    // 5. Mettre à jour la frontière
+    //Mettre à jour la frontière
     mettreAJourFrontiere(pos0);
     mettreAJourFrontiere(pos1);
     mettreAJourFrontiere(pos2);
 
-    // On retourne le nombre de pierres gagnées
+    
     return pierresGagnees;
 }
 
@@ -390,20 +390,20 @@ void Cite::ajouterTuileIA(TuileCite* tuile) {
 
 
 
-// Ajout dans Cite.cpp à la fin ou à la place de l'ancien afficher
 
-// Helper pour générer le texte (MAR, CAR, P TEM 2*, etc.)
+
+// pour générer le texte (MAR, CAR, P TEM 2*, etc.)
 string Cite::getEtiquetteHexagone(const CoordHex& pos) const {
     auto it = plateau.find(pos);
 
-    // CAS 1 : CASE VIDE -> Coordonnées
+    // case vide -> Coordonnées
     if (it == plateau.end()) {
         std::ostringstream ss;
         ss << pos.getQ() << "," << pos.getR();
         return ss.str();
     }
 
-    // CAS 2 : CASE OCCUPÉE
+    // case occupée
     HexagoneConstruction* hex = it->second.first;
     string etiquette = "";
 
@@ -411,14 +411,14 @@ string Cite::getEtiquetteHexagone(const CoordHex& pos) const {
         return "CAR";
     }
     else if (Quartier* q = dynamic_cast<Quartier*>(hex)) {
-        // On prend les 3 premières lettres du nom en majuscule (ex: MARche -> MAR)
+        // On prend les 3 premières lettres du nom en majuscule
         string nom = q->getType().getNom();
         string shortNom = nom.substr(0, 3);
         for (auto & c: shortNom) c = toupper(c);
         return shortNom;
     }
     else if (Place* p = dynamic_cast<Place*>(hex)) {
-        // Format : P TEM 2*
+        
         string nom = p->getType().getNom();
         string shortNom = nom.substr(0, 3);
         for (auto & c: shortNom) c = toupper(c);
@@ -428,7 +428,7 @@ string Cite::getEtiquetteHexagone(const CoordHex& pos) const {
     return "?";
 }
 
-// Dans Cite.cpp
+
 
 void Cite::afficherGraphique(ostream& os) const {
     if (plateau.empty()) {
@@ -436,11 +436,11 @@ void Cite::afficherGraphique(ostream& os) const {
         return;
     }
 
-    // 1. DÉTERMINER LES BORNES
+    // pour déterminer les bornes
     int min_col = 1000, max_col = -1000;
     int min_lig = 1000, max_lig = -1000;
 
-    // On regarde toutes les tuiles posées
+    
     std::set<CoordHex> zonesAInclure;
     for(auto const& pair : plateau) zonesAInclure.insert(pair.first);
     for(auto const& c : frontiere) zonesAInclure.insert(c);
@@ -453,8 +453,8 @@ void Cite::afficherGraphique(ostream& os) const {
         if (cg.lig > max_lig) max_lig = cg.lig;
     }
 
-    // --- MODIFICATION ICI : MARGE PLUS GRANDE ---
-    // Mettez 3, 4 ou 5 selon la taille que vous voulez voir autour
+
+
     int marge = 1;
 
     min_col -= marge;
@@ -462,7 +462,7 @@ void Cite::afficherGraphique(ostream& os) const {
     min_lig -= marge;
     max_lig += marge;
 
-    // 2. CONFIGURATION GÉOMÉTRIQUE
+    // pour l'affichage de la grille en ASCII
     int step_x = LARGEUR_TOIT + HAUTEUR_PENTE;
     int step_y = 2 * HAUTEUR_PENTE;
     int odd_offset = HAUTEUR_PENTE;
@@ -475,7 +475,7 @@ void Cite::afficherGraphique(ostream& os) const {
 
     vector<string> buffer(height_px, string(width_px, ' '));
 
-    // 3. DESSIN
+    
     for (int lig = min_lig; lig <= max_lig; ++lig) {
         for (int col = min_col; col <= max_col; ++col) {
 
@@ -490,11 +490,11 @@ void Cite::afficherGraphique(ostream& os) const {
             int start_y = draw_lig * step_y;
             if (col % 2 != 0) start_y += odd_offset;
 
-            // TOIT
+            // toit
             for (int i = 0; i < LARGEUR_TOIT; ++i)
                 buffer[start_y][start_x + HAUTEUR_PENTE + i] = '_';
 
-            // PENTES
+            // cotés
             for (int k = 0; k < HAUTEUR_PENTE; ++k) {
                 int y_top = start_y + 1 + k;
                 buffer[y_top][start_x + HAUTEUR_PENTE - 1 - k] = '/';
@@ -510,7 +510,7 @@ void Cite::afficherGraphique(ostream& os) const {
                 }
             }
 
-            // TEXTE
+            //pour écrire à l'intérieur de l'hexagone
             int center_y = start_y + HAUTEUR_PENTE;
             int center_x = start_x + HAUTEUR_PENTE + (LARGEUR_TOIT / 2);
             int txt_start = center_x - (label.length() / 2);
@@ -523,7 +523,7 @@ void Cite::afficherGraphique(ostream& os) const {
         }
     }
 
-    // 4. AFFICHAGE
+    
     os << "\n";
     for (const auto& line : buffer) {
         size_t end = line.find_last_not_of(" ");
