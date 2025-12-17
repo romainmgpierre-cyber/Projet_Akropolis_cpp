@@ -6,7 +6,7 @@
 
 namespace Akropolis{
 
-    // Helpers (déjà présents ou à rajouter)
+    
     const std::map<CoordHex, std::pair<HexagoneConstruction*, unsigned int>>& getPlateauDuJoueur(const Joueur& joueur) {
         return joueur.getCite()->getPlateau();
     }
@@ -18,7 +18,7 @@ namespace Akropolis{
         return false;
     }
 
-    // --- Algorithme pour trouver le score des Bleus (Plus grand groupe) ---
+    // Algorithme pour trouver le score des Bleus (Plus grand groupe)
     int calculerScoreBleu(const std::map<CoordHex, std::pair<HexagoneConstruction*, unsigned int>>& plateau) {
         std::set<CoordHex> visites;
         int maxScoreGroupe = 0;
@@ -30,7 +30,7 @@ namespace Akropolis{
             if (Quartier* q = dynamic_cast<Quartier*>(paire.second.first)) {
                 if (q->getType().getCouleur() == Couleur::bleu && visites.find(startNode) == visites.end()) {
                     
-                    // Parcours en largeur (BFS) pour trouver la taille du groupe
+                    // Parcours en largeur pour trouver la taille du groupe
                     int currentGroupScore = 0;
                     std::queue<CoordHex> file;
                     file.push(startNode);
@@ -41,7 +41,7 @@ namespace Akropolis{
                         file.pop();
 
                         // On ajoute la hauteur de la tuile au score du groupe
-                        // (Dans Akropolis, un quartier niveau 2 vaut 2 points, niveau 3 vaut 3 points, etc.)
+            
                         unsigned int hauteur = plateau.at(current).second;
                         currentGroupScore += hauteur;
 
@@ -50,7 +50,7 @@ namespace Akropolis{
                             CoordHex voisin = current.voisin(i);
                             auto it = plateau.find(voisin);
                             
-                            // Si voisin existe, est bleu, et pas visité
+                           
                             if (it != plateau.end() && visites.find(voisin) == visites.end()) {
                                 if (Quartier* qVoisin = dynamic_cast<Quartier*>(it->second.first)) {
                                     if (qVoisin->getType().getCouleur() == Couleur::bleu) {
@@ -71,7 +71,7 @@ namespace Akropolis{
         return maxScoreGroupe;
     }
 
-    // --- Helpers de validation existants ---
+
     bool estEntoure(const CoordHex& pos, const std::map<CoordHex, std::pair<HexagoneConstruction*, unsigned int>>& plateau) {
         for (int i = 0; i < 6; ++i) {
             if (plateau.find(pos.voisin(i)) == plateau.end()) return false;
@@ -87,7 +87,7 @@ namespace Akropolis{
     }
 
 
-    // --- CŒUR DU CALCUL ---
+
     map<Couleur, ScoreDetail> TableauScore::calculerDetails(const Joueur& joueur) const {
         map<Couleur, ScoreDetail> details;
         
@@ -98,22 +98,21 @@ namespace Akropolis{
 
         const auto& plateau = getPlateauDuJoueur(joueur);
 
-        // 1. Compter les Etoiles (Places) - Inchangé
+        // Compter les Etoiles (Places) - Inchangé
         for (const auto& paire : plateau) {
             if (Place* p = dynamic_cast<Place*>(paire.second.first)) {
                 details[p->getType().getCouleur()].nbEtoiles += p->getNbEtoile();
             }
         }
 
-        // --- DÉTECTION DES VARIANTES ACTIVES ---
-        // (Les noms doivent correspondre exactement à ceux que tu donneras dans Partie)
+        //Detection des variantes
         bool vHabitation = estVarianteActive(variantesActives, "Architectes");
         bool vMarche     = estVarianteActive(variantesActives, "Commercants");
         bool vCaserne    = estVarianteActive(variantesActives, "Sentinelles");
         bool vTemple     = estVarianteActive(variantesActives, "Pretres");
         bool vJardin     = estVarianteActive(variantesActives, "Jardiniers");
 
-        // 2. Calculer la valeur des quartiers valides
+        // calculer la valeur des quartiers valides
         for (const auto& paire : plateau) {
             const CoordHex& pos = paire.first;
             unsigned int hauteur = paire.second.second;
@@ -125,18 +124,18 @@ namespace Akropolis{
                 bool valide = false;
                 int multiplicateur = 1; // Par défaut x1
 
-                if (coul == Couleur::jaune) { // MARCHE
+                if (coul == Couleur::jaune) { //marche
                     bool adjacentMarche = false;
                     bool adjacentPlaceMarche = false; 
 
                     for(int i=0; i<6; ++i) {
                         auto it = plateau.find(pos.voisin(i));
                         if(it != plateau.end()){
-                            // Condition de base : adjacent à un autre quartier marché
+                            // adjacent à un autre quartier marché
                             if(Quartier* qV = dynamic_cast<Quartier*>(it->second.first))
                                 if(qV->getType().getCouleur() == Couleur::jaune) adjacentMarche = true;
                             
-                            // VARIANTE COMMERCANTS : Adjacent à une Place Marché
+                            // variante commercants : adjacent à une Place Marché
                             if (vMarche) {
                                 if(Place* pV = dynamic_cast<Place*>(it->second.first))
                                     if(pV->getType().getCouleur() == Couleur::jaune) adjacentPlaceMarche = true;
@@ -148,11 +147,11 @@ namespace Akropolis{
                         if (vMarche && adjacentPlaceMarche) multiplicateur = 2;
                     }
 
-                } else if (coul == Couleur::rouge) { // CASERNE
+                } else if (coul == Couleur::rouge) { // caserne
                     if (estEnPeripherie(pos, plateau)) {
                         valide = true;
                         
-                        // VARIANTE SENTINELLES : 3 ou 4 espaces vides adjacents
+                        // variante sentinelle : 3 ou 4 espaces vides adjacents
                         if (vCaserne) {
                             int nbVides = 0;
                             for(int i=0; i<6; ++i) {
@@ -162,26 +161,26 @@ namespace Akropolis{
                         }
                     }
 
-                } else if (coul == Couleur::violet) { // TEMPLE
+                } else if (coul == Couleur::violet) { // temple
                     if (estEntoure(pos, plateau)) {
                         valide = true;
                         
-                        // VARIANTE PRETRES : Niveau supérieur (hauteur >= 2)
+                        // variatne pretres: niveau supérieur (hauteur >= 2)
                         if (vTemple && hauteur >= 2) multiplicateur = 2;
                     }
 
-                } else if (coul == Couleur::vert) { // JARDIN
+                } else if (coul == Couleur::vert) { // jardin
                     valide = true; // Toujours valide de base
                     
-                    // VARIANTE JARDINIERS : Adjacent à un Lac
-                    // Un Lac est une case vide entourée de 6 hexagones
+                    // variante jardinier : adjacent à un Lac
+                    
                     if (vJardin) {
                         bool adjacentLac = false;
                         for(int i=0; i<6; ++i) {
                             CoordHex voisin = pos.voisin(i);
-                            // Si le voisin est vide...
+                            
                             if (plateau.find(voisin) == plateau.end()) {
-                                // ...et qu'il est entouré (fonction existante estEntoure)
+                                
                                 if (estEntoure(voisin, plateau)) {
                                     adjacentLac = true;
                                     break;
@@ -192,17 +191,17 @@ namespace Akropolis{
                     }
                 }
                 
-                // Calcul final pour ce quartier
+                
                 if (valide && coul != Couleur::bleu) {
                     details[coul].valeurTuiles += (hauteur * multiplicateur);
                 }
             }
         }
 
-        // 3. Cas spécial Bleu (Habitation)
+        // cas spécial bleu
         int scoreBleu = calculerScoreBleu(plateau);
         
-        // VARIANTE ARCHITECTES : Si le score du groupe >= 10, on double
+        // variante architectes : si le score du groupe >= 10, on double
         if (vHabitation && scoreBleu >= 10) {
             scoreBleu *= 2;
         }
@@ -212,7 +211,7 @@ namespace Akropolis{
         return details;
     }
 
-    // --- AFFICHAGE DÉTAILLÉ ---
+    
     void TableauScore::afficherDetailsScore(const Joueur& joueur, ostream& f) const {
         map<Couleur, ScoreDetail> details = calculerDetails(joueur);
         int scoreTotal = 0;
@@ -220,7 +219,7 @@ namespace Akropolis{
         f << "Détails du score pour " << joueur.getNom() << " :" << endl;
         f << "------------------------------------------------" << endl;
 
-        // Ordre d'affichage
+        
         vector<Couleur> ordre = {Couleur::bleu, Couleur::jaune, Couleur::rouge, Couleur::violet, Couleur::vert};
 
         for (Couleur c : ordre) {
@@ -228,15 +227,15 @@ namespace Akropolis{
             int sousTotal = d.totalOfficiel();
             scoreTotal += sousTotal;
 
-            string nomCouleur = toString(c); // Utilise votre fonction existante
-            // Mise en forme : Habitation (Bleu) = 2 étoiles * 5 tuiles = 10
+            string nomCouleur = toString(c);
+            
             f << " - " << nomCouleur << " :\t" 
               << d.nbEtoiles << " etoile(s) x " 
               << d.valeurTuiles << " valeur tuiles = " 
               << sousTotal << " pts" << endl;
         }
         
-        // Bonus Pierre : 1 point par pierre restante
+        // bonus pierre 1 point par pierre restante
         int pointsPierres = joueur.getNbPierres();
         scoreTotal += pointsPierres;
         f << " - Pierres :\t" << pointsPierres << " (1 pt par pierre)" << endl; 
@@ -246,7 +245,7 @@ namespace Akropolis{
         f << "================================================" << endl;
     }
 
-    // --- Implémentations héritées (pour compatibilité) ---
+   
     int CalculScoreRecouvrement::calculerScore(const Joueur& joueur) const { return 0; }
     int CalculScorePlaces::calculerScore(const Joueur& joueur) const { return 0; }
     int CalculScoreMultiplicateurs::calculerScore(const Joueur& joueur) const { return 0; }
@@ -263,11 +262,10 @@ namespace Akropolis{
 
     void TableauScore::afficherScores(ostream& f) const {
         f << "\n=== TABLEAU DES SCORES FINAL ===" << endl;
-        // On trie pour avoir le gagnant en premier ?
-        // (Copie locale pour trier)
+        
         auto scoresTries = scores; 
         sort(scoresTries.begin(), scoresTries.end(), [](const pair<Joueur*, int>& a, const pair<Joueur*, int>& b) {
-            return a.second > b.second; // Décroissant
+            return a.second > b.second; 
         });
 
         for(const auto& pair : scoresTries) {
@@ -278,7 +276,7 @@ namespace Akropolis{
         f << "🏆 LE GAGNANT EST : " << scoresTries[0].first->getNom() << " ! 🏆" << endl;
     }
 
-    // Score pour l'IA
+    // score pour l'IA
 int TableauScore::calculerScoreIA(const Joueur& joueurIA, NiveauDifficulte diff) const {
     const auto& tuiles = joueurIA.getCite()->getTuiles();
     
@@ -301,7 +299,7 @@ int TableauScore::calculerScoreIA(const Joueur& joueurIA, NiveauDifficulte diff)
             } 
             else if (Quartier* q = dynamic_cast<Quartier*>(hex)) {
                 int hauteurVirtuelle = 1;
-                // Règle Difficile (Callicratès) : compte niveau 2
+                // mode solo niveau 3
                 if (diff == NiveauDifficulte::DIFFICILE) {
                     hauteurVirtuelle = 2;
                 }
@@ -319,7 +317,7 @@ int TableauScore::calculerScoreIA(const Joueur& joueurIA, NiveauDifficulte diff)
         scoreTotal += (nbQuartiers[c] * nbEtoiles[c]);
     }
 
-    // Règle Moyen (Métagénès) : +2 points par carrière
+    // mode solo niveau 2
     if (diff == NiveauDifficulte::MOYEN) {
         scoreTotal += (nbCarrieres * 2);
     }
@@ -327,7 +325,7 @@ int TableauScore::calculerScoreIA(const Joueur& joueurIA, NiveauDifficulte diff)
     return scoreTotal;
 }
     void AfficherResultats(Partie& partie) {
-     //Fin de partie et Résultats
+     
         cout << "\n\n*****************************************" << endl;
         cout << "* RÉSULTATS FINAUX                      *" << endl;
         cout << "*****************************************" << endl;
@@ -337,25 +335,25 @@ int TableauScore::calculerScoreIA(const Joueur& joueurIA, NiveauDifficulte diff)
         const vector<Joueur*>& tousLesJoueurs = partie.getJoueurs();
 
         if (partie.getMode() == ModeJeu::SOLO) {
-            // RÉSULTATS SOLO
+            //solo
             Joueur* humain = nullptr;
             Joueur* ia = nullptr;
 
-            // Identification des rôles
+            
             for (auto* j : tousLesJoueurs) {
                 if (j->isIA()) ia = j;
                 else humain = j;
             }
 
             if (humain && ia) {
-                // Score Humain (Calcul standard)
+                // humain
                 cout << "\n--- VOTRE CITE (" << humain->getNom() << ") ---" << endl;
                 calculateurFinal.afficherDetailsScore(*humain, cout);
                 int scoreHumain = calculateurFinal.calculerScore(*humain);
 
-                // Score IA (Calcul spécifique selon difficulté)
+                // IA
                 cout << "\n--- ILLUSTRE ARCHITECTE (" << ia->getNom() << ") ---" << endl;
-                // On n'affiche pas les détails complexes pour l'IA, juste le total
+                
                 int scoreIA = calculateurFinal.calculerScoreIA(*ia, partie.getDifficulte());
 
                 cout << "Difficulte : ";
@@ -367,7 +365,7 @@ int TableauScore::calculerScoreIA(const Joueur& joueurIA, NiveauDifficulte diff)
                 cout << endl;
                 cout << "SCORE FINAL IA : " << scoreIA << " points." << endl;
 
-                // Comparaison et Verdict
+                
                 cout << "\n*****************************************" << endl;
                 cout << "              VERDICT                    " << endl;
                 cout << "*****************************************" << endl;
@@ -382,12 +380,12 @@ int TableauScore::calculerScoreIA(const Joueur& joueurIA, NiveauDifficulte diff)
                     cout << "DEFAITE. L'Illustre Architecte remporte la victoire." << endl;
                 }
                 else {
-                    // EGALITÉ : Départage aux pierres
+                    
                     cout << "EGALITE aux points ! On compare les pierres..." << endl;
                     if (humain->getNbPierres() > ia->getNbPierres()) {
                         cout << "Vous avez plus de pierres. VICTOIRE !" << endl;
                     } else {
-                        // "En cas d'égalité, c'est le joueur ayant le plus de Pierres qui l'emporte."
+                        
 
                         if (ia->getNbPierres() > humain->getNbPierres())
                             cout << "L'IA a plus de pierres. DEFAITE." << endl;
@@ -398,8 +396,8 @@ int TableauScore::calculerScoreIA(const Joueur& joueurIA, NiveauDifficulte diff)
             }
         }
         else {
-            //RÉSULTATS MULTIJOUEUR (Classique)
-            // On calcule et stocke les scores pour le tri
+            //multijoueur
+            
             vector<pair<Joueur*, int>> scoresFinaux;
 
             for(const auto& joueur : tousLesJoueurs) {
@@ -408,11 +406,11 @@ int TableauScore::calculerScoreIA(const Joueur& joueurIA, NiveauDifficulte diff)
                 cout << endl;
             }
 
-            // Tri décroissant pour trouver le vainqueur
+            // tri décroissant pour trouver le vainqueur
             sort(scoresFinaux.begin(), scoresFinaux.end(),
                  [](const pair<Joueur*, int>& a, const pair<Joueur*, int>& b) {
                      if (a.second != b.second) {
-                         return a.second > b.second; // Plus de points d'abord
+                         return a.second > b.second; 
                      }
                      return a.first->getNbPierres() > b.first->getNbPierres(); // Pierres si égalité
                  });

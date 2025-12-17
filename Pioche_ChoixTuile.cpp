@@ -4,7 +4,7 @@
 
 namespace Akropolis {
 
-    // --- PIOCHE ---
+    
 
     Pioche::~Pioche() {
         for (auto& pile : piles) {
@@ -14,15 +14,14 @@ namespace Akropolis {
     }
 
     void Pioche::organiserPiles(vector<TuileCite*>& toutesLesTuiles, int nbJoueurs) {
-        // Détermination de la taille des piles selon les règles (Page 2)
+        // Détermination de la taille des piles selon les règles
         size_t taillePile = 3; // Par défaut 2 joueurs 
         if (nbJoueurs == 3) taillePile = 4; // 
         if (nbJoueurs == 4) taillePile = 5; // 
 
-        // Nombre de piles standard = 11 (Page 2 - Mise en place)
+        
         size_t nbPiles = 11; 
-        // Note: Pour une partie longue à 2 joueurs c'est 19, à 3 joueurs c'est 15.
-        // Ici on reste sur le standard décrit[cite: 31].
+       
 
         size_t indexCourant = 0;
 
@@ -40,9 +39,7 @@ namespace Akropolis {
             }
         }
         
-        // Note : Les tuiles restantes (celles qui ne sont pas dans les 11 piles)
-        // restent dans le vecteur 'toutesLesTuiles' (partie non copiée)
-        // et seront utilisées pour l'initialisation du marché dans Partie::initialiserTuiles.
+        
         
         // On supprime du vecteur d'origine ce qu'on a mis dans les piles
         // pour ne garder que le "surplus" initial
@@ -60,7 +57,7 @@ namespace Akropolis {
     }
 
 
-    // --- CHOIX TUILE (MARCHE) ---
+    // gestion du choix des tuiles
 
     ChoixTuile::~ChoixTuile() {
         for (TuileCite* t : tuilesDisponibles) delete t;
@@ -94,7 +91,7 @@ namespace Akropolis {
     }
 
     void ChoixTuile::ajouterPile(const vector<TuileCite*>& nouvellesTuiles) {
-        // Ajoute les tuiles à la FIN du marché (à droite)
+        // Ajoute les tuiles à la fin du marché
         tuilesDisponibles.insert(tuilesDisponibles.end(), nouvellesTuiles.begin(), nouvellesTuiles.end());
     }
 }

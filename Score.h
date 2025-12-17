@@ -12,23 +12,23 @@ using namespace std;
 
 namespace Akropolis {
 
-    // Structure pour stocker le détail du score d'une couleur
+    // pour stocker le détail du score d'une couleur
     struct ScoreDetail {
-        int nbEtoiles;      // Nombre d'étoiles 
-        int valeurTuiles;   // Somme des hauteurs des tuiles valides
+        int nbEtoiles;      
+        int valeurTuiles;   
         
         int totalOfficiel() const { return (nbEtoiles) * valeurTuiles; } 
         
     };
 
-    // --- Tableau des scores ---
+    // tableau des scores
     class CalculScoreBase {
     public:
         virtual ~CalculScoreBase() = default;
         virtual int calculerScore(const Joueur& joueur) const = 0;
     };
 
-    // On garde ces classes pour la compatibilité, mais la logique principale sera dans TableauScore
+    // la logique principale sera dans TableauScore
     class CalculScoreRecouvrement : public virtual CalculScoreBase {
     public:
         int calculerScore(const Joueur& joueur) const override;
@@ -59,17 +59,17 @@ namespace Akropolis {
             variantesActives = vars;
         }
         void ajouterJoueur(Joueur* j);
-        void calculerScores(); // Met à jour le vecteur scores
-        void afficherScores(ostream& f = cout) const; // Affiche juste le résumé
+        void calculerScores(); 
+        void afficherScores(ostream& f = cout) const; 
         
-        // Nouvelle fonction pour afficher le détail demandé
+        
         void afficherDetailsScore(const Joueur& joueur, ostream& f = cout) const;
 
-        // Fonction helper pour calculer les détails
+       
         map<Couleur, ScoreDetail> calculerDetails(const Joueur& joueur) const;
 
         int calculerScore(const Joueur& joueur) const override {
-            // Recalcul complet via la nouvelle méthode
+           
             map<Couleur, ScoreDetail> details = calculerDetails(joueur);
             int total = 0;
             for (auto const& entry : details) {
@@ -79,7 +79,7 @@ namespace Akropolis {
         }
         int calculerScoreIA(const Joueur& joueurIA, NiveauDifficulte diff) const; //Score pour l'IA
     };
-    //prototype
+    
     void AfficherResultats(Partie& partie);
 }
 

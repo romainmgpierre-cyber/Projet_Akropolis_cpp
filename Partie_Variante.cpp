@@ -14,14 +14,11 @@
 using namespace std;
 namespace Akropolis {
 
-    // --- DÉCLARATIONS EXTERNES ---
+    
     extern std::vector<TuileCite*> creerToutesTuiles(int nbJoueurs);
     extern std::vector<TuileDepart*> creer4TuileDepart();
     extern void AfficherResultats(Partie& partie); 
 
-    // =========================================================
-    //  FONCTIONS D'AIDE A L'AFFICHAGE (LOCALES)
-    // =========================================================
 
     string getEtiquettePourTuile(HexagoneConstruction* hex) {
         if (dynamic_cast<Carriere*>(hex)) return "CAR";
@@ -39,7 +36,7 @@ namespace Akropolis {
     }
 
     void afficherTuileCiteASCII(TuileCite* t, ostream& os) {
-        // --- CONFIGURATION GÉOMÉTRIQUE ---
+        
         const int N = 5; 
         const int H = 2; 
         
@@ -54,9 +51,9 @@ namespace Akropolis {
 
         struct Pos { int col; int lig; int id; };
 
-        // --- LAYOUT : REF EN HAUT A DROITE ---
+        
         vector<Pos> positions = {
-            {1, 0, 0}, // Hex 0 (REF) - Haut Droite
+            {1, 0, 0}, // Hex 0 - Haut Droite
             {0, 1, 1}, // Hex 1 - Bas Gauche
             {1, 1, 2}  // Hex 2 - Bas Droite
         };
@@ -82,7 +79,7 @@ namespace Akropolis {
                 if (k == H - 1) for (int i = 0; i < N; ++i) buffer[y_bot][start_x + H + i] = '_';
             }
 
-            // Texte
+            // Texte intérieur
             int center_y = start_y + H;
             int center_x = start_x + H + (N / 2);
             int txt_start = center_x - (label.length() / 2);
@@ -93,7 +90,7 @@ namespace Akropolis {
                 }
             }
 
-            // Flèche
+        
             if (p.id == 0) {
                 string arrow = "<-- Ref";
                 int arrow_x = start_x + (2*H + N) + 2; 
@@ -118,9 +115,7 @@ namespace Akropolis {
         afficherTuileCiteASCII(dispos[index], os);
     }
 
-    // =========================================================
-    //  IMPLÉMENTATION DE LA CLASSE PARTIE
-    // =========================================================
+
 
     Partie::Partie(size_t id, ModeJeu mode) 
         : id(id), mode(mode), etat(EtatPartie::NON_DEMARREE), 
@@ -161,38 +156,38 @@ namespace Akropolis {
         throw GameException("Joueur non trouve.");
     }
 
-    // --- INITIALISATION (Modification start marché) ---
+    
     void Partie::initialiserTuiles() {
         unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
         std::default_random_engine rng(seed);
 
-        // 1. Création de toutes les tuiles
+        //Création de toutes les tuiles
         std::vector<TuileCite*> toutesLesTuiles = creerToutesTuiles(joueurs.size());
         std::shuffle(toutesLesTuiles.begin(), toutesLesTuiles.end(), rng);
         
         delete pioche; 
         pioche = new Pioche(1);
         
-        // 2. Organisation en piles
+       
         pioche->organiserPiles(toutesLesTuiles, joueurs.size());
 
-        // 3. Ajustement du marché de départ
-        // Règle : Pour N joueurs, on commence avec N+1 tuiles au centre.
+        // Ajustement du marché de départ
+        // Pour N joueurs, on commence avec N+1 tuiles au centre.
         size_t tailleCible = joueurs.size() + 1; 
         
         // Le calcul des piles laisse toujours un peu plus que nécessaire, on supprime le surplus
         while (toutesLesTuiles.size() > tailleCible) {
-            delete toutesLesTuiles.back(); // Nettoyage mémoire
-            toutesLesTuiles.pop_back();    // Suppression du vecteur
+            delete toutesLesTuiles.back(); 
+            toutesLesTuiles.pop_back();   
         }
 
-        // 4. Remplissage du marché
+        // Remplissage du marché
         for (TuileCite* t : toutesLesTuiles) {
             choixTuile->ajouterTuile(t);
         }
         toutesLesTuiles.clear(); 
 
-        // Gestion Tuiles Départ
+        
         for (TuileDepart* td : tuilesDepart) delete td;
         tuilesDepart.clear();
         
@@ -279,12 +274,12 @@ namespace Akropolis {
                 cout << "Configuration validee !\n" << endl;
             } 
             else {
-                // Tentative de lecture d'un nombre
+                
                 stringstream ss(input);
                 int choix = 0;
                 if (ss >> choix) {
                     if (choix >= 1 && choix <= (int)variantes.size()) {
-                        // Bascule (Toggle) l'état de la variante
+                        
                         if (variantes[choix - 1].estActive()) {
                             variantes[choix - 1].desactiver();
                         } else {
@@ -300,9 +295,7 @@ namespace Akropolis {
         }
     }
 
-    // =========================================================
-    //  GESTION DU TOUR COMPLÈTE
-    // =========================================================
+    //gestion tour des joueurs
 
     void Partie::gererTourJoueur(Joueur* joueur) {
         cout << "\n========================================" << endl;
@@ -318,7 +311,7 @@ namespace Akropolis {
            return;
         }
         
-        // --- LOGIQUE IA ---
+        // pour mode solo
         if (joueur->isIA()) {
              const auto& dispos = choixTuile->getTuilesDisponibles();
             int indexChoisi = -1;
@@ -346,9 +339,9 @@ namespace Akropolis {
             return; 
         }
 
-        // --- LOGIQUE HUMAIN ---
+        // avec des vrais joueurs
 
-        // 1. Affichage Cité
+        // Affichage Cité
         cout << "\n--- VOTRE CITE ACTUELLE ---" << endl;
         cout << "\033[?7l"; 
         joueur->getCite()->afficherGraphique(cout);
@@ -362,7 +355,7 @@ namespace Akropolis {
 
         while (!tourValide) {
             
-            // 2. Affichage Rivière
+            
             cout << "\n--- MARCHE DES TUILES (" << pioche->getNbPilesRestantes() << " piles en reserve) ---" << endl;
             const auto& dispos = choixTuile->getTuilesDisponibles();
             for (size_t i = 0; i < dispos.size(); ++i) {
@@ -373,7 +366,7 @@ namespace Akropolis {
             }
             cout << "-------------------------" << endl;
 
-            // 3. Achat
+            
             size_t index = 0;
             size_t coutPierrePourAnnulation = 0;
 
@@ -403,7 +396,7 @@ namespace Akropolis {
             cout << endl;
             afficherTuileCiteASCII(tuile, cout);
 
-            // 4. Placement
+            //Placement
             auto tousCoups = joueur->getCite()->genererCoupsValides(*tuile);
 
             if (tousCoups.empty()) {
@@ -450,7 +443,7 @@ namespace Akropolis {
                 continue; 
             }
 
-            // --- PRÉVISUALISATION ROTATION ---
+            // Prévisualisation de la rotation choisie
             {
                 cout << "\n--- Apercu Rotation " << rotationChoisie << " ---" << endl;
                 TuileCite* apercu = tuile->clone();

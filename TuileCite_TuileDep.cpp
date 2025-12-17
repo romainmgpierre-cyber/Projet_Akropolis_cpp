@@ -14,7 +14,7 @@ namespace Akropolis{
     }
 
     void TuileCite::rotationHoraire() {
-        // Permutation cyclique simple : [0, 1, 2] -> [2, 0, 1]
+        // permutation cyclique : [0, 1, 2] -> [2, 0, 1]
         HexagoneConstruction* temp = hexagones[2];
         hexagones[2] = hexagones[1];
         hexagones[1] = hexagones[0];
@@ -22,7 +22,7 @@ namespace Akropolis{
     }
 
     void TuileCite::rotationAntihoraire() {
-        // Permutation cyclique inverse : [0, 1, 2] -> [1, 2, 0]
+        // permutation cyclique inverse : [0, 1, 2] -> [1, 2, 0]
         HexagoneConstruction* temp = hexagones[0];
         hexagones[0] = hexagones[1];
         hexagones[1] = hexagones[2];
@@ -35,7 +35,7 @@ namespace Akropolis{
         HexagoneConstruction* h2_clone = hexagones[1]->clone();
         HexagoneConstruction* h3_clone = hexagones[2]->clone();
         
-        // Crée une nouvelle tuile (qui possède ses hexagones)
+        // crée une nouvelle tuile
         TuileCite* newTuile = new TuileCite(id, h1_clone, h2_clone, h3_clone, true);
         newTuile->setHauteur(this->hauteur);
         return newTuile;

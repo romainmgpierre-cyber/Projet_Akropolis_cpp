@@ -91,16 +91,16 @@ void RiviereWidget::dessinerTuile(QPainter& painter, TuileCite* tuile, int xCent
         QPointF(-HEX_SPACING / 2.0, HEX_SIZE_RIV * 1.5) // Hexagone 2 (Bas-Gauche)
     };
 
-    // Le point le plus à gauche du dessin est -HEX_SPACING.
+    
     const double L_SHAPE_MIDPOINT_X = -HEX_SPACING / 2.0;
 
     
-    const double MARGIN_OFFSET_RIGHT = HEX_SPACING *1.5; // Décaler d'un demi-espacement
+    const double MARGIN_OFFSET_RIGHT = HEX_SPACING *1.5;
 
     // Décalage final pour centrer la forme et ajouter la marge droite
     const double drawingOffsetX = -L_SHAPE_MIDPOINT_X + MARGIN_OFFSET_RIGHT;
 
-    double drawingOffsetY = -HEX_SIZE_RIV * 0.75; // Ajustement vertical
+    double drawingOffsetY = -HEX_SIZE_RIV * 0.75; 
 
 
     //  Dessin de chaque hexagone de la tuile
@@ -108,7 +108,7 @@ void RiviereWidget::dessinerTuile(QPainter& painter, TuileCite* tuile, int xCent
         HexagoneConstruction* hex = tuile->getHexagone(i);
         QColor col = Qt::white;
 
-        // Détermination de la couleur (code omis pour la clarté)
+        // Détermination de la couleur
         if (auto* q = dynamic_cast<Quartier*>(hex))
             col = typeToColor(q->getType().getCouleur());
         else if (auto* p = dynamic_cast<Place*>(hex))
@@ -116,11 +116,11 @@ void RiviereWidget::dessinerTuile(QPainter& painter, TuileCite* tuile, int xCent
         else if (dynamic_cast<Carriere*>(hex))
             col = typeToColor(Couleur::gris);
 
-        // Calcul du centre absolu
+        // Calcul du centre
         QPointF center = QPointF(xCenterOffset + offsets[i].x() + drawingOffsetX,
                                  yCenter + offsets[i].y() + drawingOffsetY);
 
-        // --- Dessin de la forme (Hexagone) ---
+        // dessin de la forme
         QPolygonF poly;
         for (int j = 0; j < 6; ++j) {
             double angle_deg = 60 * j - 30;
@@ -128,12 +128,12 @@ void RiviereWidget::dessinerTuile(QPainter& painter, TuileCite* tuile, int xCent
             poly << center + QPointF(HEX_SIZE_RIV * cos(angle_rad), HEX_SIZE_RIV * sin(angle_rad));
         }
 
-        // Ombre / Effet 3D (code omis)
+        
         painter.setPen(Qt::NoPen);
         painter.setBrush(QColor(0, 0, 0, 40));
         painter.drawPolygon(poly.translated(1, 1));
 
-        // Hexagone avec dégradé (code omis)
+      
         QRadialGradient grad(center, HEX_SIZE_RIV);
         grad.setColorAt(0, col.lighter(120));
         grad.setColorAt(1, col);
@@ -142,7 +142,7 @@ void RiviereWidget::dessinerTuile(QPainter& painter, TuileCite* tuile, int xCent
         painter.setPen(QPen(col.darker(130), hovered ? 3 : 2));
         painter.drawPolygon(poly);
 
-        // Affichage des étoiles (code omis)
+        
         if (auto* p = dynamic_cast<Place*>(hex)) {
             painter.setPen(Qt::NoPen);
             painter.setBrush(QColor(255, 215, 0));
@@ -157,7 +157,7 @@ void RiviereWidget::paintEvent(QPaintEvent *event) {
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
 
-    painter.fillRect(rect(), QColor(220, 220, 220)); // Fond gris clair
+    painter.fillRect(rect(), QColor(220, 220, 220)); 
 
     // Titre
     painter.setPen(QColor(60, 60, 60));
@@ -178,10 +178,10 @@ void RiviereWidget::paintEvent(QPaintEvent *event) {
     // Largeur totale disponible moins les marges
     int totalWidth = width() - 20;
 
-    // Largeur allouée par tuile, incluant l'espace entre elles
+    // Largeur allouée par tuile
     double largeurParTuile = totalWidth / (double)nbTuiles;
 
-    // Position de départ (pour centrer la rivière)
+    // Position de départ
     double currentX = 10;
 
     for(size_t i = 0; i < nbTuiles; ++i) {
@@ -190,7 +190,7 @@ void RiviereWidget::paintEvent(QPaintEvent *event) {
         double xCenter = currentX + (largeurParTuile / 2.0);
         double yCenter = height() / 2.0;
 
-        // Décalage pour aligner le centre de la tuile dessinée sur le centre de la zone allouée
+        
         double drawingX = xCenter - (TUILE_WIDTH_ESTIMEE / 2.0);
 
         bool hovered = (static_cast<int>(i) == hoveredIndex);
@@ -203,13 +203,13 @@ void RiviereWidget::paintEvent(QPaintEvent *event) {
             painter.drawRoundedRect(currentX, 40, largeurParTuile, height() - 50, 8, 8);
         }
 
-        // Dessin de la tuile
+        
         dessinerTuile(painter, tuiles[i], (int)drawingX, (int)yCenter, hovered);
 
-        // Afficher le coût
+        
         int cout = choixActuel->calculerCout(i);
 
-        // Position du coût: centré horizontalement dans la zone (près du bas)
+        
         double costX = xCenter - 20;
         double costY = height() - 40;
 
@@ -239,8 +239,8 @@ MainWindow::MainWindow(QWidget *parent)
 
 }
 void MainWindow::demarrerPartie(){
-    // 1. Initialisation du Jeu :
-    // Choix du Mode (Solo ou Multi)
+    // Initialisation du Jeu
+    
     QStringList modes;
     modes << "Solo (vs IA)" << "Multijoueur (Local)";
     bool ok;
@@ -249,7 +249,7 @@ void MainWindow::demarrerPartie(){
         modes, 0, false, &ok);
     if (!ok) modeChoisi = "Solo (vs IA)";
     if (modeChoisi == "Solo (vs IA)") {
-        // --- CONFIGURATION SOLO ---
+        // mode solo
         partie = new Partie(1, ModeJeu::SOLO);
 
         // Ajout du joueur humain
@@ -258,14 +258,14 @@ void MainWindow::demarrerPartie(){
                                                   "Entrez votre nom :",
                                                   QLineEdit::Normal, "Joueur", &ok);
 
-        // Si l'utilisateur annule ou laisse vide, on met un défaut
+        
         if (!ok || nomJoueur.isEmpty()) nomJoueur = "Joueur Humain";
         partie->ajouterJoueur(nomJoueur.toStdString(), 1);
 
-        // Ajout de l'IA (Illustre Constructeur) - paramètre estIA = true
+        
         partie->ajouterJoueur("Illustre Constructeur", 2, true);
 
-        // Choix difficulté (pour le score de l'IA)
+        // Choix difficulté
         QStringList diffs; diffs << "Facile" << "Moyen" << "Difficile";
         QString diff = QInputDialog::getItem(this, "Difficulté", "Niveau de l'IA :", diffs, 1, false);
 
@@ -292,32 +292,32 @@ void MainWindow::demarrerPartie(){
             partie->ajouterJoueur(nom.toStdString(), i + 1);
         }
 
-    // Création dynamique des joueurs
+    
         for (int i = 0; i < nbJoueurs; ++i) {
             std::string nom = "Joueur " + std::to_string(i + 1);
             partie->ajouterJoueur(nom, i + 1);}
     }
     partie->initialiserTuiles();
 
-    // 2. Initialisation
+    
     QWidget *centralWidget = new QWidget;
     setCentralWidget(centralWidget);
     layoutPrincipal = new QHBoxLayout(centralWidget);
     layoutPrincipal->setSpacing(20);
     layoutPrincipal->setContentsMargins(20, 20, 20, 20);
 
-    // Partie Gauche : La Grille
+    // Partie Gauche : la grille
     gridWidget = new HexGridWidget;
     gridWidget->setMinimumSize(600, 600);
     layoutPrincipal->addWidget(gridWidget, 2);
 
-    // Partie Droite : Contrôles
+    // Partie Droite : les contrôles
     QWidget *sidePanel = new QWidget;
     sidePanel->setMaximumWidth(350);
     QVBoxLayout *sideLayout = new QVBoxLayout(sidePanel);
     sideLayout->setSpacing(10);
 
-    // === PANEL JOUEUR ===
+    
     panelJoueur = new QFrame;
     panelJoueur->setStyleSheet(
         "QFrame {"
@@ -360,7 +360,7 @@ void MainWindow::demarrerPartie(){
 
     sideLayout->addWidget(panelJoueur);
 
-    // Widget Rivière
+    
     QLabel *labelRiviere = new QLabel("Marché");
     labelRiviere->setStyleSheet("font-size: 16px; font-weight: bold; color: #34495e;");
     sideLayout->addWidget(labelRiviere);
@@ -405,7 +405,7 @@ void MainWindow::demarrerPartie(){
     layoutPrincipal->addWidget(sidePanel, 0);
 
 
-    // 3. Connexions
+    // connexions
     connect(gridWidget, &HexGridWidget::hexClicked, this, &MainWindow::onHexClicked);
     connect(btnRotation, &QPushButton::clicked, this, &MainWindow::onRotationClicked);
     connect(btnValidation, &QPushButton::clicked, this, &MainWindow::onValidationButtonClicked);
@@ -414,7 +414,7 @@ void MainWindow::demarrerPartie(){
     connect(riviereWidget, &RiviereWidget::tuileChoisie, this, &MainWindow::onTuileChoisie);
     connect(btnPivot, &QPushButton::clicked, this, &MainWindow::onPivotClicked);
 
-    // 4. Démarrage
+    // démarrage
     etatActuel = EtatJeu::CHOIX_RIVIERE;
     mettreAJourInterface();
     QMessageBox::information(this, "C'est parti !",
@@ -438,10 +438,10 @@ void MainWindow::onTuileChoisie(int index) {
         // On récupère la tuile
         tuileSelectionnee = choix->choisirTuile(j, index);
         
-        indexSourceTuile = index;  // 1. On mémorise l'index pour pouvoir annuler plus tard
-        etatActuel = EtatJeu::PLACEMENT_TUILE; // 2. On change l'état
+        indexSourceTuile = index;  // On mémorise l'index pour pouvoir annuler plus tard
+        etatActuel = EtatJeu::PLACEMENT_TUILE; // On change l'état
         
-        // La mise à jour de l'interface se fera juste après et activera le bouton
+        
         mettreAJourInterface(); 
 
     } catch(const GameException& e) {
@@ -452,19 +452,19 @@ void MainWindow::onTuileChoisie(int index) {
 }
 
 void MainWindow::onRotationClicked() {
-    // Vérification de base pour s'assurer qu'une tuile est bien en prévisualisation
+    // Vérification pour s'assurer qu'une tuile est bien en prévisualisation
     if (!tuileSelectionnee || !btnRotation->isEnabled()) return;
 
     int currentRot = gridWidget->getFantomeRotation();
     
-    // 1. Incrémenter la rotation de 60 degrés (de 0 à 5)
+    // Incrémenter la rotation de 60 degrés (de 0 à 5)
     int nextRot = (currentRot + 1) % 6;
     
-    // 2. Appliquer la nouvelle rotation au widget (le dessin change immédiatement)
+    // Appliquer la nouvelle rotation au widget
     gridWidget->setFantomeRotation(nextRot); 
     rotationActuelle = nextRot; 
     
-    // 3. Maintenir le bouton Valider activé et mettre à jour le statut
+    
     btnValidation->setEnabled(true); 
     statutLabel->setText(QString("Rotation %1. Cliquez sur Valider pour placer.")
                          .arg(nextRot * 60));
@@ -483,11 +483,11 @@ void MainWindow::onValidationButtonClicked() {
     CoordHex offsetPivot = localPos[pivotUI].rotate(rotUI);
 
     for(int i=0; i<3; ++i) {
-        // Position absolue = AncreSouris + (PosLocaleTournée - OffsetPivot)
+        
         coordsVisuelles.push_back(ancreSelectionnee + (localPos[i].rotate(rotUI) - offsetPivot));
     }
 
-    // 2. Chercher le coup validé par le moteur de jeu qui correspond à l'ancre et à la rotation UI
+    // Chercher le coup validé par le moteur de jeu qui correspond à l'ancre et à la rotation
     auto coupsValides = cite->genererCoupsValides(*tuileSelectionnee);
     bool valide = false;
     Cite::CoupPossible coupFinal;
@@ -499,17 +499,13 @@ void MainWindow::onValidationButtonClicked() {
         if (forme == 0) { rel1 = CoordHex(-1, 0); rel2 = CoordHex(0, -1); } // Forme V
         else            { rel1 = CoordHex(1, 0);  rel2 = CoordHex(0, 1); }  // Forme ^
 
-        // On applique la rotation interne du coup (permutations)
-        // Note: genererCoupsValides a déjà calculé les "vraies" coordonnées finales ancre, pos1, pos2 ?
 
-        // Simplification : On vérifie juste si les 3 coordonnées visuelles correspondent
-        // aux 3 coordonnées logiques du coup.
 
         CoordHex logPos0 = c.ancre;
-        // Pour comparer, il faut appliquer la rotation géométrique logique correspondant à c.rotation
+        
 
         if (coordsVisuelles[0] == c.ancre) {
-            // L'ancre correspond ! Maintenant, est-ce que l'orientation correspond ?
+            // vérification de l'orientation
 
             if (c.rotation == rotUI) {
                 coupFinal = c;
@@ -520,15 +516,13 @@ void MainWindow::onValidationButtonClicked() {
         }
     }
 
-    // On demande à la logique : "Si je place l'hexagone 0 ici (coordsVisuelles[0]), est-ce valide ?"
-    // On filtre les coups valides pour ne garder que ceux où ancre == coordsVisuelles[0]
-    // Et où la rotation correspond à notre rotation visuelle.
+    
 
     for(const auto& c : coupsValides) {
-        // 1. Est-ce que l'hexagone 0 (l'ancre logique) est au bon endroit ?
+        // vérification de l'ancre
         if (c.ancre == coordsVisuelles[0]) {
-            // 2. Est-ce que la rotation correspond ?
-            // Votre logique Cite et Widget semblent alignées sur 0..5
+            // vérification de l'orientation
+           
             if (c.rotation == rotUI) {
                 coupFinal = c;
                 valide = true;
@@ -556,7 +550,7 @@ void MainWindow::onHexClicked(CoordHex coord) {
     Joueur* j = partie->getJoueurActuel();
     Cite* cite = j->getCite();
     
-    // 1. Vérifier si cette coordonnée est l'ancre d'au moins UN coup légal (nécessaire pour activer la prévisualisation)
+    // Vérifier si cette coordonnée est l'ancre d'au moins un coup léga
     bool ancreLegale = false;
     auto coupsValides = cite->genererCoupsValides(*tuileSelectionnee);
     
@@ -568,13 +562,13 @@ void MainWindow::onHexClicked(CoordHex coord) {
     }
 
     if (ancreLegale) {
-        // Ancre valide : on active la prévisualisation.
+        // on active la prévisualisation.
         ancreSelectionnee = coord;
         
-        // La rotation est initialisée à 0 sans vérification de légalité
+        // La rotation est initialisée à 0
         int initialRotation = 0; 
         
-        // Initialisation de la prévisualisation
+        
         gridWidget->setTuileFantome(tuileSelectionnee, ancreSelectionnee);
         gridWidget->setFantomeRotation(initialRotation);
         rotationActuelle = initialRotation;
@@ -583,7 +577,7 @@ void MainWindow::onHexClicked(CoordHex coord) {
         btnValidation->setEnabled(true);
         statutLabel->setText("Rotationnez ou Validez le placement.");
     } else {
-        // Clic sur une case illégale
+        
         gridWidget->clearTuileFantome(); 
         btnRotation->setEnabled(false);
         btnValidation->setEnabled(false);
@@ -592,7 +586,7 @@ void MainWindow::onHexClicked(CoordHex coord) {
 }
 
 void MainWindow::passerAuJoueurSuivant() {
-    // Vérifier fin de partie
+    
     verifierFinPartie();
 
     if (etatActuel == EtatJeu::FIN_PARTIE) {
@@ -637,7 +631,7 @@ void MainWindow::passerAuJoueurSuivant() {
         });
 
     } else {
-        // C'est à l'humain : on réactive tout
+        // C'est à l'humain donc on réactive tout
         riviereWidget->setEnabled(true);
         QMessageBox::information(this, "À vous !",
                                  QString("C'est à %1 de jouer.").arg(QString::fromStdString(nouveauJoueur->getNom())));
@@ -645,7 +639,7 @@ void MainWindow::passerAuJoueurSuivant() {
 }
 
 void MainWindow::verifierFinPartie() {
-    // Règle : Pioche vide ET max 1 tuile sur la rivière
+    // Vérification des conditions de fin de partie
     bool piocheVide = partie->getPioche()->estVide();
     int tuilesRestantes = partie->getChoixTuile()->getNombreTuiles();
 
@@ -667,7 +661,7 @@ void MainWindow::afficherScore() {
 }
 
 void MainWindow::animerTransition() {
-    // Effet de fondu sur le panel joueur
+    
     auto* effect = new QGraphicsOpacityEffect(panelJoueur);
     panelJoueur->setGraphicsEffect(effect);
 
@@ -682,7 +676,7 @@ void MainWindow::animerTransition() {
 void MainWindow::mettreAJourInterface() {
     Joueur* j = partie->getJoueurActuel();
     
-    // Mise à jour des textes
+    
     infoLabel->setText(QString("Tour de : %1\nPierres: %2\nScore: %3\nÉtat: %4")
                            .arg(QString::fromStdString(j->getNom()))
                            .arg(j->getNbPierres())
@@ -710,17 +704,17 @@ void MainWindow::mettreAJourInterface() {
     riviereWidget->setChoixTuile(partie->getChoixTuile());
 
     
-    // Rotation : Seulement si on est en train de placer une tuile
+    // Rotation seulement si on est en train de placer une tuile
     btnRotation->setEnabled(etatActuel == EtatJeu::PLACEMENT_TUILE);
     
-    // Annuler : Seulement si on a une tuile en main ET qu'on est en mode placement
+    // Annuler seulement si on a une tuile en main et qu'on est en mode placement
     bool peutAnnuler = (etatActuel == EtatJeu::PLACEMENT_TUILE && tuileSelectionnee != nullptr);
     btnUndo->setEnabled(peutAnnuler);
 
-    // Rivière : Seulement si on doit choisir
+    // Rivière seulement si on doit choisir
     riviereWidget->setEnabled(etatActuel == EtatJeu::CHOIX_RIVIERE);
     
-    // Validation : Gérée par le clic sur la grille, on ne la force pas ici à true
+    
     if (etatActuel != EtatJeu::PLACEMENT_TUILE) {
         btnValidation->setEnabled(false);
     }
@@ -736,46 +730,46 @@ void MainWindow::onUndoClicked() {
     Joueur* j = partie->getJoueurActuel();
     ChoixTuile* choix = partie->getChoixTuile();
 
-    // 1. Rembourser le joueur (si on a bien l'index)
+    // Rembourser le joueur
     if (indexSourceTuile != -1) {
-        // Le coût est égal à l'index (0 pierre pour la 1ère tuile, etc.)
+        
         j->ajouterPierres(indexSourceTuile);
     }
 
-    // 2. Remettre la tuile dans la rivière à sa place
+    // Remettre la tuile dans la rivière
     if (choix && tuileSelectionnee) {
         choix->remettreTuile(tuileSelectionnee, indexSourceTuile);
     }
 
-    // 3. Nettoyer l'état interne
+    
     tuileSelectionnee = nullptr;     
     indexSourceTuile = -1;           
     
-    // 4. Nettoyer l'affichage (supprimer le fantôme vert/rouge)
+    
     gridWidget->clearTuileFantome(); 
     
-    // 5. Revenir à l'état de choix
+   
     etatActuel = EtatJeu::CHOIX_RIVIERE;
     
-    // 6. Tout mettre à jour
+    
     mettreAJourInterface();
     
     statutLabel->setText("Sélection annulée. Pierres remboursées.");
 }
 
 void MainWindow::onRecentrerClicked() {
-    // Recentrer la vue (à implémenter dans HexGridWidget)
+    // Recentrer la vue
     gridWidget->update();
 }
 
 void MainWindow::onPivotClicked() {
     if (!tuileSelectionnee) return;
 
-    // On change le pivot (0 -> 1 -> 2 -> 0)
+    
     pivotActuel = (pivotActuel + 1) % 3;
     gridWidget->setFantomePivot(pivotActuel);
 
-    // On re-vérifie si la position actuelle est valide avec ce nouveau pivot
+    
     onHexClicked(ancreSelectionnee);
 
     statutLabel->setText(QString("Pivot changé sur l'hexagone %1").arg(pivotActuel));
