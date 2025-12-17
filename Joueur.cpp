@@ -32,7 +32,7 @@ namespace Akropolis {
         else throw GameException("Pas assez de pierres !");
     }
 
-    void Joueur::placerTuile(TuileCite* tuile, const Cite::CoupPossible& coup) {
+    int Joueur::placerTuile(TuileCite* tuile, const Cite::CoupPossible& coup) {
         //place la tuile et nous retourne le nombre de pierres gagnées.
         int pierresGagnees = cite->placerTuile(tuile, coup);
 
@@ -40,6 +40,7 @@ namespace Akropolis {
         if (pierresGagnees > 0) {
             ajouterPierres(pierresGagnees);
         }
+        return pierresGagnees;
     }
 
     void Joueur::afficher(ostream& f) const {

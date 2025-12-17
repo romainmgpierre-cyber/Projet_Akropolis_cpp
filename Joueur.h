@@ -45,7 +45,7 @@ namespace Akropolis {
         bool peutPayerPierres(int n) const { return nbPierres >= n; }
 
         
-        void placerTuile(TuileCite* tuile, const Cite::CoupPossible& coup);
+        int placerTuile(TuileCite* tuile, const Cite::CoupPossible& coup);
 
         void afficher(ostream& f = cout) const;
         friend ostream& operator<<(ostream& f, const Joueur& joueur);

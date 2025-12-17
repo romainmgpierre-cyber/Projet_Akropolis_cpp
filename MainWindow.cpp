@@ -273,7 +273,7 @@ void MainWindow::demarrerPartie(){
         else partie->setDifficulte(NiveauDifficulte::FACILE);}
     //Choix du nombre de joueurs
     else{
-        partie = new Partie(1, ModeJeu::SOLO);
+        partie = new Partie(1, ModeJeu::MULTIJOUEUR);
         int nbJoueurs = QInputDialog::getInt(this, "Multijoueurs",
             "Nombre de joueurs (2-4) :",
             2, 2, 4, 1, &ok);
@@ -290,11 +290,6 @@ void MainWindow::demarrerPartie(){
 
             partie->ajouterJoueur(nom.toStdString(), i + 1);
         }
-
-    
-        for (int i = 0; i < nbJoueurs; ++i) {
-            std::string nom = "Joueur " + std::to_string(i + 1);
-            partie->ajouterJoueur(nom, i + 1);}
     }
     partie->initialiserTuiles();
 
@@ -474,6 +469,111 @@ void MainWindow::onValidationButtonClicked() {
 
     Joueur* j = partie->getJoueurActuel();
     Cite* cite = j->getCite();
+
+    // --- 1. RECONSTRUCTION DE L'ÉTAT VISUEL (Ce que voit le joueur) ---
+    // On détermine quelle partie de la tuile (index 0, 1 ou 2) est à quelle coordonnée sur la grille.
+
+    int rotUI = gridWidget->getFantomeRotation();
+    int pivotUI = this->pivotActuel; // Index de l'hexagone servant de pivot (0, 1 ou 2)
+    CoordHex ancreVisuelle = ancreSelectionnee; // La coordonnée de la grille où l'utilisateur a cliqué
+
+    // Positions locales relatives dans la tuile (doit correspondre à HexGridWidget::dessinerTuile)
+    const std::array<CoordHex, 3> localPos = {CoordHex(0,0), CoordHex(-1,0), CoordHex(0,-1)};
+
+    // Calcul du décalage lié au pivot après rotation
+    // Le pivotUI se trouve visuellement sur la case ancreVisuelle
+    CoordHex offsetPivot = localPos[pivotUI].rotate(rotUI);
+
+    // Map : IndexOriginal -> CoordonnéeFinale
+    // Où se trouve l'hexagone 0 ? l'hexagone 1 ? l'hexagone 2 ?
+    std::vector<CoordHex> posVisuelles(3);
+
+    for(int i=0; i<3; ++i) {
+        // Formule de transformation identique à celle du HexGridWidget
+        posVisuelles[i] = ancreVisuelle + (localPos[i].rotate(rotUI) - offsetPivot);
+    }
+
+    // --- 2. RECHERCHE D'UN COUP LOGIQUE ÉQUIVALENT ---
+    auto coupsValides = cite->genererCoupsValides(*tuileSelectionnee);
+    Cite::CoupPossible coupFinal;
+    bool trouve = false;
+
+    for(const auto& c : coupsValides) {
+        // Décodage du coup logique (Forme + Permutation)
+        int forme = c.rotation / 3;
+        int perm = c.rotation % 3;
+
+        // Géométrie relative de la forme utilisée par le moteur
+        CoordHex rel1, rel2;
+        if (forme == 0) { rel1 = CoordHex(-1, 0); rel2 = CoordHex(0, -1); }
+        else { rel1 = CoordHex(1, 0);  rel2 = CoordHex(0, 1); }
+
+        // Coordonnées des 3 slots logiques sur la grille
+        // Slot 0 est à l'ancre du coup, Slot 1 à ancre+rel1, Slot 2 à ancre+rel2
+        std::array<CoordHex, 3> slotsLogiques;
+        slotsLogiques[0] = c.ancre;
+        slotsLogiques[1] = c.ancre + rel1;
+        slotsLogiques[2] = c.ancre + rel2;
+
+        // Calcul du contenu : Quel hexagone original (0,1,2) se trouve dans quel slot ?
+        // La rotationHoraire (perm) décale les contenus : 0->1, 1->2, 2->0 dans le tableau
+        // Cela signifie que le Slot 0 reçoit le contenu qui était en position X...
+
+        // Mapping précis des permutations :
+        // perm 0 : Slot 0 = Hex 0, Slot 1 = Hex 1, Slot 2 = Hex 2
+        // perm 1 : Slot 0 = Hex 2, Slot 1 = Hex 0, Slot 2 = Hex 1
+        // perm 2 : Slot 0 = Hex 1, Slot 1 = Hex 2, Slot 2 = Hex 0
+        int indexHexInSlot[3];
+        if (perm == 0) { indexHexInSlot[0]=0; indexHexInSlot[1]=1; indexHexInSlot[2]=2; }
+        else if (perm == 1){ indexHexInSlot[0]=2; indexHexInSlot[1]=0; indexHexInSlot[2]=1; }
+        else { indexHexInSlot[0]=1; indexHexInSlot[1]=2; indexHexInSlot[2]=0; }
+
+        // --- COMPARAISON ---
+        // Le coup est valide si pour chaque hexagone (0,1,2), sa position visuelle
+        // est identique à sa position logique.
+        bool match = true;
+        for(int slot=0; slot<3; ++slot) {
+            int originalIndex = indexHexInSlot[slot]; // Quel hexagone est ici ?
+            CoordHex posLogique = slotsLogiques[slot]; // Où est-il selon le moteur ?
+
+            // Est-ce que cela correspond à ce qu'on voit ?
+            if (!(posVisuelles[originalIndex] == posLogique)) {
+                match = false;
+                break;
+            }
+        }
+
+        if (match) {
+            coupFinal = c;
+            trouve = true;
+            break;
+        }
+    }
+
+    // --- 3. APPLICATION OU REJET ---
+    if(trouve) {
+        try {
+            int pierres = j->placerTuile(tuileSelectionnee, coupFinal);
+
+            if (pierres > 0) {
+                QMessageBox::information(this, "Recouvrement",
+                                         QString("Vous avez recouvert des carrières et gagné %1 pierre(s) !").arg(pierres));
+            }
+
+            tuileSelectionnee = nullptr;
+            gridWidget->clearTuileFantome();
+            btnRotation->setEnabled(false);
+            btnValidation->setEnabled(false);
+            passerAuJoueurSuivant();
+        } catch (...) {}
+    } else {
+        QMessageBox::information(this, "Placement Invalide",
+                                 "Ce placement n'est pas valide (vérifiez l'adjacence ou la superposition).");
+    }
+    /*if (!tuileSelectionnee || etatActuel != EtatJeu::PLACEMENT_TUILE) return;
+
+    Joueur* j = partie->getJoueurActuel();
+    Cite* cite = j->getCite();
     
     int rotUI = gridWidget->getFantomeRotation();
     int pivotUI = this->pivotActuel;
@@ -541,6 +641,7 @@ void MainWindow::onValidationButtonClicked() {
         } catch (...) {}
     } else {
         QMessageBox::information(this, "Invalide", "Ce placement ne correspond à aucune règle valide.");  }
+*/
 }
 
 void MainWindow::onHexClicked(CoordHex coord) {
@@ -625,7 +726,7 @@ void MainWindow::passerAuJoueurSuivant() {
             nouveauJoueur->recupererTuileIA(tuile);
 
             QMessageBox::information(this, "Tour de l'IA",
-                                     QString("L'Illustre Constructeur a pris la tuile n°%1.").arg(indexChoisi + 1));
+                QString("L'Illustre Constructeur a pris la tuile n°%1.").arg(indexChoisi + 1));
             passerAuJoueurSuivant();
         });
 
@@ -633,7 +734,7 @@ void MainWindow::passerAuJoueurSuivant() {
         // C'est à l'humain donc on réactive tout
         riviereWidget->setEnabled(true);
         QMessageBox::information(this, "À vous !",
-                                 QString("C'est à %1 de jouer.").arg(QString::fromStdString(nouveauJoueur->getNom())));
+            QString("C'est à %1 de jouer.").arg(QString::fromStdString(nouveauJoueur->getNom())));
     }
 }
 
