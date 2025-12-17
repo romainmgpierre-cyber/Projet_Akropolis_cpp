@@ -108,11 +108,101 @@ namespace Akropolis {
         os << endl;
     }
 
+void afficherTuileCiteASCII(TuileCite* t, int rotation, ostream& os) {
+        
+        const int N = 5; 
+        const int H = 2; 
+        
+        int step_x = N + H;
+        int step_y = 2 * H;
+        int odd_offset = H;
+
+        int width_px = 2 * step_x + N + 2 * H + 20; 
+        int height_px = 2 * step_y + H + odd_offset + 2;
+
+        vector<string> buffer(height_px, string(width_px, ' '));
+
+        struct Pos { int col; int lig; int id; };
+        vector<Pos> positions;
+
+        
+        bool formeA = (rotation >= 3); 
+
+        if (formeA) {
+            // Forme A (Pyramide)
+            // L'Ancre (Hex 0) est en haut
+            positions = {
+                {1, 0, 0}, 
+                {0, 1, 1}, 
+                {1, 1, 2}  
+            };
+        } else {
+            // Forme V (Inversée)
+            // L'Ancre (Hex 0) est en bas
+            positions = {
+                {0, 1, 0}, 
+                {0, 0, 1}, 
+                {1, 0, 2}  
+            };
+        }
+
+        for (const auto& p : positions) {
+         
+            string label = to_string(p.id) + "." + getEtiquettePourTuile(t->getHexagone(p.id));
+            
+            int start_x = p.col * step_x + 1;
+            int start_y = p.lig * step_y;
+            
+            if (p.col % 2 != 0) start_y += odd_offset;
+
+            // Toit
+            for (int i = 0; i < N; ++i) buffer[start_y][start_x + H + i] = '_';
+
+            // Pentes
+            for (int k = 0; k < H; ++k) {
+                int y_top = start_y + 1 + k;
+                buffer[y_top][start_x + H - 1 - k] = '/';
+                buffer[y_top][start_x + H + N + k] = '\\';
+                int y_bot = start_y + H + 1 + k;
+                buffer[y_bot][start_x + k] = '\\';
+                buffer[y_bot][start_x + (2 * H + N) - 1 - k] = '/';
+                if (k == H - 1) for (int i = 0; i < N; ++i) buffer[y_bot][start_x + H + i] = '_';
+            }
+
+            // Texte intérieur
+            int center_y = start_y + H;
+            int center_x = start_x + H + (N / 2);
+            int txt_start = center_x - (label.length() / 2);
+            if (txt_start >= 0) {
+                for (size_t i = 0; i < label.length(); ++i) {
+                    if (center_y < height_px && txt_start + i < (size_t)width_px)
+                        buffer[center_y][txt_start + i] = label[i];
+                }
+            }
+
+            // Marqueur ANCRE sur l'hexagone 0
+            if (p.id == 0) {
+                string arrow = "<-- [ANCRE]";
+                int arrow_x = start_x + (2*H + N) + 2; 
+                for(size_t i=0; i<arrow.length(); ++i) {
+                    if(center_y < height_px && arrow_x + i < (size_t)width_px)
+                        buffer[center_y][arrow_x + i] = arrow[i];
+                }
+            }
+        }
+
+        for (const auto& line : buffer) {
+            size_t end = line.find_last_not_of(" ");
+            if (end != string::npos) os << line.substr(0, end + 1) << "\n";
+        }
+        os << endl;
+    }
+
     void afficherTuileCiteASCII(const ChoixTuile* choixTuile, size_t index, ostream& os) {
         const auto& dispos = choixTuile->getTuilesDisponibles();
         if (index >= dispos.size()) return;
         os << "Tuile selectionnee (Rotation 0) :" << endl;
-        afficherTuileCiteASCII(dispos[index], os);
+        afficherTuileCiteASCII(dispos[index], 0, os);
     }
 
 
@@ -391,10 +481,11 @@ namespace Akropolis {
                 }
             }
 
-            TuileCite* tuile = choixTuile->choisirTuile(joueur, index);
+          TuileCite* tuile = choixTuile->choisirTuile(joueur, index);
 
             cout << endl;
-            afficherTuileCiteASCII(tuile, cout);
+            // Affichage initial (Rotation 0 => Forme V)
+            afficherTuileCiteASCII(tuile, 0, cout);
 
             //Placement
             auto tousCoups = joueur->getCite()->genererCoupsValides(*tuile);
@@ -411,7 +502,9 @@ namespace Akropolis {
 
             cout << "--- Rotations possibles ---" << endl;
             for(size_t i = 0; i < rotationsVec.size(); ++i) {
-                cout <<"["<< (i+1) << "] Rotation " << rotationsVec[i] << endl;
+                // Petit helper textuel pour dire la forme
+                string forme = (rotationsVec[i] >= 3) ? "(Forme A)" : "(Forme V)";
+                cout <<"["<< (i+1) << "] Rotation " << rotationsVec[i] << " " << forme << endl;
             }
 
             int rotationChoisie = -1;
@@ -443,12 +536,13 @@ namespace Akropolis {
                 continue; 
             }
 
-            // Prévisualisation de la rotation choisie
             {
                 cout << "\n--- Apercu Rotation " << rotationChoisie << " ---" << endl;
                 TuileCite* apercu = tuile->clone();
+
                 for(int i=0; i < (rotationChoisie % 3); ++i) apercu->rotationHoraire();
-                afficherTuileCiteASCII(apercu, cout);
+                
+                afficherTuileCiteASCII(apercu, rotationChoisie, cout);
                 delete apercu;
             }
 
