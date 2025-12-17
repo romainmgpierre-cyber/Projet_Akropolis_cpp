@@ -123,7 +123,7 @@ namespace Akropolis{
                 Couleur coul = q->getType().getCouleur();
                 
                 bool valide = false;
-                int multiplicateur = 1; // Par défaut x1
+                int multiplicateur = 0; // Par défaut x0
 
                 if (coul == Couleur::jaune) { // MARCHE
                     bool adjacentMarche = false;
