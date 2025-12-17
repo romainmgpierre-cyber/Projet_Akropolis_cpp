@@ -3,13 +3,13 @@
 namespace Akropolis{
 
     CoordHex CoordHex::rotate(int rotation) const {
-        // Normalisation de la rotation (de 0 à 5, 6 rotations possibles)
+        // gestion de la rotation de 0 à 5, 6 rotations possibles
         int normalizedRot = (rotation % 6 + 6) % 6;
         
         int q = this->q;
         int r = this->r;
         
-        // Logique de rotation en coordonnées axiales (q, r)
+        // Logique de rotation
         switch (normalizedRot) {
             case 0: return *this;             
             case 1: return CoordHex(-r, q + r); // 60 degrés

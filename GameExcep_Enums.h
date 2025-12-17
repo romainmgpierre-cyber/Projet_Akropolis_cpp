@@ -36,7 +36,7 @@ namespace Akropolis{
     void printCouleurs(ostream& f = cout);
 	void printNbEtoiles(ostream& f = cout);
 
-//pour la classe partie : 
+//pour la classe partie
     enum class ModeJeu {SOLO, MULTIJOUEUR};
     enum class NiveauDifficulte {FACILE, MOYEN, DIFFICILE};
     enum class EtatPartie {NON_DEMARREE, EN_COURS, TERMINEE, SUSPENDUE};

@@ -4,20 +4,7 @@
 #include <random>
 namespace Akropolis {
 
-/*J'ai fait 5 fonctions pour créer :
-- les tuiles 2+
-- 3+
-- 4
-- les tuiles de départ
-- les tuiles necessaires selon le nombre de joueur :    
-     std::vector<TuileCite*> creerToutesTuiles(int nbJoueurs) 
 
-pour une partie à 2 joueurs on prendra uniquement les cartes de la première fct plus celles de départ
-pour une à trois joueurs, on prend les cartes 2+ et 3+ et celles de départ
-pour une à quatre on prend toutes les cartes
-
-*/
-    //declaration de la fonction de mélange;
     void melangerTuiles(std::vector<TuileCite*>& tuiles);
     
     std::vector<TuileCite*> creerTuiles2j() {
@@ -506,7 +493,7 @@ pour une à quatre on prend toutes les cartes
         size_t idHexagone = 184; // On réutilise idHexagone
 
         for (int i = 0; i < 4; ++i) {
-            // Toutes les tuiles de départ ont la même structure: Place HABITATION (Bleu) 1 étoile
+            // Toutes les tuiles de départ ont la même structure
             tuilesDepart.push_back(new TuileDepart(
                 idTuile++,
                 new Place(idHexagone++, Type::HABITATION, 1),

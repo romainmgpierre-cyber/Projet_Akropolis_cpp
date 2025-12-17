@@ -5,7 +5,7 @@
 namespace Akropolis {
 
     Joueur::Joueur(const string& nom, int numeroJoueur, bool estIA) 
-        : nom(nom), nbPierres(numeroJoueur), estIA(estIA) // Le 1er joueur a 1 pierre, le 2ème 2, etc.
+        : nom(nom), nbPierres(numeroJoueur), estIA(estIA) // Le 1er joueur a 1 pierre, le 2ème 2, ...
     {
         cite = new Cite();
     }
@@ -33,10 +33,10 @@ namespace Akropolis {
     }
 
     void Joueur::placerTuile(TuileCite* tuile, const Cite::CoupPossible& coup) {
-        // La Cité place la tuile et nous retourne le nombre de pierres gagnées.
+        //place la tuile et nous retourne le nombre de pierres gagnées.
         int pierresGagnees = cite->placerTuile(tuile, coup);
 
-        // Le joueur ajoute les pierres à son inventaire
+        
         if (pierresGagnees > 0) {
             ajouterPierres(pierresGagnees);
         }
@@ -56,7 +56,7 @@ namespace Akropolis {
     int Joueur::calculerScore() const {
         
         TableauScore calculateur;
-        // On délègue le calcul
+        
         return calculateur.calculerScore(*this);
     }
 

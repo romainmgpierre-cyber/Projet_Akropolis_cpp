@@ -15,10 +15,10 @@ namespace Akropolis{
         int getQ() const { return q; }
         int getR() const { return r; }
         // Coordonées axiales donc <s, q, r>
-        // s est implicite : s = -q - r
-        int s() const { return -q - r; }
+        
+        int s() const { return -q - r; } // s est implicite : s = -q - r
 
-        // Surcharges opérateurs
+        
         CoordHex operator+(const CoordHex& autre) const {
             return CoordHex(q + autre.q, r + autre.r);
         }
@@ -33,7 +33,7 @@ namespace Akropolis{
         bool operator!=(const CoordHex& autre) const {
             return !(*this == autre);
         }
-        // cet opérateur sera utilisé dans le tri
+        
         bool operator<(const CoordHex& autre) const {
             if (q != autre.q) return q < autre.q;
             return r < autre.r;
@@ -50,11 +50,11 @@ namespace Akropolis{
             return *this + directions[direction % 6];
         }
 
-        // Distance entre deux hexagones
+  
         int distance(const CoordHex& autre) const {
             CoordHex diff = *this - autre;
-            // Formule de RedBlobGames (convertie de cubique)
-            return (abs(diff.q) + abs(diff.r) + abs(diff.s())) / 2;
+            
+            return (abs(diff.q) + abs(diff.r) + abs(diff.s())) / 2; // Formule de RedBlobGames (convertie de cubique)
         }
     };
 }

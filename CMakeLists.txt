@@ -5,12 +5,12 @@ project(akropolis LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# 1. AJOUTEZ CES LIGNES POUR ACTIVER QT
+
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
-# Trouve les composants Widgets de Qt
+
 find_package(Qt6 REQUIRED COMPONENTS Widgets)
 
 add_executable(akropolis
@@ -51,5 +51,5 @@ add_executable(akropolis
         Sauvegarde.cpp
 )
 
-# 2. LIEZ LA BIBLIOTHÈQUE QT A VOTRE EXÉCUTABLE
+
 target_link_libraries(akropolis PRIVATE Qt6::Widgets)

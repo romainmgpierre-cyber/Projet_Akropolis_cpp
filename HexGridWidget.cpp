@@ -118,7 +118,7 @@ void HexGridWidget::paintEvent(QPaintEvent *event) {
 
     painter.fillRect(rect(), QColor(245, 247, 250));
 
-    // Grille de points en arrière-plan (effet design moderne)
+    // grille de points en arrière-plan
     painter.setPen(QPen(QColor(200, 200, 200, 100), 1));
     for (int x = 0; x < width(); x += 30) {
         for (int y = 0; y < height(); y += 30) {
@@ -138,7 +138,7 @@ void HexGridWidget::paintEvent(QPaintEvent *event) {
         painter.save();
         painter.setOpacity(0.7);
 
-        // Positions relatives d'une tuile standard: (0, 0), (1, 0), (0, 1)
+        // Positions d'une tuile standard: (0, 0), (1, 0), (0, 1)
         const std::array<Akropolis::CoordHex, 3> localPositions = {
             Akropolis::CoordHex(0, 0),
             Akropolis::CoordHex(-1, 0),
@@ -150,20 +150,20 @@ void HexGridWidget::paintEvent(QPaintEvent *event) {
         for (size_t i = 0; i < 3; ++i) {
             
             Akropolis::CoordHex localCoord = localPositions[i];
-            // 1. Appliquer la rotation locale (avec rotFantome)
+            //Appliquer la rotation locale (avec rotFantome)
             Akropolis::CoordHex rotatedCoord = localCoord.rotate(rotFantome);
             
-            // 2. Appliquer la translation (avec posFantome)
+            // Appliquer la translation (avec posFantome)
             Akropolis::CoordHex finalCoord = posFantome + (rotatedCoord- pivotOffset);
             
-            // 3. Dessiner l'hexagone fantôme (hauteur 1, non survolé)
+            // Dessiner l'hexagone fantôme (hauteur 1, non survolé)
             Akropolis::HexagoneConstruction* hexContent = hexContentArray[i];
             dessinerHexagone(painter, finalCoord, hexContent, 1, false); 
         }
 
-        // --- Marqueur de placement central (conservé) ---
+        // Marqueur de placement central
         QPointF center = cubeToPixel(posFantome);
-        // Anneau pulsant pour l'animation
+        
         QPen pen(QColor(76, 175, 80), 3);
         pen.setStyle(Qt::DotLine);
         painter.setPen(pen);
@@ -171,7 +171,7 @@ void HexGridWidget::paintEvent(QPaintEvent *event) {
         double pulseSize = 25 + 7 * qSin(QTime::currentTime().msec() * 0.01);
         painter.drawEllipse(center, pulseSize, pulseSize);
 
-        // Icône centrale
+        
         painter.setPen(Qt::NoPen);
         painter.setBrush(QColor(76, 175, 80));
         painter.drawEllipse(center, 12, 12);
@@ -210,7 +210,7 @@ void HexGridWidget::dessinerHexagone(QPainter& painter, CoordHex coord, Hexagone
     else if (Carriere* c = dynamic_cast<Carriere*>(hex)) {
         baseColor = typeToColor(Couleur::gris);
     }
-    // Ombre portée
+    
     if (hauteur > 1 || isHovered) {
         painter.save();
         painter.setPen(Qt::NoPen);
@@ -220,7 +220,7 @@ void HexGridWidget::dessinerHexagone(QPainter& painter, CoordHex coord, Hexagone
         painter.restore();
     }
 
-    // Dessin
+    
     if (hauteur > 1) {
         painter.setPen(QPen(baseColor.darker(150), 4));
     } else {
