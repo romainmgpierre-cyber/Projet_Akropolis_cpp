@@ -253,7 +253,6 @@ void MainWindow::demarrerPartie(){
         partie = new Partie(1, ModeJeu::SOLO);
 
         // Ajout du joueur humain
-        partie->ajouterJoueur("Joueur Humain", 1);
         QString nomJoueur = QInputDialog::getText(this, "Nom du Joueur",
                                                   "Entrez votre nom :",
                                                   QLineEdit::Normal, "Joueur", &ok);
