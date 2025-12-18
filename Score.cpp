@@ -5,8 +5,6 @@
 
 
 namespace Akropolis{
-
-    
     const std::map<CoordHex, std::pair<HexagoneConstruction*, unsigned int>>& getPlateauDuJoueur(const Joueur& joueur) {
         return joueur.getCite()->getPlateau();
     }

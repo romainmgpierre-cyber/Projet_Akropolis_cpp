@@ -9,7 +9,8 @@
 #include <set>
 #include <vector> 
 #include <random> 
-#include <chrono> 
+#include <chrono>
+#include "Sauvegarde.h";
 
 using namespace std;
 namespace Akropolis {
@@ -592,7 +593,35 @@ void afficherTuileCiteASCII(TuileCite* t, int rotation, ostream& os) {
             } else {
                 cout << "--> Tuile placee." << endl;
             }
-            
+
+            // demande si le joueur veux enrgistrer la partie ?
+            std:string reponse;
+            while (true) {
+                cout<<"Voulez-enregistrer la partie ? (oui/non):";
+                cin>>reponse;
+                if (reponse != "oui" && reponse != "non") {
+                    std::cout<<"Reponse invalide";
+                }else {
+                    break;
+                }
+            }
+            //lancer enregistrement
+            if (reponse == "oui") {
+                try {
+                    // CORRECTION
+                    if (this->getConfig() != nullptr) {
+                        Sauvegarde::EnregistrerPartie(*(this->getConfig()));
+                    } else {
+                        std::cout << "Erreur : La configuration n'est pas liée à la partie." << std::endl;
+                    }
+                    // On appelle la fonction du namespace Sauvegarde
+                    Sauvegarde::EnregistrerPartie(*(this->getConfig()));
+                    cout << "Sauvegarde effectuee avec succes !" << endl;
+                } catch (const exception& e) {
+                    cerr << "Erreur lors de l'enregistrement : " << e.what() << endl;
+                }
+            }
+
             tourValide = true; 
         }
     }

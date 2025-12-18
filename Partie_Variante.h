@@ -25,6 +25,7 @@ namespace Akropolis{
         string getDescription() const { return description; }
     };
 
+    class Configuration; // Déclaration anticipée
     class Partie{
         size_t id;
         ModeJeu mode;
@@ -42,6 +43,9 @@ namespace Akropolis{
         vector<TuileCite*> tuilesDisponibles; 
         vector<TuileDepart*> tuilesDepart; 
         size_t nbTuilesParTour;
+
+        // pour référencer la configuration
+        Akropolis::Configuration* config = nullptr;
 
     public:
         Partie(size_t id, ModeJeu mode);
@@ -63,6 +67,8 @@ namespace Akropolis{
         Pioche* getPioche() const { return pioche; }
         vector<Variante> getVariantesDisponibles() const{ return variantes; }
         vector<Variante> getVariantesActives() const;
+        Configuration* getConfig(){return config;}
+
 
         void initialiserTuiles();
         void ajouterJoueur(const std::string& nom, int numeroJoueur, bool estIA = false);        void retirerJoueur(const string& nom);
@@ -75,6 +81,7 @@ namespace Akropolis{
         void passerTour() {
             joueurActuelIndex = (joueurActuelIndex + 1) % joueurs.size();
         }
+        void setConfig(Configuration& c){config = &c;}
     
     private :
     

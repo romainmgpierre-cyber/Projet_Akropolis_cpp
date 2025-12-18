@@ -15,29 +15,32 @@
 #include <algorithm>
 #include <cstdlib>
 #include <ctime>
-#include "MenuConfiguration.h"
 #include "FonctionsAide.h"
 #include "Sauvegarde.h"
 #include "MainWindow.h" 
-#include <QApplication> 
+#include <QApplication>
+#include "MenuConfiguration.h"
 
 using namespace std;
 using namespace Akropolis;
 
-void LancerPartie(const Akropolis::Configuration& config) {
-    Akropolis::Partie partie(1, config.getMode());
-    partie.setDifficulte(config.getDifficulte());
+void LancerPartie(Akropolis::Configuration& config) {
+    Akropolis::Partie* partie= new Akropolis::Partie(1, config.getMode());
+    partie->setDifficulte(config.getDifficulte());
+    partie->setConfig(config);
+    config.setPartie(partie);
+
 
     for (size_t i = 0; i < config.getNomsJoueurs().size(); ++i) {
-        partie.ajouterJoueur(config.getNomsJoueurs()[i], i + 1);
+        partie->ajouterJoueur(config.getNomsJoueurs()[i], i + 1);
     }
 
     if (config.getMode() == Akropolis::ModeJeu::SOLO) {
-        partie.ajouterJoueur("Illustre Constructeur", 2, true);
+        partie->ajouterJoueur("Illustre Constructeur", 2, true);
     }
 
-    partie.lancerPartie();
-    AfficherResultats(partie);
+    partie->lancerPartie();
+    AfficherResultats(*partie);
 }
 
 int LancerConsole() {

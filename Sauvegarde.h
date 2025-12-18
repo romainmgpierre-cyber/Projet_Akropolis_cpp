@@ -21,7 +21,7 @@ namespace Sauvegarde {
     void afficherNomParties(vector<string>& nomsParties);
 
     // Enregistrer une partie
-    void EnregistrerPartie();
+    void EnregistrerPartie(Akropolis::Configuration& config);
 #endif //UNTITLED_SAUVEGARDE_H
 
 #endif //AKROPOLIS_SAUVEGARDE_H

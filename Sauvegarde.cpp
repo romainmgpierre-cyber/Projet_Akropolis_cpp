@@ -26,8 +26,6 @@ namespace Sauvegarde {
         std::vector<std::string> listeNomPartie = {};
         std::ifstream fichier(NOM_FICHIER_SAUVERGARDE);
         if (!fichier) {
-            //ça rentre dans cette boucle pourtant j'ai un fichier texte nomé NomSauvegardes.txt
-            // On retourne le vecteur vide
             return listeNomPartie;
         }
 
@@ -51,7 +49,7 @@ namespace Sauvegarde {
         }
     }
 
-    void EnregistrerPartie() { ///*Akropolis::Configuration& config*/
+    void EnregistrerPartie(Akropolis::Configuration& config) {
         string nomPartie;
         while (true) {
             std::cout<<"\nQuel nom voulez vous donner à la sauvegarde ? : ";
@@ -62,15 +60,52 @@ namespace Sauvegarde {
                 break;
         }
         // creation du fichier de sauvegarde
-        std::ofstream nouvFichier(nomPartie + ".txt");
+        std::ofstream nouvFichier(nomPartie + ".csv");
+
         // verification de si la création à été un succée
         if (!nouvFichier.is_open()) {
             cout<<"\nerreur de création/ouverture du fichier sauvegarde";
         }
-        //on écrit toute les infos de sauvegardes
-        nouvFichier<<"information diverse et variables sur la sauvegarde de la partie";
-        nouvFichier<<"tellement d'infos";
-        nouvFichier<<"c'est trop biennnnnn!!!";
+        //ici
+        //on recupere déja toutes les infos sous forme de variables
+        // on recupere les nom des joeurs
+        std::vector<Akropolis::Joueur*> joueurPointeurs= config.getPartieCourante()->getJoueurs();
+        //initialisation du vecteur qui stocke les noms
+        std::vector<std::string> nomsJoueurs(joueurPointeurs.size());
+        cout<<joueurPointeurs.size();
+        cout<<"la1";
+        for (int i = 0; i < joueurPointeurs.size(); i++) {
+            cout<<"lollollil";
+            nomsJoueurs[i] = joueurPointeurs[i]->getNom();
+        }
+        // nombre de joueur
+        int nbJoueur = config.getPartieCourante()->getNombreJoueurs();
+
+        // information complémentaires (mode jeu, dificulté et nombre de tuile)
+        //int nbTuileTour = config.getPartieCourante()->getNbTuileTour();
+        Akropolis::ModeJeu modeDuJeu = config.getPartieCourante()->getMode();
+        Akropolis::NiveauDifficulte dificulte = config.getPartieCourante()->getDifficulte();
+
+
+        //On stocke d'abord ces infos dans le csv sous form variable puis infos dans la case d'a coté
+        // On utilise la virgule comme séparateur CSV
+        const char SEPARATEUR = ',';
+
+
+        // infos générale de la partie
+        nouvFichier << "Variable" << SEPARATEUR << "Valeur\n";
+        nouvFichier << "Mode de Jeu" << SEPARATEUR << (modeDuJeu == Akropolis::ModeJeu::SOLO ? "SOLO" : "MULTIJOUEUR") << "\n";
+        nouvFichier << "Difficulté (si SOLO)" << SEPARATEUR << (modeDuJeu == Akropolis::ModeJeu::SOLO ? std::to_string((int)dificulte) : "N/A") << "\n";
+        nouvFichier << "Joueur Actuel Index" << SEPARATEUR << nbJoueur<< "\n";
+        nouvFichier << "Nombre de Joueurs" << SEPARATEUR << nbJoueur<< "\n";
+
+        // On écrit quel variante sont actives
+        nouvFichier << "\n--- VARIANTES ---\n";
+        nouvFichier << "Nom" << SEPARATEUR << "Active\n";
+        for (const auto& v : config.getPartieCourante()->getVariantesDisponibles()) {
+            nouvFichier << v.getNom() << SEPARATEUR << (v.estActive() ? "1" : "0") << "\n";
+        }
+
         nouvFichier.close();
 
         //on ajoute le nom de la sauvegarde dans le fichier NomSauvegardes.txt
@@ -79,7 +114,7 @@ namespace Sauvegarde {
         if (!fichierNoms.is_open()) {
             cout<<"\nerreur de création/ouverture du fichier";
         }
-        fichierNoms<<"\n"<<nomPartie;
+        fichierNoms<<"\n"<<nomPartie; //es ce que je fai + "csv ici ?"
         fichierNoms.close();
     }
     std::string demandePartie( std::vector<std::string> listeNom) {
