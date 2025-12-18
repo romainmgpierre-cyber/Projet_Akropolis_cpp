@@ -11,7 +11,7 @@ namespace Sauvegarde {
     // verifie si le fichier existe dans le répertoire
     bool ExistanceFichier (const string& nomFichier);
 
-    // Affiche toute les infos d'une sauvegarde
+    // Affiche toute les infos d'une sauvegarde pour le debug
     void afficherInfo(std::string& nomFichierPartie);
 
     // Renvois un vecteur contenant tout les nom des fichier de sauvegarde
@@ -20,8 +20,10 @@ namespace Sauvegarde {
     // Sert a afficher les différentes sauvergardes disponibles
     void afficherNomParties(vector<string>& nomsParties);
 
-    // Enregistrer une partie
+    // Enregistrer et charger une partie
     void EnregistrerPartie(Akropolis::Configuration& config);
+    void chargerPartie();
+
 #endif //UNTITLED_SAUVEGARDE_H
 
 #endif //AKROPOLIS_SAUVEGARDE_H

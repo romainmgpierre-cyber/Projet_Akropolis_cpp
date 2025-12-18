@@ -175,6 +175,77 @@ namespace Sauvegarde {
         }
     }
 
+    void chargerPartie(std::string& nomSauvegarde) {
+        std::ifstream fichier(nomSauvegarde + "csv");
+        if (!fichier.is_open()) {
+            std::cerr << "Erreur : Impossible d'ouvrir le fichier " << nomSauvegarde << std::endl;
+            return;
+        }
+        std::string ligne;
+        std::string sectionActuelle = "";
+        const char SEP = ',';
+
+        // Les variable a initialiser
+        Akropolis::ModeJeu mode;
+        Akropolis::NiveauDifficulte diff;
+        int nbJoueurs = 0;
+
+        // On accède au différentes partie du csv
+        while (std::getline(fichier, ligne)) {
+            if (ligne.empty() || ligne == "\r") continue;
+
+            // Détection des changements de partie
+            if (ligne.find("--- VARIANTES ---") != std::string::npos) { sectionActuelle = "VARIANTES"; continue; }
+            if (ligne.find("--- JOUEURS ---") != std::string::npos) { sectionActuelle = "JOUEURS"; continue; }
+            if (ligne.find("--- Joueur") != std::string::npos) { sectionActuelle = "INFOS_JOUEUR"; continue; }
+            if (ligne.find("--- CiteJoueur") != std::string::npos) { sectionActuelle = "CITE"; continue; }
+
+            std::stringstream ss(ligne);
+            std::string cle, valeur;
+
+            // Lecture des infos générales (au début du fichier)
+            if (sectionActuelle == "") {
+                if (std::getline(ss, cle, SEP) && std::getline(ss, valeur, SEP)) {
+                    if (cle == "Mode de Jeu") mode = (valeur == "SOLO" ? Akropolis::ModeJeu::SOLO : Akropolis::ModeJeu::MULTIJOUEUR);
+                    if (cle == "Difficulté (si SOLO)") diff = (Akropolis::NiveauDifficulte)std::stoi(valeur);
+                    if (cle == "Nombre de Joueurs") nbJoueurs = std::stoi(valeur);
+                }
+            }
+
+            // Lecture des Variantes
+            else if (sectionActuelle == "VARIANTES") {
+                if (std::getline(ss, cle, SEP) && std::getline(ss, valeur, SEP)) {
+                    if (cle != "Nom") { // On ignore l'en-tête
+                        bool active = (valeur == "1");
+                        // Ici, vous devrez appliquer l'état à votre futur objet Partie
+                    }
+                }
+            }
+
+            // Lecture de la Cité (Hexagones)
+            else if (sectionActuelle == "CITE") {
+                std::string type, sId, sQ, sR, sRot, sH;
+                if (std::getline(ss, type, SEP) && std::getline(ss, sId, SEP) &&
+                    std::getline(ss, sQ, SEP) && std::getline(ss, sR, SEP) &&
+                    std::getline(ss, sRot, SEP) && std::getline(ss, sH, SEP)) {
+
+                    if (type == "TypeTuile") continue; // Sauter l'en-tête
+
+                    int id = std::stoi(sId);
+                    int q = std::stoi(sQ);
+                    int r = std::stoi(sR);
+                    int h = std::stoi(sH);
+
+                    // LOGIQUE DE RECONSTRUCTION :
+                    // 1. Retrouver l'hexagone original via son ID
+                    // 2. Le placer dans la map du joueur aux coordonnées (q, r) à la hauteur h
+                }
+            }
+        }
+
+        fichier.close();
+        std::cout << "chargement de partie terminée" << std::endl;
+    }
     void MenuSauvegardes() {
         // recuperation des nom des parties
         std::vector<std::string> listeNomPartie =  recupNomFichiers();
@@ -202,6 +273,6 @@ namespace Sauvegarde {
         std::string Nompartie = demandePartie(listeNomPartie);
 
         //On peut maintenant initialiser la partie avec toute les infos dans le fichier
-        afficherInfo(Nompartie);
+        chargerPartie(Nompartie);
     }
 }
