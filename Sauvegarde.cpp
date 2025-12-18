@@ -230,7 +230,7 @@ namespace Sauvegarde {
             std::stringstream ss(ligne);
             std::string cle, valeur;
 
-            // --- LECTURE INFOS GÉNÉRALES ---
+            // lecture des infos générale a la partie
             if (sectionActuelle == "") {
                 if (std::getline(ss, cle, SEP) && std::getline(ss, valeur, SEP)) {
                     if (cle == "Mode de Jeu") modeCharge = (valeur == "SOLO" ? Akropolis::ModeJeu::SOLO : Akropolis::ModeJeu::MULTIJOUEUR);
@@ -239,7 +239,7 @@ namespace Sauvegarde {
                 }
             }
 
-            // --- LECTURE INFOS INDIVIDUELLES DU JOUEUR ---
+            // -Lecture individuelle de chaque joueur
             else if (sectionActuelle == "INFOS_JOUEUR") {
                 if (std::getline(ss, cle, SEP) && std::getline(ss, valeur, SEP)) {
                     if (indexJoueurActuel < partie->getJoueurs().size()) {
@@ -249,7 +249,7 @@ namespace Sauvegarde {
                 }
             }
 
-            // --- LECTURE ET RECONSTRUCTION DE LA CITÉ ---
+            // Lecture et reconstruction de la citée
             else if (sectionActuelle == "CITE") {
                 std::string type, sId, sQ, sR, sRot, sH;
                 if (std::getline(ss, type, SEP) && std::getline(ss, sId, SEP) &&
@@ -276,8 +276,9 @@ namespace Sauvegarde {
             }
         }
 
-        // --- FINALISATION ---
+        // finalisation;
         config.setNbJoueurHumain(nbJoueursCharge);
+        //set aussi pour la partie le nb de joueurs
         partie->setDifficulte(diffCharge);
 
         fichier.close();
@@ -291,7 +292,6 @@ namespace Sauvegarde {
         if (listeNomPartie.empty()) {
             // Si il n'y a pas de partie déjà sauvegardées
             std::cout<<"Il n'y a pas encore de partie sauvergadées";
-
             std::string reponse;
             while (reponse != "oui") {
                 std::cout<<"\nTappez oui pour retourner au menu principal : ";
@@ -315,8 +315,8 @@ namespace Sauvegarde {
         config.setPartie(partie);
         //On peut maintenant initialiser la partie avec toute les infos dans le fichier
         chargerPartie(Nompartie, config, partie);
-        cout<<partie->getNombreJoueurs();
-        cout<<config.getNomsJoueurs().size();
+        //cout<<partie->getNombreJoueurs();
+        //cout<<config.getNomsJoueurs().size(); //bug ici
 
         partie->lancerPartie();
         AfficherResultats(*partie);
