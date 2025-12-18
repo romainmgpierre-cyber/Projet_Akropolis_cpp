@@ -70,7 +70,8 @@ int LancerConsole() {
         }
     } catch (const PartieAnnulee& e) {
         cout << "\n\n=== FIN DE PARTIE ===" << endl;
-        cout << e.getInfo() << endl;
+        cout << "\nPartie quitée";
+        //cout << e.getInfo() << endl;
         return 0;
     } catch (const GameException& e) {
         cerr << "\n ERREUR FATALE DU JEU: " << e.getInfo() << endl;

@@ -66,18 +66,17 @@ namespace Sauvegarde {
         if (!nouvFichier.is_open()) {
             cout<<"\nerreur de création/ouverture du fichier sauvegarde";
         }
-        //ici
+
         //on recupere déja toutes les infos sous forme de variables
+
         // on recupere les nom des joeurs
         std::vector<Akropolis::Joueur*> joueurPointeurs= config.getPartieCourante()->getJoueurs();
         //initialisation du vecteur qui stocke les noms
         std::vector<std::string> nomsJoueurs(joueurPointeurs.size());
-        cout<<joueurPointeurs.size();
-        cout<<"la1";
         for (int i = 0; i < joueurPointeurs.size(); i++) {
-            cout<<"lollollil";
             nomsJoueurs[i] = joueurPointeurs[i]->getNom();
         }
+
         // nombre de joueur
         int nbJoueur = config.getPartieCourante()->getNombreJoueurs();
 
@@ -87,7 +86,7 @@ namespace Sauvegarde {
         Akropolis::NiveauDifficulte dificulte = config.getPartieCourante()->getDifficulte();
 
 
-        //On stocke d'abord ces infos dans le csv sous form variable puis infos dans la case d'a coté
+        // On stocke d'abord ces infos dans le csv sous form variable puis infos dans la case d'a coté
         // On utilise la virgule comme séparateur CSV
         const char SEPARATEUR = ',';
 
@@ -104,6 +103,47 @@ namespace Sauvegarde {
         nouvFichier << "Nom" << SEPARATEUR << "Active\n";
         for (const auto& v : config.getPartieCourante()->getVariantesDisponibles()) {
             nouvFichier << v.getNom() << SEPARATEUR << (v.estActive() ? "1" : "0") << "\n";
+        }
+
+        //pour chaque joueur on sauvegarde les infos
+        nouvFichier << "\n--- JOUEURS ---\n";
+        for (int i = 0; i < joueurPointeurs.size(); i++) {
+            nouvFichier << "\n--- Joueur"<<i<< "---\n";
+            nouvFichier << "nbPierres" << SEPARATEUR << joueurPointeurs[i]->getNbPierres();
+            nouvFichier << "\nestIA" << SEPARATEUR << joueurPointeurs[i]->isIA();
+            nouvFichier << "\n--- CiteJoueur"<<i<< "---\n";
+
+            //Enregistrement des tuiles de chaques joueur
+
+            // Format : TYPE_TUILE, ID_TUILE, Q, R, ROTATION, HAUTEUR
+            nouvFichier << "TypeTuile" << SEPARATEUR << "ID" << SEPARATEUR << "Q" << SEPARATEUR << "R" << SEPARATEUR << "Rotation" << SEPARATEUR << "Hauteur\n";
+
+            // On récupère le plateau du joueur (std::map<CoordHex, std::pair<HexagoneConstruction*, unsigned int>>)
+            const auto& plateau = joueurPointeurs[i]->getCite()->getPlateau();
+
+            // Note : Comme votre structure actuelle stocke des Hexagones individuels,
+            // nous sauvegardons l'état de chaque case pour une reconstruction fidèle.
+            for (const auto& casePlateau : plateau) {
+                const Akropolis::CoordHex& coord = casePlateau.first;
+                Akropolis::HexagoneConstruction* hex = casePlateau.second.first;
+                unsigned int hauteur = casePlateau.second.second;
+
+                // On identifie s'il s'agit d'une Carrière, d'un Quartier ou d'une Place
+                // pour pouvoir reconstruire l'hexagone exact au chargement
+                std::string typeHex = "INCONNU";
+                int idContenu = -1; // ID de la tuile parente si disponible
+
+                if (dynamic_cast<Akropolis::Carriere*>(hex)) typeHex = "CARRIERE";
+                else if (auto* q = dynamic_cast<Akropolis::Quartier*>(hex)) typeHex = "QUARTIER_" + std::to_string((int)q->getType().getCouleur());
+                else if (auto* p = dynamic_cast<Akropolis::Place*>(hex)) typeHex = "PLACE_" + std::to_string((int)p->getType().getCouleur()) + "_" + std::to_string(p->getNbEtoile());
+
+                nouvFichier << typeHex << SEPARATEUR
+                            << hex->getId() << SEPARATEUR  // Utilisation de l'ID fixe de l'hexagone
+                            << coord.getQ() << SEPARATEUR
+                            << coord.getR() << SEPARATEUR
+                            << "N/A" << SEPARATEUR // La rotation est implicite par la position des hexagones
+                            << hauteur << "\n";
+            }
         }
 
         nouvFichier.close();

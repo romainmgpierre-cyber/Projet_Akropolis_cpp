@@ -608,14 +608,11 @@ void afficherTuileCiteASCII(TuileCite* t, int rotation, ostream& os) {
             //lancer enregistrement
             if (reponse == "oui") {
                 try {
-                    // CORRECTION
                     if (this->getConfig() != nullptr) {
                         Sauvegarde::EnregistrerPartie(*(this->getConfig()));
                     } else {
                         std::cout << "Erreur : La configuration n'est pas liée à la partie." << std::endl;
                     }
-                    // On appelle la fonction du namespace Sauvegarde
-                    Sauvegarde::EnregistrerPartie(*(this->getConfig()));
                     cout << "Sauvegarde effectuee avec succes !" << endl;
                 } catch (const exception& e) {
                     cerr << "Erreur lors de l'enregistrement : " << e.what() << endl;
