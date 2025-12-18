@@ -618,7 +618,6 @@ void afficherTuileCiteASCII(TuileCite* t, int rotation, ostream& os) {
                     cerr << "Erreur lors de l'enregistrement : " << e.what() << endl;
                 }
             }
-
             tourValide = true; 
         }
     }
