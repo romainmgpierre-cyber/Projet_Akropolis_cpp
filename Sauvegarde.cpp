@@ -4,6 +4,7 @@
 #include <filesystem>
 #include "Cite.h"
 #include "MenuConfiguration.h"
+#include "Score.h"
 #define TAILLE 3
 #define NOM_FICHIER_SAUVERGARDE "NomSauvegardes.txt"
 #include "fabrique_tuiles.h"
@@ -167,7 +168,7 @@ namespace Sauvegarde {
             if (numPartie<1 || numPartie >listeNom.size()) {
                 std::cout<<"\nCe numero de sauvegarde n'existe pas veuillez ressayer";
             }else {
-                std::string nomPartie = listeNom[numPartie-1]+".txt";
+                std::string nomPartie = listeNom[numPartie-1]+".csv";
                 if (!ExistanceFichier(nomPartie)) {
                     std::cout<<"\nPartie non trouvé veuillez ressayer";
                 }else {
@@ -314,5 +315,10 @@ namespace Sauvegarde {
         config.setPartie(partie);
         //On peut maintenant initialiser la partie avec toute les infos dans le fichier
         chargerPartie(Nompartie, config, partie);
+        cout<<partie->getNombreJoueurs();
+        cout<<config.getNomsJoueurs().size();
+
+        partie->lancerPartie();
+        AfficherResultats(*partie);
     }
 }
