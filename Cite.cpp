@@ -138,21 +138,7 @@ vector<Cite::CoupPossible> Cite::genererCoupsValides(const TuileCite& tuile) con
                 HexagoneConstruction* support1 = it1->second.first;
                 HexagoneConstruction* support2 = it2->second.first;
 
-                // Récupération des hexagones de la nouvelle tuile
-                HexagoneConstruction* nouveau0 = tuileTest->getHexagone(0);
-                HexagoneConstruction* nouveau1 = tuileTest->getHexagone(1);
-                HexagoneConstruction* nouveau2 = tuileTest->getHexagone(2);
 
-                
-                // Une Carrière ne peut pas recouvrir une Carrière
-                bool violationCarriere = false;
-
-                if (dynamic_cast<Carriere*>(nouveau0) && dynamic_cast<Carriere*>(support0))
-                    violationCarriere = true;
-                if (dynamic_cast<Carriere*>(nouveau1) && dynamic_cast<Carriere*>(support1))
-                    violationCarriere = true;
-                if (dynamic_cast<Carriere*>(nouveau2) && dynamic_cast<Carriere*>(support2))
-                    violationCarriere = true;
 
                 
                 // La tuile posée doit être "à cheval" sur au moins deux tuiles différentes (ou hexagones de départ)
@@ -180,7 +166,7 @@ vector<Cite::CoupPossible> Cite::genererCoupsValides(const TuileCite& tuile) con
                 bool violationSoutien = (ids_support_uniques.size() < 2);
 
                 
-                if (!violationCarriere && !violationSoutien) {
+                if (!violationSoutien) {
                     unsigned int h0 = paire.second.second;
                     unsigned int h1 = it1->second.second;
                     unsigned int h2 = it2->second.second;

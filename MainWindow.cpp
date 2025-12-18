@@ -470,30 +470,26 @@ void MainWindow::onValidationButtonClicked() {
     Joueur* j = partie->getJoueurActuel();
     Cite* cite = j->getCite();
 
-    // --- 1. RECONSTRUCTION DE L'ÉTAT VISUEL (Ce que voit le joueur) ---
+    //1. L'ÉTAT VISUEL
     // On détermine quelle partie de la tuile (index 0, 1 ou 2) est à quelle coordonnée sur la grille.
 
     int rotUI = gridWidget->getFantomeRotation();
     int pivotUI = this->pivotActuel; // Index de l'hexagone servant de pivot (0, 1 ou 2)
     CoordHex ancreVisuelle = ancreSelectionnee; // La coordonnée de la grille où l'utilisateur a cliqué
 
-    // Positions locales relatives dans la tuile (doit correspondre à HexGridWidget::dessinerTuile)
+    // Positions locales relatives dans la tuile
     const std::array<CoordHex, 3> localPos = {CoordHex(0,0), CoordHex(-1,0), CoordHex(0,-1)};
 
-    // Calcul du décalage lié au pivot après rotation
-    // Le pivotUI se trouve visuellement sur la case ancreVisuelle
+
     CoordHex offsetPivot = localPos[pivotUI].rotate(rotUI);
 
-    // Map : IndexOriginal -> CoordonnéeFinale
-    // Où se trouve l'hexagone 0 ? l'hexagone 1 ? l'hexagone 2 ?
     std::vector<CoordHex> posVisuelles(3);
 
     for(int i=0; i<3; ++i) {
-        // Formule de transformation identique à celle du HexGridWidget
         posVisuelles[i] = ancreVisuelle + (localPos[i].rotate(rotUI) - offsetPivot);
     }
 
-    // --- 2. RECHERCHE D'UN COUP LOGIQUE ÉQUIVALENT ---
+    //  2. RECHERCHE D'UN COUP LOGIQUE ÉQUIVALENT
     auto coupsValides = cite->genererCoupsValides(*tuileSelectionnee);
     Cite::CoupPossible coupFinal;
     bool trouve = false;
@@ -508,8 +504,6 @@ void MainWindow::onValidationButtonClicked() {
         if (forme == 0) { rel1 = CoordHex(-1, 0); rel2 = CoordHex(0, -1); }
         else { rel1 = CoordHex(1, 0);  rel2 = CoordHex(0, 1); }
 
-        // Coordonnées des 3 slots logiques sur la grille
-        // Slot 0 est à l'ancre du coup, Slot 1 à ancre+rel1, Slot 2 à ancre+rel2
         std::array<CoordHex, 3> slotsLogiques;
         slotsLogiques[0] = c.ancre;
         slotsLogiques[1] = c.ancre + rel1;
@@ -519,18 +513,12 @@ void MainWindow::onValidationButtonClicked() {
         // La rotationHoraire (perm) décale les contenus : 0->1, 1->2, 2->0 dans le tableau
         // Cela signifie que le Slot 0 reçoit le contenu qui était en position X...
 
-        // Mapping précis des permutations :
-        // perm 0 : Slot 0 = Hex 0, Slot 1 = Hex 1, Slot 2 = Hex 2
-        // perm 1 : Slot 0 = Hex 2, Slot 1 = Hex 0, Slot 2 = Hex 1
-        // perm 2 : Slot 0 = Hex 1, Slot 1 = Hex 2, Slot 2 = Hex 0
         int indexHexInSlot[3];
         if (perm == 0) { indexHexInSlot[0]=0; indexHexInSlot[1]=1; indexHexInSlot[2]=2; }
         else if (perm == 1){ indexHexInSlot[0]=2; indexHexInSlot[1]=0; indexHexInSlot[2]=1; }
         else { indexHexInSlot[0]=1; indexHexInSlot[1]=2; indexHexInSlot[2]=0; }
 
-        // --- COMPARAISON ---
-        // Le coup est valide si pour chaque hexagone (0,1,2), sa position visuelle
-        // est identique à sa position logique.
+        // Le coup est valide si pour chaque hexagone (0,1,2), sa position visuelle est identique à sa position logique.
         bool match = true;
         for(int slot=0; slot<3; ++slot) {
             int originalIndex = indexHexInSlot[slot]; // Quel hexagone est ici ?
@@ -550,7 +538,7 @@ void MainWindow::onValidationButtonClicked() {
         }
     }
 
-    // --- 3. APPLICATION OU REJET ---
+    // 3. APPLICATION OU REJET
     if(trouve) {
         try {
             int pierres = j->placerTuile(tuileSelectionnee, coupFinal);
@@ -570,78 +558,7 @@ void MainWindow::onValidationButtonClicked() {
         QMessageBox::information(this, "Placement Invalide",
                                  "Ce placement n'est pas valide (vérifiez l'adjacence ou la superposition).");
     }
-    /*if (!tuileSelectionnee || etatActuel != EtatJeu::PLACEMENT_TUILE) return;
 
-    Joueur* j = partie->getJoueurActuel();
-    Cite* cite = j->getCite();
-    
-    int rotUI = gridWidget->getFantomeRotation();
-    int pivotUI = this->pivotActuel;
-    std::vector<CoordHex> coordsVisuelles;
-    const std::array<CoordHex, 3> localPos = {CoordHex(0,0), CoordHex(-1,0), CoordHex(0,-1)};
-    CoordHex offsetPivot = localPos[pivotUI].rotate(rotUI);
-
-    for(int i=0; i<3; ++i) {
-        
-        coordsVisuelles.push_back(ancreSelectionnee + (localPos[i].rotate(rotUI) - offsetPivot));
-    }
-
-    // Chercher le coup validé par le moteur de jeu qui correspond à l'ancre et à la rotation
-    auto coupsValides = cite->genererCoupsValides(*tuileSelectionnee);
-    bool valide = false;
-    Cite::CoupPossible coupFinal;
-
-    for(const auto& c : coupsValides) {
-        std::vector<CoordHex> coordsLogiques;
-        int forme = c.rotation / 3;
-        CoordHex rel1, rel2;
-        if (forme == 0) { rel1 = CoordHex(-1, 0); rel2 = CoordHex(0, -1); } // Forme V
-        else            { rel1 = CoordHex(1, 0);  rel2 = CoordHex(0, 1); }  // Forme ^
-
-
-
-        CoordHex logPos0 = c.ancre;
-        
-
-        if (coordsVisuelles[0] == c.ancre) {
-            // vérification de l'orientation
-
-            if (c.rotation == rotUI) {
-                coupFinal = c;
-                valide = true;
-                break;
-            }
-
-        }
-    }
-
-    
-
-    for(const auto& c : coupsValides) {
-        // vérification de l'ancre
-        if (c.ancre == coordsVisuelles[0]) {
-            // vérification de l'orientation
-           
-            if (c.rotation == rotUI) {
-                coupFinal = c;
-                valide = true;
-                break;
-            }
-        }
-    }
-
-    if(valide) {
-        try {
-            j->placerTuile(tuileSelectionnee, coupFinal);
-            tuileSelectionnee = nullptr;
-            gridWidget->clearTuileFantome();
-            btnRotation->setEnabled(false);
-            btnValidation->setEnabled(false);
-            passerAuJoueurSuivant();
-        } catch (...) {}
-    } else {
-        QMessageBox::information(this, "Invalide", "Ce placement ne correspond à aucune règle valide.");  }
-*/
 }
 
 void MainWindow::onHexClicked(CoordHex coord) {
