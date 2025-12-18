@@ -6,7 +6,6 @@
 #include <sstream>
 
 using namespace std;
-using namespace std;
 namespace Akropolis{
 
 Cite::~Cite() {
@@ -53,6 +52,7 @@ void Cite::mettreAJourFrontiere(const CoordHex& pos) {
 
 vector<Cite::CoupPossible> Cite::genererCoupsValides(const TuileCite& tuile) const {
     vector<CoupPossible> coups;
+    set<tuple<int, int, int, int>> coupsUniques; // q, r, rotation, hauteur
     TuileCite* tuileTest = tuile.clone();
 
     // IMPORTANT : Ces positions doivent correspondre à celles dans HexGridWidget
@@ -77,44 +77,42 @@ vector<Cite::CoupPossible> Cite::genererCoupsValides(const TuileCite& tuile) con
         for (int perm = 0; perm < 3; perm++) {
             int rotation_id = (forme * 3) + perm;
 
-            // ========================================
             // PLACEMENT AU SOL (Hauteur 1)
-            // ========================================
 
             // On teste TOUTES les cases de la frontière comme ancre potentielle
             for (const CoordHex& ancre : frontiere) {
-                CoordHex pos1 = ancre + rel1;
-                CoordHex pos2 = ancre + rel2;
+                CoordHex pos0 = ancre;
+                CoordHex pos1 = ancre - rel1;
+                CoordHex pos2 = ancre - rel2;
+                std::array<CoordHex, 3> candidats = {pos0, pos1, pos2};
+                for(const CoordHex& ancrePotentielle : candidats) {
+                    CoordHex pos1 = ancrePotentielle + rel1;
+                    CoordHex pos2 = ancrePotentielle + rel2;
 
-                // RÈGLE 1 : Les 3 cases doivent être VIDES
-                bool ancreVide = (plateau.find(ancre) == plateau.end());
-                bool pos1Vide = (plateau.find(pos1) == plateau.end());
-                bool pos2Vide = (plateau.find(pos2) == plateau.end());
+                    // Vérification unicité avant calculs lourds
+                    auto signature = make_tuple(ancrePotentielle.getQ(), ancrePotentielle.getR(), rotation_id, 1);
+                    if (coupsUniques.count(signature)) continue;
 
-                if (!ancreVide || !pos1Vide || !pos2Vide) {
-                    continue; // Au moins une case occupée → placement impossible
-                }
+                    // RÈGLE 1 : Les 3 cases doivent être VIDES
+                    if (plateau.count(ancrePotentielle) || plateau.count(pos1) || plateau.count(pos2)) continue;
 
-                // RÈGLE 2 : AU MOINS UN des 3 hexagones doit toucher la cité existante
-                // On vérifie les 6 voisins de chaque hexagone de la tuile
-                bool toucheCite = false;
-
-                std::array<CoordHex, 3> positionsTuile = {ancre, pos1, pos2};
-
-                for (const CoordHex& pos : positionsTuile) {
-                    for (int dir = 0; dir < 6; dir++) {
-                        CoordHex voisin = pos.voisin(dir);
-                        // Si ce voisin est occupé (dans le plateau), alors la tuile touche la cité
-                        if (plateau.find(voisin) != plateau.end()) {
-                            toucheCite = true;
-                            break;
+                    // RÈGLE 2 : Adjacence (au moins un hexagone touche la cité)
+                    bool toucheCite = false;
+                    std::array<CoordHex, 3> positionsTuile = {ancrePotentielle, pos1, pos2};
+                    for (const CoordHex& pos : positionsTuile) {
+                        for (int dir = 0; dir < 6; dir++) {
+                            if (plateau.count(pos.voisin(dir))) {
+                                toucheCite = true;
+                                break;
+                            }
                         }
+                        if (toucheCite) break;
                     }
-                    if (toucheCite) break;
-                }
 
-                if (toucheCite) {
-                    coups.push_back({ancre, rotation_id, false, 1});
+                    if (toucheCite) {
+                        coups.push_back({ancrePotentielle, rotation_id, false, 1});
+                        coupsUniques.insert(signature);
+                    }
                 }
             }
 
