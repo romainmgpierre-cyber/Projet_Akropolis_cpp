@@ -111,6 +111,11 @@ namespace Akropolis{
         }
 
         void afficherGraphique(ostream& os) const;
+
+        //methode pour forcer le palcement des tuiles sans les verifications
+        void forcerPlacementHexagone(const CoordHex& coord, HexagoneConstruction* hex, unsigned int hauteur) {
+            plateau[coord] = std::make_pair(hex, hauteur);
+        }
     };
 
 }

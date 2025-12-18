@@ -49,6 +49,7 @@ add_executable(akropolis
         FonctionsAide.cpp
         Sauvegarde.h
         Sauvegarde.cpp
+        fabrique_tuiles.h
 )
 
 

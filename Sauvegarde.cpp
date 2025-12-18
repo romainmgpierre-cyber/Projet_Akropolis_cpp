@@ -6,6 +6,8 @@
 #include "MenuConfiguration.h"
 #define TAILLE 3
 #define NOM_FICHIER_SAUVERGARDE "NomSauvegardes.txt"
+#include "fabrique_tuiles.h"
+
 
 namespace Sauvegarde {
     bool ExistanceFichier (const std::string& nomFichier) {
@@ -174,77 +176,111 @@ namespace Sauvegarde {
             }
         }
     }
+    //fonction pour retrouver les hexagone avec leurs ID
+    Akropolis::HexagoneConstruction* trouverHexagoneParId(int id, const std::vector<Akropolis::TuileCite*>& reserve) {
+        for (auto* tuile : reserve) {
+            for (int i = 0; i < 3; ++i) { // Chaque tuile a 3 hexagones
+                if (tuile->getHexagone(i)->getId() == id) {
+                    return tuile->getHexagone(i);
+                }
+            }
+        }
+        return nullptr;
+    }
+    void chargerPartie(std::string& nomSauvegarde, Akropolis::Configuration& config, Akropolis::Partie* partie) {
+        // Ouverture du fichier (on ajoute .csv)
+        std::string chemin = nomSauvegarde;
+        if (chemin.find(".csv") == std::string::npos) chemin += ".csv";
 
-    void chargerPartie(std::string& nomSauvegarde) {
-        std::ifstream fichier(nomSauvegarde + "csv");
+        std::ifstream fichier(chemin);
         if (!fichier.is_open()) {
-            std::cerr << "Erreur : Impossible d'ouvrir le fichier " << nomSauvegarde << std::endl;
+            std::cerr << "Erreur : Impossible d'ouvrir le fichier " << chemin << std::endl;
             return;
         }
+
         std::string ligne;
         std::string sectionActuelle = "";
         const char SEP = ',';
 
-        // Les variable a initialiser
-        Akropolis::ModeJeu mode;
-        Akropolis::NiveauDifficulte diff;
-        int nbJoueurs = 0;
+        // Variables temporaires de chargement
+        Akropolis::ModeJeu modeCharge;
+        Akropolis::NiveauDifficulte diffCharge;
+        int nbJoueursCharge = 0;
+        int indexJoueurActuel = -1;
 
-        // On accède au différentes partie du csv
+        // On génère une réserve de tuiles pour pouvoir faire correspondre les IDs
+        // On prend 4 joueurs par défaut pour être sûr d'avoir tous les IDs possibles en mémoire
+        std::vector<Akropolis::TuileCite*> reserve = Akropolis::creerToutesTuiles(4);
+
+
         while (std::getline(fichier, ligne)) {
             if (ligne.empty() || ligne == "\r") continue;
 
-            // Détection des changements de partie
+            // Gestion des sections
             if (ligne.find("--- VARIANTES ---") != std::string::npos) { sectionActuelle = "VARIANTES"; continue; }
             if (ligne.find("--- JOUEURS ---") != std::string::npos) { sectionActuelle = "JOUEURS"; continue; }
-            if (ligne.find("--- Joueur") != std::string::npos) { sectionActuelle = "INFOS_JOUEUR"; continue; }
+            if (ligne.find("--- Joueur") != std::string::npos) {
+                sectionActuelle = "INFOS_JOUEUR";
+                indexJoueurActuel++; // On passe au joueur suivant dans le fichier
+                continue;
+            }
             if (ligne.find("--- CiteJoueur") != std::string::npos) { sectionActuelle = "CITE"; continue; }
 
             std::stringstream ss(ligne);
             std::string cle, valeur;
 
-            // Lecture des infos générales (au début du fichier)
+            // --- LECTURE INFOS GÉNÉRALES ---
             if (sectionActuelle == "") {
                 if (std::getline(ss, cle, SEP) && std::getline(ss, valeur, SEP)) {
-                    if (cle == "Mode de Jeu") mode = (valeur == "SOLO" ? Akropolis::ModeJeu::SOLO : Akropolis::ModeJeu::MULTIJOUEUR);
-                    if (cle == "Difficulté (si SOLO)") diff = (Akropolis::NiveauDifficulte)std::stoi(valeur);
-                    if (cle == "Nombre de Joueurs") nbJoueurs = std::stoi(valeur);
+                    if (cle == "Mode de Jeu") modeCharge = (valeur == "SOLO" ? Akropolis::ModeJeu::SOLO : Akropolis::ModeJeu::MULTIJOUEUR);
+                    if (cle == "Difficulté (si SOLO)") diffCharge = (Akropolis::NiveauDifficulte)std::stoi(valeur);
+                    if (cle == "Nombre de Joueurs") nbJoueursCharge = std::stoi(valeur);
                 }
             }
 
-            // Lecture des Variantes
-            else if (sectionActuelle == "VARIANTES") {
+            // --- LECTURE INFOS INDIVIDUELLES DU JOUEUR ---
+            else if (sectionActuelle == "INFOS_JOUEUR") {
                 if (std::getline(ss, cle, SEP) && std::getline(ss, valeur, SEP)) {
-                    if (cle != "Nom") { // On ignore l'en-tête
-                        bool active = (valeur == "1");
-                        // Ici, vous devrez appliquer l'état à votre futur objet Partie
+                    if (indexJoueurActuel < partie->getJoueurs().size()) {
+                        Akropolis::Joueur* j = partie->getJoueurs()[indexJoueurActuel];
+                        if (cle == "nbPierres") j->ajouterPierres(std::stoi(valeur) - j->getNbPierres());
                     }
                 }
             }
 
-            // Lecture de la Cité (Hexagones)
+            // --- LECTURE ET RECONSTRUCTION DE LA CITÉ ---
             else if (sectionActuelle == "CITE") {
                 std::string type, sId, sQ, sR, sRot, sH;
                 if (std::getline(ss, type, SEP) && std::getline(ss, sId, SEP) &&
                     std::getline(ss, sQ, SEP) && std::getline(ss, sR, SEP) &&
                     std::getline(ss, sRot, SEP) && std::getline(ss, sH, SEP)) {
 
-                    if (type == "TypeTuile") continue; // Sauter l'en-tête
+                    // On ignore les lignes d'en-tête du CSV
+                    if (type == "TypeTuile" || type == "Variable") continue;
 
                     int id = std::stoi(sId);
                     int q = std::stoi(sQ);
                     int r = std::stoi(sR);
-                    int h = std::stoi(sH);
+                    unsigned int h = std::stoul(sH);
 
-                    // LOGIQUE DE RECONSTRUCTION :
-                    // 1. Retrouver l'hexagone original via son ID
-                    // 2. Le placer dans la map du joueur aux coordonnées (q, r) à la hauteur h
+                    // 1. On retrouve l'hexagone physique dans la réserve
+                    Akropolis::HexagoneConstruction* hexPhysique = trouverHexagoneParId(id, reserve);
+
+                    // 2. On force le placement sur le plateau du joueur actuel
+                    if (hexPhysique && indexJoueurActuel >= 0 && indexJoueurActuel < partie->getJoueurs().size()) {
+                        Akropolis::CoordHex coords(q, r);
+                        partie->getJoueurs()[indexJoueurActuel]->getCite()->forcerPlacementHexagone(coords, hexPhysique, h);
+                    }
                 }
             }
         }
 
+        // --- FINALISATION ---
+        config.setNbJoueurHumain(nbJoueursCharge);
+        partie->setDifficulte(diffCharge);
+
         fichier.close();
-        std::cout << "chargement de partie terminée" << std::endl;
+        std::cout << ">>> Chargement de '" << nomSauvegarde << "' effectue avec succes." << std::endl;
     }
     void MenuSauvegardes() {
         // recuperation des nom des parties
@@ -268,11 +304,15 @@ namespace Sauvegarde {
             // S'il y a des parties sauvegardées on les affiches
             afficherNomParties(listeNomPartie);
         }
-
         // On demande maintenant quel partie on veut charger
         std::string Nompartie = demandePartie(listeNomPartie);
 
+        // On créer l'objet config qu'on va paramétrer avec la sauvegarde
+        Akropolis::Configuration config;
+        Akropolis::Partie* partie= new Akropolis::Partie(1, config.getMode());
+        partie->setConfig(config);
+        config.setPartie(partie);
         //On peut maintenant initialiser la partie avec toute les infos dans le fichier
-        chargerPartie(Nompartie);
+        chargerPartie(Nompartie, config, partie);
     }
 }

@@ -515,6 +515,8 @@ void Cite::afficherGraphique(ostream& os) const {
             os << line.substr(0, end + 1) << "\n";
         }
     }
+
 }
+
 
 }
