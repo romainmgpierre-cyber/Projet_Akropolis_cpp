@@ -8,6 +8,7 @@
 #include <QInputDialog>
 #include <QString>
 #include <QTimer>
+#include <QApplication>
 
 using namespace Akropolis;
 RiviereWidget::RiviereWidget(QWidget *parent) : QWidget(parent) {
@@ -261,7 +262,6 @@ void MainWindow::demarrerPartie(){
 
     QStringList modes;
     modes << "Solo (vs IA)" << "Multijoueur (Local)";
-    bool ok;
     QString modeChoisi = QInputDialog::getItem(this, "Bienvenue sur Akropolis",
         "Choisissez le mode de jeu :",
         modes, 0, false, &ok);
