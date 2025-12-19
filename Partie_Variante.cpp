@@ -288,14 +288,14 @@ void afficherTuileCiteASCII(TuileCite* t, int rotation, ostream& os) {
         if (departsDisponibles.size() < joueurs.size()) throw GameException("Tuiles depart manquantes");
 
         for (size_t i = 0; i < joueurs.size(); ++i) {
+            tuilesDepart.push_back(departsDisponibles[i]);
+            joueurs[i]->getCite()->initialiserCite(departsDisponibles[i]);
+
             if (joueurs[i]->isIA()) {
-                joueurs[i]->ajouterPierres(1);
-                delete departsDisponibles[i];
-            } else {
-                tuilesDepart.push_back(departsDisponibles[i]);
-                joueurs[i]->getCite()->initialiserCite(departsDisponibles[i]);
+                joueurs[i]->ajouterPierres(1); // L'IA commence avec ses pierres bonus
             }
         }
+        
         for (size_t i = joueurs.size(); i < departsDisponibles.size(); ++i) delete departsDisponibles[i];
     }
 

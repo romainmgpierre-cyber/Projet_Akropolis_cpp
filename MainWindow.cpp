@@ -241,6 +241,24 @@ MainWindow::MainWindow(QWidget *parent)
 void MainWindow::demarrerPartie(){
     // Initialisation du Jeu
     
+    QStringList optionsInitiales;
+    optionsInitiales << "Créer une nouvelle partie" << "Charger une partie existante";
+
+    bool ok;
+    QString choixInitial = QInputDialog::getItem(this, "Akropolis - Menu",
+                                                 "Que souhaitez-vous faire ?",
+                                                 optionsInitiales, 0, false, &ok);
+
+    if (!ok) {
+        qApp->quit(); // Quitter si l'utilisateur annule
+        return;
+    }
+
+    if (choixInitial == "Charger une partie existante") {
+        QMessageBox::information(this, "Chargement", "A FAIRE");
+        return;
+    }
+
     QStringList modes;
     modes << "Solo (vs IA)" << "Multijoueur (Local)";
     bool ok;
@@ -640,10 +658,35 @@ void MainWindow::passerAuJoueurSuivant() {
             if (indexChoisi == -1) indexChoisi = 0;
 
             TuileCite* tuile = choix->choisirTuile(nouveauJoueur, indexChoisi);
+
+            auto coups = nouveauJoueur->getCite()->genererCoupsValides(*tuile);
+            if (!coups.empty()) {
+                nouveauJoueur->placerTuile(tuile, coups[0]); 
+            } else {
+                nouveauJoueur->recupererTuileIA(tuile);
+            }
             nouveauJoueur->recupererTuileIA(tuile);
 
-            QMessageBox::information(this, "Tour de l'IA",
-                QString("L'Illustre Constructeur a pris la tuile n°%1.").arg(indexChoisi + 1));
+
+            QMessageBox msgBox(this);
+            msgBox.setWindowTitle("Tour de l'IA");
+            msgBox.setText(QString("L'Illustre Constructeur a pris la tuile n°%1.").arg(indexChoisi + 1));
+
+            QPushButton *voirBtn = msgBox.addButton("Visualiser sa cité", QMessageBox::ActionRole);
+            QPushButton *passerBtn = msgBox.addButton("Passer au tour suivant", QMessageBox::AcceptRole);
+
+            msgBox.exec(); // Affichage
+
+            if (msgBox.clickedButton() == voirBtn) {
+                gridWidget->setCite(nouveauJoueur->getCite());
+                gridWidget->update();
+
+                // Pour permettre de revenir à sa cité
+                QMessageBox::information(this, "Vue de l'IA",
+                                         "Vous visualisez la cité de l'IA.\nCliquez sur OK pour revenir à votre cité et jouer.");
+
+            }
+
             passerAuJoueurSuivant();
         });
 
