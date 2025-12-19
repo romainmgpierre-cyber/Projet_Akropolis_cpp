@@ -22,8 +22,7 @@ namespace Sauvegarde {
 
     // Enregistrer et charger une partie
     void EnregistrerPartie(Akropolis::Configuration& config);
-    void chargerPartie();
-
+    void chargerPartie(std::string& nomSauvegarde, Akropolis::Configuration& config, Akropolis::Partie* partie);
 #endif //UNTITLED_SAUVEGARDE_H
 
 #endif //AKROPOLIS_SAUVEGARDE_H

@@ -253,9 +253,34 @@ void MainWindow::demarrerPartie(){
     }
 
     if (choixInitial == "Charger une partie existante") {
-        QMessageBox::information(this, "Chargement", "A FAIRE");
+    std::vector<std::string> listeNoms = Sauvegarde::recupNomFichiers();
+
+    if (listeNoms.empty()) {
+        QMessageBox::warning(this, "Chargement", "Aucune sauvegarde trouvée.");
         return;
     }
+
+    QStringList items;
+    for (const auto& name : listeNoms) {
+        if (!name.empty()) items << QString::fromStdString(name);
+    }
+
+    bool ok;
+    QString item = QInputDialog::getItem(this, "Reprendre", "Choisir sauvegarde :", items, 0, false, &ok);
+    
+    if (ok && !item.isEmpty()) {
+        partie = new Akropolis::Partie(1, Akropolis::ModeJeu::MULTIJOUEUR); 
+        Akropolis::Configuration configDummy;
+        
+        std::string nomFich = item.toStdString();
+        Sauvegarde::chargerPartie(nomFich, configDummy, partie);
+
+        etatActuel = EtatJeu::CHOIX_RIVIERE;
+        this->mettreAJourInterface(); 
+        
+        QMessageBox::information(this, "Chargement", "Partie reprise !");
+    }
+}
 
     QStringList modes;
     modes << "Solo (vs IA)" << "Multijoueur (Local)";
@@ -845,45 +870,36 @@ void MainWindow::onPivotClicked() {
 }
 
 void MainWindow::onQuitterClicked() {
-    QMessageBox::StandardButton reply;
-    reply = QMessageBox::question(this, "Quitter", 
-                                "Voulez-vous vraiment quitter la partie ?\nUne sauvegarde sera créée.",
+    QMessageBox::StandardButton reply = QMessageBox::question(this, "Quitter", 
+                                "Voulez-vous vraiment quitter ?\nUne sauvegarde sera créée.",
                                 QMessageBox::Yes | QMessageBox::No);
 
     if (reply == QMessageBox::Yes) {
         bool ok;
         QString nomSauvegarde = QInputDialog::getText(this, "Sauvegarde",
-                                                     "Entrez le nom de votre fichier de sauvegarde :", 
+                                                     "Nom de la sauvegarde :", 
                                                      QLineEdit::Normal, "ma_partie", &ok);
         
         if (ok && !nomSauvegarde.isEmpty()) {
-            /* Note : Comme votre fonction Sauvegarde::EnregistrerPartie utilise std::cin,
-               il est préférable d'implémenter ici un appel simplifié qui génère le CSV 
-               directement avec l'objet 'partie' actuel de la MainWindow.
-            */
-            
-            std::string nomFich = nomSauvegarde.toStdString() + ".csv";
-            std::ofstream fichier(nomFich);
+            std::string nomBase = nomSauvegarde.toStdString();
+            std::string nomFich = nomBase + ".csv";
 
+            std::ofstream fichier(nomFich);
             if (fichier.is_open()) {
-                // Enregistrement minimal au format CSV (basé sur votre logique dans Sauvegarde.cpp)
                 fichier << "Variable,Valeur\n";
                 fichier << "Mode de Jeu," << (partie->getMode() == Akropolis::ModeJeu::SOLO ? "SOLO" : "MULTIJOUEUR") << "\n";
                 fichier << "Nombre de Joueurs," << partie->getNombreJoueurs() << "\n";
-                
-                for (auto* j : partie->getJoueurs()) {
-                    fichier << "\nJoueur," << j->getNom() << "\n";
-                    fichier << "Pierres," << j->getNbPierres() << "\n";
-                    fichier << "Score actuel," << j->calculerScore() << "\n";
-                }
-                
                 fichier.close();
-                
-                QMessageBox::information(this, "Sauvegarde réussie", 
-                                       "La partie a été enregistrée dans : " + nomSauvegarde + ".csv");
-            }
 
-            qApp->quit();
+                std::ofstream fichierNoms("NomSauvegardes.txt", std::ios::app);
+                if (fichierNoms.is_open()) {
+                    fichierNoms << "\n" << nomBase; 
+                    fichierNoms.close();
+                }
+
+                QMessageBox::information(this, "Succès", "Partie sauvegardée dans " + nomSauvegarde);
+                qApp->quit();
+            }
         }
     }
 }

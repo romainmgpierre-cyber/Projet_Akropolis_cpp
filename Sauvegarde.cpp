@@ -188,8 +188,7 @@ namespace Sauvegarde {
         }
         return nullptr;
     }
-    void chargerPartie(std::string& nomSauvegarde, Akropolis::Configuration& config, Akropolis::Partie* partie) {
-        // Ouverture du fichier (on ajoute .csv)
+void chargerPartie(std::string& nomSauvegarde, Akropolis::Configuration& config, Akropolis::Partie* partie) {        // Ouverture du fichier (on ajoute .csv)
         std::string chemin = nomSauvegarde;
         if (chemin.find(".csv") == std::string::npos) chemin += ".csv";
 
