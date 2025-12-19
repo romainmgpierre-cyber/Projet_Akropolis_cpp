@@ -54,6 +54,7 @@ class RiviereWidget : public QWidget {
 public:
     explicit RiviereWidget(QWidget *parent = nullptr);
     void setChoixTuile(Akropolis::ChoixTuile* choix);
+    void setPierresDisponibles(int nb) { pierresDisponibles = nb; update(); }
 
 signals:
     void tuileChoisie(int index);
@@ -69,6 +70,7 @@ private:
     Akropolis::ChoixTuile* choixActuel = nullptr;
     int hoveredIndex = -1;
     double scale = 30.0;
+    int pierresDisponibles = 0;
 
     void dessinerTuile(QPainter& painter, Akropolis::TuileCite* tuile, int x, int y, bool hovered = false);
     QColor typeToColor(Akropolis::Couleur c) const;

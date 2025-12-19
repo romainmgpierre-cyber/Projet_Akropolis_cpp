@@ -154,10 +154,10 @@ void RiviereWidget::dessinerTuile(QPainter& painter, TuileCite* tuile, int xCent
         }
     }
 }
+
 void RiviereWidget::paintEvent(QPaintEvent *event) {
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
-
     painter.fillRect(rect(), QColor(220, 220, 220)); 
 
     // Titre
@@ -171,59 +171,54 @@ void RiviereWidget::paintEvent(QPaintEvent *event) {
     if (!choixActuel || choixActuel->getTuilesDisponibles().empty()) {
         painter.drawText(rect(), Qt::AlignCenter, "Aucune tuile disponible");
         return;
-    };
+    }
 
     auto tuiles = choixActuel->getTuilesDisponibles();
     int nbTuiles = tuiles.size();
-
-    // Largeur totale disponible moins les marges
     int totalWidth = width() - 20;
-
-    // Largeur allouée par tuile
     double largeurParTuile = totalWidth / (double)nbTuiles;
-
-    // Position de départ
     double currentX = 10;
 
     for(size_t i = 0; i < nbTuiles; ++i) {
-
-        // Calculer le centre de la zone de la tuile
         double xCenter = currentX + (largeurParTuile / 2.0);
         double yCenter = height() / 2.0;
-
-        
         double drawingX = xCenter - (TUILE_WIDTH_ESTIMEE / 2.0);
 
         bool hovered = (static_cast<int>(i) == hoveredIndex);
+        int cout = choixActuel->calculerCout(i);
 
-        // Cadre de sélection
+        bool peutPrendre = (cout <= pierresDisponibles);
+
         if (hovered) {
+            // Bleu si survolé
             painter.setPen(QPen(QColor(33, 150, 243), 3));
             painter.setBrush(QColor(33, 150, 243, 30));
-            // Le cadre couvre toute la zone allouée
             painter.drawRoundedRect(currentX, 40, largeurParTuile, height() - 50, 8, 8);
         }
 
-        
         dessinerTuile(painter, tuiles[i], (int)drawingX, (int)yCenter, hovered);
 
-        
-        int cout = choixActuel->calculerCout(i);
-
-        
+        // Dessin de l'étiquette du coût
         double costX = xCenter - 20;
         double costY = height() - 40;
 
         painter.setPen(Qt::NoPen);
-        painter.setBrush(cout > 0 ? QColor(244, 67, 54) : QColor(76, 175, 80));
+        
+        // --- COULEUR DYNAMIQUE ---
+        // Vert si on a assez de pierres, Rouge sinon
+        if (peutPrendre) {
+            painter.setBrush(QColor(76, 175, 80)); // Vert
+        } else {
+            painter.setBrush(QColor(244, 67, 54)); // Rouge
+        }
+
         painter.drawRoundedRect(costX, costY, 40, 24, 12, 12);
 
         painter.setPen(Qt::white);
         QFont font = painter.font();
         font.setBold(true);
         painter.setFont(font);
-        painter.drawText(QRectF(costX, costY, 40, 24), Qt::AlignCenter,
-                         QString("%1").arg(cout));
+        painter.drawText(QRectF(costX, costY, 40, 24), Qt::AlignCenter, QString("%1").arg(cout));
 
         currentX += largeurParTuile;
     }
@@ -754,7 +749,8 @@ void MainWindow::mettreAJourInterface() {
         int pilesConsommees = totalInitial - pilesRestantes;
         progressBar->setValue(pilesConsommees);
     }
-
+    riviereWidget->setPierresDisponibles(j->getNbPierres());
+    
     // Mise à jour de la rivière
     partie->remplirChoixTuile();
     riviereWidget->setChoixTuile(partie->getChoixTuile());
