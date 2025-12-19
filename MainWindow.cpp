@@ -437,29 +437,25 @@ void MainWindow::demarrerPartie(){
 MainWindow::~MainWindow() {
     delete partie;
 }
+
 void MainWindow::onTuileChoisie(int index) {
     if (tuileSelectionnee) return;
 
     Joueur* j = partie->getJoueurActuel();
     ChoixTuile* choix = partie->getChoixTuile();
-
-    int cout = choix->calculerCout(index);
-    try{
-        j->retirerPierres(cout);
-
-        // On récupère la tuile
+    try {
         tuileSelectionnee = choix->choisirTuile(j, index);
-        
-        indexSourceTuile = index;  // On mémorise l'index pour pouvoir annuler plus tard
-        etatActuel = EtatJeu::PLACEMENT_TUILE; // On change l'état
-        
-        
-        mettreAJourInterface(); 
+
+        indexSourceTuile = index;
+        etatActuel = EtatJeu::PLACEMENT_TUILE;
+
+        mettreAJourInterface();
 
     } catch(const GameException& e) {
+        int cout = choix->calculerCout(index);
         QMessageBox::warning(this, "Impossible",
-            QString("Vous avez besoin de %1 pierres. Vous n'en avez que %2.")
-            .arg(cout).arg(j->getNbPierres()));
+                             QString("Vous avez besoin de %1 pierres. Vous n'en avez que %2.")
+                                 .arg(cout).arg(j->getNbPierres()));
     }
 }
 
