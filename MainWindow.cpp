@@ -9,6 +9,8 @@
 #include <QString>
 #include <QTimer>
 #include <QApplication>
+#include <fstream>
+
 
 using namespace Akropolis;
 RiviereWidget::RiviereWidget(QWidget *parent) : QWidget(parent) {
@@ -408,6 +410,21 @@ void MainWindow::demarrerPartie(){
     btnRecentrer = new ModernButton("Recentrer");
     sideLayout->addWidget(btnRecentrer);
 
+    btnQuitter = new ModernButton("Quitter");
+    btnQuitter->setStyleSheet(
+        "QPushButton {"
+        "  background: #e74c3c;" // Couleur rouge pour indiquer une action de sortie
+        "  color: white; border: none; border-radius: 8px; padding: 12px 24px;"
+        "  font-size: 14px; font-weight: bold; min-width: 120px;"
+        "}"
+        "QPushButton:hover { background: #c0392b; }"
+        "QPushButton:pressed { background: #a93226; }"
+    );
+    sideLayout->addWidget(btnQuitter);
+
+// Connexion du signal
+connect(btnQuitter, &QPushButton::clicked, this, &MainWindow::onQuitterClicked);
+
     sideLayout->addStretch();
     layoutPrincipal->addWidget(sidePanel, 0);
 
@@ -750,7 +767,7 @@ void MainWindow::mettreAJourInterface() {
         progressBar->setValue(pilesConsommees);
     }
     riviereWidget->setPierresDisponibles(j->getNbPierres());
-    
+
     // Mise à jour de la rivière
     partie->remplirChoixTuile();
     riviereWidget->setChoixTuile(partie->getChoixTuile());
@@ -825,4 +842,48 @@ void MainWindow::onPivotClicked() {
     onHexClicked(ancreSelectionnee);
 
     statutLabel->setText(QString("Pivot changé sur l'hexagone %1").arg(pivotActuel));
+}
+
+void MainWindow::onQuitterClicked() {
+    QMessageBox::StandardButton reply;
+    reply = QMessageBox::question(this, "Quitter", 
+                                "Voulez-vous vraiment quitter la partie ?\nUne sauvegarde sera créée.",
+                                QMessageBox::Yes | QMessageBox::No);
+
+    if (reply == QMessageBox::Yes) {
+        bool ok;
+        QString nomSauvegarde = QInputDialog::getText(this, "Sauvegarde",
+                                                     "Entrez le nom de votre fichier de sauvegarde :", 
+                                                     QLineEdit::Normal, "ma_partie", &ok);
+        
+        if (ok && !nomSauvegarde.isEmpty()) {
+            /* Note : Comme votre fonction Sauvegarde::EnregistrerPartie utilise std::cin,
+               il est préférable d'implémenter ici un appel simplifié qui génère le CSV 
+               directement avec l'objet 'partie' actuel de la MainWindow.
+            */
+            
+            std::string nomFich = nomSauvegarde.toStdString() + ".csv";
+            std::ofstream fichier(nomFich);
+
+            if (fichier.is_open()) {
+                // Enregistrement minimal au format CSV (basé sur votre logique dans Sauvegarde.cpp)
+                fichier << "Variable,Valeur\n";
+                fichier << "Mode de Jeu," << (partie->getMode() == Akropolis::ModeJeu::SOLO ? "SOLO" : "MULTIJOUEUR") << "\n";
+                fichier << "Nombre de Joueurs," << partie->getNombreJoueurs() << "\n";
+                
+                for (auto* j : partie->getJoueurs()) {
+                    fichier << "\nJoueur," << j->getNom() << "\n";
+                    fichier << "Pierres," << j->getNbPierres() << "\n";
+                    fichier << "Score actuel," << j->calculerScore() << "\n";
+                }
+                
+                fichier.close();
+                
+                QMessageBox::information(this, "Sauvegarde réussie", 
+                                       "La partie a été enregistrée dans : " + nomSauvegarde + ".csv");
+            }
+
+            qApp->quit();
+        }
+    }
 }

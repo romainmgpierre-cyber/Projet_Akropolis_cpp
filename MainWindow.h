@@ -94,6 +94,7 @@ private slots:
     void onTuileChoisie(int index);
     void onValidationButtonClicked();
     void onPivotClicked();
+    void onQuitterClicked();
 
 private:
     void mettreAJourInterface();
@@ -111,6 +112,7 @@ private:
     ModernButton *btnRecentrer;
     ModernButton *btnValidation;
     ModernButton *btnPivot;
+    ModernButton *btnQuitter;
 
     Akropolis::Partie* partie;
     Akropolis::TuileCite* tuileSelectionnee = nullptr;
