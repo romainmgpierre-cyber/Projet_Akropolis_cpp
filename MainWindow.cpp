@@ -1,4 +1,5 @@
 #include "MainWindow.h"
+#include "Sauvegarde.h"
 #include <QPainter>
 #include <QMouseEvent>
 #include "HexCons_Carr_Quart_Place.h"
