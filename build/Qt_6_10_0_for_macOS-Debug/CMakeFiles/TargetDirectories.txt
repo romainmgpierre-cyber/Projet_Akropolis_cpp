@@ -1,0 +1,5 @@
+/Users/antoinelavallee/Documents/LO21/Projet/akropolis/build/Qt_6_10_0_for_macOS-Debug/CMakeFiles/akropolis.dir
+/Users/antoinelavallee/Documents/LO21/Projet/akropolis/build/Qt_6_10_0_for_macOS-Debug/CMakeFiles/edit_cache.dir
+/Users/antoinelavallee/Documents/LO21/Projet/akropolis/build/Qt_6_10_0_for_macOS-Debug/CMakeFiles/rebuild_cache.dir
+/Users/antoinelavallee/Documents/LO21/Projet/akropolis/build/Qt_6_10_0_for_macOS-Debug/CMakeFiles/akropolis_autogen_timestamp_deps.dir
+/Users/antoinelavallee/Documents/LO21/Projet/akropolis/build/Qt_6_10_0_for_macOS-Debug/CMakeFiles/akropolis_autogen.dir

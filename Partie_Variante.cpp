@@ -118,48 +118,52 @@ void afficherTuileCiteASCII(TuileCite* t, int rotation, ostream& os) {
         int step_y = 2 * H;
         int odd_offset = H;
 
-        int width_px = 2 * step_x + N + 2 * H + 20; 
-        int height_px = 2 * step_y + H + odd_offset + 2;
+        // Zone de dessin agrandie pour supporter toutes les rotations
+        int width_px = 4 * step_x + 20; 
+        int height_px = 4 * step_y + 20;
 
         vector<string> buffer(height_px, string(width_px, ' '));
 
         struct Pos { int col; int lig; int id; };
         vector<Pos> positions;
 
-        
-        bool formeA = (rotation >= 3); 
+        bool forme1 = (rotation >= 3); 
 
-        if (formeA) {
-            // Forme A (Pyramide)
-            // L'Ancre (Hex 0) est en haut
+        int c0 = 1; 
+        int l0 = 1;
+
+        string posStr = "";
+
+        if (!forme1) {
+    
             positions = {
-                {1, 0, 0}, 
-                {0, 1, 1}, 
-                {1, 1, 2}  
+                {c0, l0, 0},     // 0: Ancre (Bas)
+                {c0 - 1, l0, 1}, // 1: Gauche
+                {c0, l0 - 1, 2}  // 2: Haut
             };
+            posStr = "BAS";
         } else {
-            // Forme V (Inversée)
-            // L'Ancre (Hex 0) est en bas
+       
             positions = {
-                {0, 1, 0}, 
-                {0, 0, 1}, 
-                {1, 0, 2}  
+                {c0, l0, 0},         // 0: Ancre (Haut)
+                {c0 + 1, l0 + 1, 1}, // 1: Droite-Bas
+                {c0, l0 + 1, 2}      // 2: Bas
             };
+            posStr = "HAUT";
         }
 
         for (const auto& p : positions) {
-         
-            string label = to_string(p.id) + "." + getEtiquettePourTuile(t->getHexagone(p.id));
+            string typeHex = getEtiquettePourTuile(t->getHexagone(p.id));
+            string label = to_string(p.id) + "." + typeHex;
             
             int start_x = p.col * step_x + 1;
             int start_y = p.lig * step_y;
             
+            // Gestion du décalage hexagone (colonnes impaires décalées)
             if (p.col % 2 != 0) start_y += odd_offset;
 
-            // Toit
+            // --- DESSIN ---
             for (int i = 0; i < N; ++i) buffer[start_y][start_x + H + i] = '_';
-
-            // Pentes
             for (int k = 0; k < H; ++k) {
                 int y_top = start_y + 1 + k;
                 buffer[y_top][start_x + H - 1 - k] = '/';
@@ -181,17 +185,18 @@ void afficherTuileCiteASCII(TuileCite* t, int rotation, ostream& os) {
                 }
             }
 
-            // Marqueur ANCRE sur l'hexagone 0
+            // --- MARQUAGE ANCRE ---
             if (p.id == 0) {
-                string arrow = "<-- [ANCRE]";
-                int arrow_x = start_x + (2*H + N) + 2; 
-                for(size_t i=0; i<arrow.length(); ++i) {
-                    if(center_y < height_px && arrow_x + i < (size_t)width_px)
-                        buffer[center_y][arrow_x + i] = arrow[i];
+                string info = "<-- ANCRE: " + typeHex + " (" + posStr + ")";
+                int info_x = start_x + (2*H + N) + 2; 
+                for(size_t i=0; i<info.length(); ++i) {
+                    if(center_y < height_px && info_x + i < (size_t)width_px)
+                        buffer[center_y][info_x + i] = info[i];
                 }
             }
         }
 
+        // Affichage du buffer
         for (const auto& line : buffer) {
             size_t end = line.find_last_not_of(" ");
             if (end != string::npos) os << line.substr(0, end + 1) << "\n";
