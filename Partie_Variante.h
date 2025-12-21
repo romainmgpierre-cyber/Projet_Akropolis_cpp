@@ -52,6 +52,9 @@ namespace Akropolis{
         ~Partie();
         Partie(const Partie&) = delete;
         Partie& operator=(const Partie&) = delete;
+
+        size_t getJoueurActuelIndex() const { return joueurActuelIndex; }
+        void setJoueurActuelIndex(size_t index) { joueurActuelIndex = index; }
         
         void lancerPartie(); // Initialise tout
         void boucleDeJeu();  // Fait tourner les tours
