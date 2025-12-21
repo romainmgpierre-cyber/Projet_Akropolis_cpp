@@ -30,14 +30,13 @@ namespace Akropolis {
         const string& getNom() const { return nom; }
         int getNbPierres() const { return nbPierres; }
         Cite* getCite() const { return cite; }
-        
-        void setNom(const string& nouveauNom);
+
 
         bool isIA() const { return estIA; }
         
         void recupererTuileIA(TuileCite* tuile); // Méthode pour l'IA qui contourne la logique de placement standard
         
-
+        void setNom(const string& nouveauNom);
         void ajouterPierre() { nbPierres++; }
         void ajouterPierres(int n);
         void retirerPierre();
