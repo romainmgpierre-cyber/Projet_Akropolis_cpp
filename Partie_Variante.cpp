@@ -10,7 +10,7 @@
 #include <vector> 
 #include <random> 
 #include <chrono>
-#include "Sauvegarde.h";
+#include "Sauvegarde.h"
 
 using namespace std;
 namespace Akropolis {
@@ -118,52 +118,48 @@ void afficherTuileCiteASCII(TuileCite* t, int rotation, ostream& os) {
         int step_y = 2 * H;
         int odd_offset = H;
 
-        // Zone de dessin agrandie pour supporter toutes les rotations
-        int width_px = 4 * step_x + 20; 
-        int height_px = 4 * step_y + 20;
+        int width_px = 2 * step_x + N + 2 * H + 20; 
+        int height_px = 2 * step_y + H + odd_offset + 2;
 
         vector<string> buffer(height_px, string(width_px, ' '));
 
         struct Pos { int col; int lig; int id; };
         vector<Pos> positions;
 
-        bool forme1 = (rotation >= 3); 
+        
+        bool formeA = (rotation >= 3); 
 
-        int c0 = 1; 
-        int l0 = 1;
-
-        string posStr = "";
-
-        if (!forme1) {
-    
+        if (formeA) {
+            // Forme A (Pyramide)
+            // L'Ancre (Hex 0) est en haut
             positions = {
-                {c0, l0, 0},     // 0: Ancre (Bas)
-                {c0 - 1, l0, 1}, // 1: Gauche
-                {c0, l0 - 1, 2}  // 2: Haut
+                {1, 0, 0}, 
+                {0, 1, 1}, 
+                {1, 1, 2}  
             };
-            posStr = "BAS";
         } else {
-       
+            // Forme V (Inversée)
+            // L'Ancre (Hex 0) est en bas
             positions = {
-                {c0, l0, 0},         // 0: Ancre (Haut)
-                {c0 + 1, l0 + 1, 1}, // 1: Droite-Bas
-                {c0, l0 + 1, 2}      // 2: Bas
+                {0, 1, 0}, 
+                {0, 0, 1}, 
+                {1, 0, 2}  
             };
-            posStr = "HAUT";
         }
 
         for (const auto& p : positions) {
-            string typeHex = getEtiquettePourTuile(t->getHexagone(p.id));
-            string label = to_string(p.id) + "." + typeHex;
+         
+            string label = to_string(p.id) + "." + getEtiquettePourTuile(t->getHexagone(p.id));
             
             int start_x = p.col * step_x + 1;
             int start_y = p.lig * step_y;
             
-            // Gestion du décalage hexagone (colonnes impaires décalées)
             if (p.col % 2 != 0) start_y += odd_offset;
 
-            // --- DESSIN ---
+            // Toit
             for (int i = 0; i < N; ++i) buffer[start_y][start_x + H + i] = '_';
+
+            // Pentes
             for (int k = 0; k < H; ++k) {
                 int y_top = start_y + 1 + k;
                 buffer[y_top][start_x + H - 1 - k] = '/';
@@ -185,18 +181,17 @@ void afficherTuileCiteASCII(TuileCite* t, int rotation, ostream& os) {
                 }
             }
 
-            // --- MARQUAGE ANCRE ---
+            // Marqueur ANCRE sur l'hexagone 0
             if (p.id == 0) {
-                string info = "<-- ANCRE: " + typeHex + " (" + posStr + ")";
-                int info_x = start_x + (2*H + N) + 2; 
-                for(size_t i=0; i<info.length(); ++i) {
-                    if(center_y < height_px && info_x + i < (size_t)width_px)
-                        buffer[center_y][info_x + i] = info[i];
+                string arrow = "<-- [ANCRE]";
+                int arrow_x = start_x + (2*H + N) + 2; 
+                for(size_t i=0; i<arrow.length(); ++i) {
+                    if(center_y < height_px && arrow_x + i < (size_t)width_px)
+                        buffer[center_y][arrow_x + i] = arrow[i];
                 }
             }
         }
 
-        // Affichage du buffer
         for (const auto& line : buffer) {
             size_t end = line.find_last_not_of(" ");
             if (end != string::npos) os << line.substr(0, end + 1) << "\n";
@@ -293,14 +288,14 @@ void afficherTuileCiteASCII(TuileCite* t, int rotation, ostream& os) {
         if (departsDisponibles.size() < joueurs.size()) throw GameException("Tuiles depart manquantes");
 
         for (size_t i = 0; i < joueurs.size(); ++i) {
-            tuilesDepart.push_back(departsDisponibles[i]);
-            joueurs[i]->getCite()->initialiserCite(departsDisponibles[i]);
-
             if (joueurs[i]->isIA()) {
-                joueurs[i]->ajouterPierres(1); // L'IA commence avec ses pierres bonus
+                joueurs[i]->ajouterPierres(1);
+                delete departsDisponibles[i];
+            } else {
+                tuilesDepart.push_back(departsDisponibles[i]);
+                joueurs[i]->getCite()->initialiserCite(departsDisponibles[i]);
             }
         }
-        
         for (size_t i = joueurs.size(); i < departsDisponibles.size(); ++i) delete departsDisponibles[i];
     }
 
@@ -634,6 +629,79 @@ void afficherTuileCiteASCII(TuileCite* t, int rotation, ostream& os) {
             }
         }
         return actives;
+    }
+    void Partie::activerVariante(const std::string& nom) {
+        for (auto& v : this->getVariantesDisponibles()) {
+            if (v.getNom() == nom) {
+                v.activer();
+                return;
+            }
+        }
+    }
+
+    // Dans Partie_Variante.cpp
+    void Akropolis::Partie::setVarianteEtat(const std::string& nom, bool active) {
+        for (auto& v : variantes) { // Accès direct au membre privé
+            if (v.getNom() == nom) {
+                if (active) v.activer();
+                else v.desactiver();
+                return;
+            }
+        }
+    }
+
+    void Partie::reprendrePartie() {
+        if (joueurs.empty()) throw GameException("Erreur chargement: Pas de joueurs.");
+
+        // On reconstruit la pioche
+        // On prend toutes les tuiles du jeu, et on retire celles que les joueurs possèdent déjà.
+
+        std::vector<TuileCite*> toutes = creerToutesTuiles(joueurs.size());
+        std::set<size_t> idsUtilises;
+
+        // On enregistre toutes les IDs de toutes les tuiles actuellement sur les plateaux des joueurs
+        for(auto* j : joueurs) {
+            for(auto* t : j->getCite()->getTuiles()) {
+                idsUtilises.insert(t->getId());
+            }
+        }
+
+        // On garde pour la pioche que les tuiles qui ne sont pas utilisées
+        std::vector<TuileCite*> restantes;
+        for(auto* t : toutes) {
+            if(idsUtilises.find(t->getId()) == idsUtilises.end()) {
+                restantes.push_back(t);
+            } else {
+                delete t; // on supprime le doublon
+            }
+        }
+
+        // On réinitialise la pioche et le marché avec les tuiles qui restent
+        delete pioche;
+        pioche = new Pioche(1);
+        delete choixTuile;
+        choixTuile = new ChoixTuile(1);
+
+        // On répartit dans les piles
+        pioche->organiserPiles(restantes, joueurs.size());
+
+        // Les tuiles en plus vont dans le marché
+        for(auto* t : restantes) {
+            choixTuile->ajouterTuile(t);
+        }
+
+        // Si le marché est vide on tire une pile tout de suite
+        if(choixTuile->getNombreTuiles() == 0 && !pioche->estVide()) {
+            std::vector<TuileCite*> pile = pioche->prendreUnePile();
+            choixTuile->ajouterPile(pile);
+        }
+
+        // Lancement du jeu
+        etat = EtatPartie::EN_COURS;
+        // On reprend le joueur sauvegardé
+        cout << "\n--- Reprise de la Partie sauvegardee ! ---" << endl;
+
+        boucleDeJeu();
     }
 
 }
