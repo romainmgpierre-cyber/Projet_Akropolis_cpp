@@ -294,9 +294,7 @@ void afficherTuileCiteASCII(TuileCite* t, int rotation, ostream& os) {
         for (size_t i = 0; i < joueurs.size(); ++i) {
             tuilesDepart.push_back(departsDisponibles[i]);
             joueurs[i]->getCite()->initialiserCite(departsDisponibles[i]);
-            if (joueurs[i]->isIA()) {
-                joueurs[i]->ajouterPierres(1);
-            }
+
         }
         for (size_t i = joueurs.size(); i < departsDisponibles.size(); ++i) delete departsDisponibles[i];
     }
@@ -433,7 +431,45 @@ void afficherTuileCiteASCII(TuileCite* t, int rotation, ostream& os) {
         }
 
         // avec des vrais joueurs
+        if (mode == ModeJeu::SOLO) {
+            Joueur* ia = nullptr;
+            for (auto* j : joueurs) {
+                if (j->isIA()) { ia = j; break; }
+            }
 
+            if (ia) {
+                cout << "\n########################################" << endl;
+                cout << "      L'ILLUSTRE ARCHITECTE (IA)        " << endl;
+                cout << "########################################" << endl;
+                
+                TableauScore scoreHelper;
+                int scoreIA = scoreHelper.calculerScoreIA(*ia, this->difficulte);
+                cout << ">> SCORE ACTUEL : " << scoreIA << " points" << endl;
+                cout << ">> PIERRES      : " << ia->getNbPierres() << endl;
+
+                cout << "\n>> CITE (Tuiles collectees) :" << endl;
+                const auto& tuilesIA = ia->getCite()->getTuiles();
+                
+                if (tuilesIA.empty()) {
+                    cout << "   (Aucune tuile pour l'instant)" << endl;
+                } else {
+                    int count = 0;
+                    for (const auto* t : tuilesIA) {
+                        cout << " [";
+                        for (int k = 0; k < 3; ++k) {
+                            cout << getEtiquettePourTuile(t->getHexagone(k));
+                            if (k < 2) cout << "-";
+                        }
+                        cout << "]";
+                        
+                        count++;
+                        if (count % 4 == 0) cout << endl; 
+                    }
+                    if (count % 4 != 0) cout << endl;
+                }
+                cout << "########################################\n" << endl;
+            }
+        }
         // Affichage Cité
         cout << "\n--- VOTRE CITE ACTUELLE ---" << endl;
         cout << "\033[?7l"; 
@@ -595,7 +631,7 @@ void afficherTuileCiteASCII(TuileCite* t, int rotation, ostream& os) {
                 cout << "--> Tuile placee." << endl;
             }
 
-            // demande si le joueur veux enrgistrer la partie ?
+            // demande si le joueur veux enrgistrer la partie 
             std:string reponse;
             while (true) {
                 cout<<"Voulez-enregistrer la partie ? (oui/non):";
