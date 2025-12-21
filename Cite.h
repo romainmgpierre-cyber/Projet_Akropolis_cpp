@@ -84,9 +84,9 @@ namespace Akropolis{
         // Méthode spécifique pour l'IA
         void ajouterTuileIA(TuileCite* tuile);
 
-        
+        // autres
         const vector<TuileCite*>& getTuiles() const { return tuiles_posees; }
-
+        void forcerPlacementTuile(TuileCite* tuile, const CoordHex& ancre, int rotation, unsigned int hauteur);
         
         Cite() = default; 
         ~Cite(); 
