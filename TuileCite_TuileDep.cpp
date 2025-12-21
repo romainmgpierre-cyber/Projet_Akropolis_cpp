@@ -2,10 +2,10 @@
 
 namespace Akropolis{
 
-    TuileCite::TuileCite(size_t id, HexagoneConstruction* h1, 
-                         HexagoneConstruction* h2, HexagoneConstruction* h3,
-                         bool possede) 
-        : id(id), hexagones({{h1, h2, h3}}), hauteur(1), proprietaire(possede) {}
+    TuileCite::TuileCite(size_t id, HexagoneConstruction* h1,
+                         HexagoneConstruction* h2, HexagoneConstruction* h3, size_t id_per,
+                         bool possede)
+        : id(id), hexagones({{h1, h2, h3}}), hauteur(1),id_persistant(id_per) ,proprietaire(possede) {}
 
     TuileCite::~TuileCite() {
         if (proprietaire) {
@@ -14,6 +14,7 @@ namespace Akropolis{
     }
 
     void TuileCite::rotationHoraire() {
+        rotation = (rotation + 1) % 3;
         // permutation cyclique : [0, 1, 2] -> [2, 0, 1]
         HexagoneConstruction* temp = hexagones[2];
         hexagones[2] = hexagones[1];
@@ -36,8 +37,12 @@ namespace Akropolis{
         HexagoneConstruction* h3_clone = hexagones[2]->clone();
         
         // crée une nouvelle tuile
-        TuileCite* newTuile = new TuileCite(id, h1_clone, h2_clone, h3_clone, true);
+        TuileCite* newTuile = new TuileCite(id, h1_clone, h2_clone, h3_clone, id_persistant, true);
         newTuile->setHauteur(this->hauteur);
+
+        newTuile->setRotation(this->rotation);
+        newTuile->setAncre(this->positionAncre);
+
         return newTuile;
     }
 
