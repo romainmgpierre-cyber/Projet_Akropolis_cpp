@@ -11,6 +11,7 @@
 #include <QTimer>
 #include <QApplication>
 #include <fstream>
+#include "Score.h"
 
 
 using namespace Akropolis;
@@ -769,12 +770,20 @@ void MainWindow::animerTransition() {
 
 void MainWindow::mettreAJourInterface() {
     Joueur* j = partie->getJoueurActuel();
-    
+    int scoreAffiche = 0;
+    if (j->isIA()) {
+        // Pour l'IA, on utilise la méthode spécifique avec la difficulté
+        Akropolis::TableauScore scoreHelper;
+        scoreAffiche = scoreHelper.calculerScoreIA(*j, partie->getDifficulte());
+    } else {
+        // Pour l'humain, on utilise la méthode classique
+        scoreAffiche = j->calculerScore();
+    }
     
     infoLabel->setText(QString("Tour de : %1\nPierres: %2\nScore: %3\nÉtat: %4")
                            .arg(QString::fromStdString(j->getNom()))
                            .arg(j->getNbPierres())
-                           .arg(j->calculerScore())
+                           .arg(scoreAffiche)
                            .arg(etatActuel == EtatJeu::CHOIX_RIVIERE ? "Choisir une tuile" : "Placer la tuile"));
 
     QString statut = (etatActuel == EtatJeu::CHOIX_RIVIERE)
