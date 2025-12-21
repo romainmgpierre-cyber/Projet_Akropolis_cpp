@@ -2,6 +2,7 @@
 #include <fstream>
 #include <string>
 #include <filesystem>
+#include <algorithm>
 #include "Cite.h"
 #include "MenuConfiguration.h"
 #include "Score.h"
@@ -252,6 +253,16 @@ namespace Sauvegarde {
     // On charges les tuiles en attentes
     auto chargerTuilesEnAttente = [&]() {
         if (partie->getJoueurs().empty() || tuilesEnAttente.empty()) return;
+
+        std::sort(tuilesEnAttente.begin(), tuilesEnAttente.end(), 
+            [](const TuileACharger& a, const TuileACharger& b) {
+                if (a.hauteur != b.hauteur) {
+                    return a.hauteur < b.hauteur; 
+                }
+                // Si même hauteur, priorité à la tuile de départ
+                return (a.type == "TUILE_DEPART") && (b.type != "TUILE_DEPART");
+            }
+        );
 
         Akropolis::Joueur* joueur = partie->getJoueurs().back();
         bool citeInitialisee = false;
