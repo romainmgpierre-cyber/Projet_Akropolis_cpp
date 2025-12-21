@@ -1,2 +1,0 @@
-set(__QT_DEPLOY_TARGET_akropolis_FILE /Users/antoinelavallee/Documents/LO21/Projet/akropolis/build/Qt_6_10_0_for_macOS-Debug/akropolis)
-set(__QT_DEPLOY_TARGET_akropolis_TYPE EXECUTABLE)
