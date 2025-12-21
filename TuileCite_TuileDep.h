@@ -8,14 +8,18 @@ namespace Akropolis {
     class TuileCite{
         private : 
             size_t id;
+            size_t id_persistant;
             array<HexagoneConstruction*, 3> hexagones;
              
             unsigned int hauteur=1;
-            bool proprietaire; //true si possède des haxagones (pour la gestion de la mémoire)
+            bool proprietaire; //true si possède des hexagones (pour la gestion de la mémoire)
+            int rotation = 0; // 0, 1 ou 2, pour la sauvegarde
+            CoordHex positionAncre;
             
-        public : 
-            TuileCite(size_t id, HexagoneConstruction* h1, 
+        public :
+            TuileCite(size_t id, HexagoneConstruction* h1,
               HexagoneConstruction* h2, HexagoneConstruction* h3,
+              size_t id_per,
               bool possede = true);
             ~TuileCite();
             TuileCite(const TuileCite&)=delete;
@@ -31,20 +35,25 @@ namespace Akropolis {
             }
 
             void setHauteur(unsigned int h) { hauteur = h; }
-         
+
             void rotationHoraire();
             void rotationAntihoraire();
-
+            int getRotation() const { return rotation; }
+            void setRotation(int r) { rotation = r % 3; }
             bool contientCarriere() const;
             bool contientPlace() const;
             int getNombreQuartiers() const;
             int getNombreCarrieres() const;
+            unsigned int getHauteur() const { return hauteur; }
+            size_t getIdPersistant() const { return id_persistant; }
             vector<Couleur> getCouleursQuartiers() const;
     
             void afficher(ostream& os = std::cout) const;
             friend ostream& operator<<(std::ostream& os, const TuileCite& tuile);
     
             TuileCite* clone() const;
+            CoordHex getAncre() const { return positionAncre; }
+            void setAncre(const CoordHex& c) { positionAncre = c; }
     };
 
    class TuileDepart {
