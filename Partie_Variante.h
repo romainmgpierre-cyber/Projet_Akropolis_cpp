@@ -67,11 +67,13 @@ namespace Akropolis{
         Pioche* getPioche() const { return pioche; }
         vector<Variante> getVariantesDisponibles() const{ return variantes; }
         vector<Variante> getVariantesActives() const;
+        void setVarianteEtat(const std::string& nom, bool active);
         Configuration* getConfig(){return config;}
 
 
         void initialiserTuiles();
-        void ajouterJoueur(const std::string& nom, int numeroJoueur, bool estIA = false);        void retirerJoueur(const string& nom);
+        void ajouterJoueur(const std::string& nom, int numeroJoueur, bool estIA = false);
+        void retirerJoueur(const string& nom);
         void setDifficulte(NiveauDifficulte diff) { difficulte = diff; }
         NiveauDifficulte getDifficulte() const { return difficulte; }
         void ajouterVariante(const Variante& v) { variantes.push_back(v); }
@@ -82,8 +84,8 @@ namespace Akropolis{
             joueurActuelIndex = (joueurActuelIndex + 1) % joueurs.size();
         }
         void setConfig(Configuration& c){config = &c;}
-    
-    private :
+
+        void reprendrePartie();
     
     private:
         
