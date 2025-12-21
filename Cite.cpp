@@ -27,6 +27,8 @@ void Cite::initialiserCite(TuileDepart* tuileDepart) {
     CoordHex c2 = centre.voisin(2); // (-1, 1)
     CoordHex c3 = centre.voisin(4); // (0, -1)
 
+
+
     plateau[c1] = { tuileDepart->getHexagone(1), 1 };
     mettreAJourFrontiere(c1);
     plateau[c2] = { tuileDepart->getHexagone(2), 1 };
@@ -253,15 +255,15 @@ std::string Cite::validerPlacement(const TuileCite& tuile, const CoordHex& ancre
         // Interdiction Carrière sur Carrière
         if (dynamic_cast<Carriere*>(nouveau0) && dynamic_cast<Carriere*>(support0)) {
             delete tuileTest;
-            return "❌ PLACEMENT EN HAUTEUR INVALIDE : Carrière sur Carrière interdit (position 0).";
+            return "PLACEMENT EN HAUTEUR INVALIDE : Carrière sur Carrière interdit (position 0).";
         }
         if (dynamic_cast<Carriere*>(nouveau1) && dynamic_cast<Carriere*>(support1)) {
             delete tuileTest;
-            return "❌ PLACEMENT EN HAUTEUR INVALIDE : Carrière sur Carrière interdit (position 1).";
+            return "PLACEMENT EN HAUTEUR INVALIDE : Carrière sur Carrière interdit (position 1).";
         }
         if (dynamic_cast<Carriere*>(nouveau2) && dynamic_cast<Carriere*>(support2)) {
             delete tuileTest;
-            return "❌ PLACEMENT EN HAUTEUR INVALIDE : Carrière sur Carrière interdit (position 2).";
+            return "PLACEMENT EN HAUTEUR INVALIDE : Carrière sur Carrière interdit (position 2).";
         }
 
         
@@ -328,7 +330,11 @@ int Cite::placerTuile(TuileCite* tuile, const CoupPossible& coup) {
 
     // Mettre à jour la tuile et l'inventaire
     tuile->setHauteur(coup.hauteur);
+    tuile->setAncre(coup.ancre);
     tuiles_posees.push_back(tuile); // La Cité prend possession
+
+
+
 
     // gain de pierres par recouvrement
     int pierresGagnees = 0;
@@ -517,6 +523,46 @@ void Cite::afficherGraphique(ostream& os) const {
     }
 
 }
+    void Cite::forcerPlacementTuile(TuileCite* tuile, const CoordHex& ancre, int rotation, unsigned int hauteur) {
+        // On applique la rotation à l'objet tuile
+        tuile->setRotation(0);
+        for(int i = 0; i < (rotation % 3); ++i) {
+            tuile->rotationHoraire();
+        }
+
+        // calule de la position celon les rotation
+        int forme = rotation / 3;
+        CoordHex rel1, rel2;
+
+        if (forme == 0) {
+            // Forme V
+            rel1 = CoordHex(-1, 0);
+            rel2 = CoordHex(0, -1);
+        } else {
+            // Forme A
+            rel1 = CoordHex(1, 0);
+            rel2 = CoordHex(0, 1);
+        }
+
+        CoordHex pos0 = ancre;
+        CoordHex pos1 = ancre + rel1;
+        CoordHex pos2 = ancre + rel2;
+
+        //Mise à jour  Tuile
+        tuile->setHauteur(hauteur);
+        tuile->setAncre(ancre);
+        tuiles_posees.push_back(tuile);
+
+        // Mise à jour Plateau
+        plateau[pos0] = { tuile->getHexagone(0), hauteur };
+        plateau[pos1] = { tuile->getHexagone(1), hauteur };
+        plateau[pos2] = { tuile->getHexagone(2), hauteur };
+
+        // Mise à jour des frontières
+        mettreAJourFrontiere(pos0);
+        mettreAJourFrontiere(pos1);
+        mettreAJourFrontiere(pos2);
+    }
 
 
 }
